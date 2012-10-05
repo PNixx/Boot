@@ -1,0 +1,120 @@
+<?
+class Boot_Config {
+
+	/**
+	 * Хранилище настроек
+	 * @var array
+	 */
+	private $_config = null;
+
+	/**
+	 * Достаём данные из конфига
+	 * @param  $name
+	 * @return array|null
+	 */
+	public function __get($name) {
+
+		if( isset($this->_config->$name) ) {
+			return $this->_config->$name;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Читаем файл конфига, и помещаем его в хранилище
+	 */
+	public function __construct() {
+
+		if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
+			define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
+		} else {
+			define('APPLICATION_ENV', false);
+		}
+
+		if( is_file(APPLICATION_PATH . '/config/application.ini') ) {
+
+			//Читаем файл
+			$config = parse_ini_file(APPLICATION_PATH . '/config/application.ini', true, INI_SCANNER_RAW);
+
+			if( isset($config['production']) == false ) {
+				throw new Exception('Ключ production в конфиге не найден: config.ini');
+			}
+
+			//Если есть ключ разработки
+			if( APPLICATION_ENV && isset($config[APPLICATION_ENV]) ) {
+				$config = array_merge($config['production'], $config[APPLICATION_ENV]);
+			} else {
+				$config = $config['production'];
+			}
+
+			foreach($config as $key => $param) {
+
+				//Чистим лишние пробелы
+				$key = trim($key);
+				$param = trim($param);
+
+				//Если строка
+				if( $param === "true" || $param === "false" ) {
+					$param = $param === "true" ? true : false;
+				}
+				$param = str_replace("[APPLICATION_ROOT]", APPLICATION_ROOT, $param);
+
+				//Записываем данные в массив
+				if( strstr($key, '.') == false ) {
+
+					$this->_config->$key = $param;
+				} else {
+
+					//Разбиваем строку
+					$keys = explode('.', $key);
+
+					//Добавляем в конфиг
+					$array = array();
+					for($i = count($keys) - 1; $i >= 0; $i--) {
+						if( $i == count($keys) - 1 ) {
+							$array[$keys[$i]] = $param;
+						} else {
+							$array = array($keys[$i] => $array);
+						}
+					}
+
+					//Преобразовываем связку массивов в объекты
+					$this->_config = $this->object_megre_recursive($this->_config, $array);
+				}
+
+			}
+		} else {
+			throw new Exception('Файл конфига не найден: ' . APPLICATION_PATH . '/config/application.ini');
+		}
+	}
+
+	/**
+	 * Добавление в оъект
+	 * @param $array
+	 * @param $input
+	 * @return void
+	 */
+	private function object_megre_recursive($array, $input) {
+
+		if( is_object($input) || is_array($input) ) {
+			foreach($input as $i => $value) {
+
+				if( !isset($array->$i) ) {
+					$array->$i = null;
+				}
+
+				if( is_object($input) ) {
+					$array->$i = $this->object_megre_recursive($array->$i, $value);
+				} elseif( is_array($value) ) {
+					$array->$i = $this->object_megre_recursive($array->$i, (object)$value);
+				} else {
+					$array->$i = $value;
+				}
+			}
+		} else {
+			$array = $input;
+		}
+		return $array;
+	}
+}
