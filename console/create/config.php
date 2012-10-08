@@ -53,6 +53,7 @@ $directories = array(
 	"/application/views/home",
 	"/application/models",
 	"/application/layouts",
+	"/db"
 );
 
 //Создаём необходимые директории

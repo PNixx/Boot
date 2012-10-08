@@ -220,6 +220,6 @@ class postgres {
 	 * @return void
 	 */
 	public function delete($table, $id) {
-		$this->query("DELETE FROM {$this->separator}{$table}{$this->separator} WHERE id = {$id};");
+		$this->query("DELETE FROM {$this->separator}{$table}{$this->separator} WHERE id = '{$id}';");
 	}
 }

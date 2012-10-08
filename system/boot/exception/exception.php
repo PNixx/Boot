@@ -2,7 +2,7 @@
 class Boot_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
-		self::ex(new Exception($message, $code, $error_code));
+		self::ex(new Exception($message, $code));
 	}
 
 	public static function ex(Exception $e) {

@@ -64,6 +64,14 @@ class Model {
 	}
 
 	/**
+	 * Drop table
+	 * @param $table
+	 */
+	public function drop_table($table) {
+		return $this->_db->query("DROP TABLE {$this->_db->separator}{$table}{$this->_db->separator}");
+	}
+
+	/**
 	 * Поиск записей по условию, используя db_table
 	 * @param null $where
 	 * @return Model

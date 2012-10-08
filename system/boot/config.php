@@ -29,13 +29,13 @@ class Boot_Config {
 		if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
 			define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
 		} else {
-			define('APPLICATION_ENV', false);
+			define('APPLICATION_ENV', "production");
 		}
 
 		if( is_file(APPLICATION_PATH . '/config/application.ini') ) {
 
 			//Читаем файл
-			$config = parse_ini_file(APPLICATION_PATH . '/config/application.ini', true, INI_SCANNER_RAW);
+			$config = parse_ini_file(APPLICATION_PATH . '/config/application.ini', true);
 
 			if( isset($config['production']) == false ) {
 				throw new Exception('Ключ production в конфиге не найден: config.ini');

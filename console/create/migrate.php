@@ -39,6 +39,9 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 
 			//Создаваемая таблица
 			$table = $match[2];
+			if( $table == null ) {
+				exit("You must write table name, example: create_table_user");
+			}
 
 			if( file_exists(APPLICATION_PATH . "/models/{$table}.php") ) {
 				exit("Model_{$table} is exist");

@@ -114,10 +114,26 @@ class Boot_Migration extends Model {
 		foreach($tables as $table => $key) {
 
 			//Строим колонки
-			$column = array("id" => "int NOT NULL AUTO_INCREMENT");
+			switch(Boot::getInstance()->config->db->adapter) {
+
+				case "postgres":
+					$column = array(
+						"id" => "serial",
+						"date" => "timestamp DEFAULT now() NOT NULL"
+					);
+					break;
+				case "mysql":
+					$column = array(
+						"id" => "int NOT NULL AUTO_INCREMENT",
+						"date" => "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+					);
+					break;
+
+				default:
+					exit("Unknown type db adapter");
+			}
 			$pkey = array("id");
 			$column = array_merge($column, $key);
-			$column['date'] = "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
 			//Отправляем запрос на создание таблицы
 			$this->create_table($table, $column, $pkey);
@@ -169,7 +185,7 @@ class Boot_Migration extends Model {
 				//СОздание таблицы
 				case "create_table":
 					foreach($data as $table => $column) {
-						$this->query("DROP TABLE `{$table}`");
+						$this->drop_table($table);
 						echo "DROP TABLE `{$table}`;\r\n";
 					}
 					break;
