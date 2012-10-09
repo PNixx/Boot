@@ -44,7 +44,9 @@ class Boot_Exception extends Exception {
 			$exception = new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
 			echo "<pre>";
 			echo "<b>Error message:</b> " . $exception->getMessage() . "<br>";
-			print_r($exception->getTraceAsString());
+			if( APPLICATION_ENV != "production" ) {
+				print_r($exception->getTraceAsString());
+			}
 			echo "</pre>";
 			exit;
 		}
@@ -60,8 +62,25 @@ class Ajax_Exception extends Exception {
 			'error'      => $code,
 			'error_code' => $error_code,
 			'message'    => $message,
-			'trace'      => Boot::getInstance()->config->is_work ? "" : $this->getTraceAsString()
+			'trace'      => APPLICATION_ENV == "production" ? "" : $this->getTraceAsString()
 		));
+		exit;
+	}
+}
+class Controller_Exception extends Exception {
+
+	public function __construct($message = null, $code = 500, $error_code = null) {
+		header('HTTP/1.0 ' . $code);
+		if( Boot_Controller::getInstance()->isAjax() ) {
+			echo json_encode(array(
+				'error' => $code,
+				'error_code' => $error_code,
+				'message' => $message,
+				'trace' => APPLICATION_ENV == "production" ? "" : $this->getTraceAsString()
+			));
+		} else {
+			new Boot_Exception($message, $code);
+		}
 		exit;
 	}
 }

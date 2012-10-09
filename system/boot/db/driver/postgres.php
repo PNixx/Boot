@@ -151,8 +151,7 @@ class postgres {
 				$v = addslashes($v);
 			}
 
-			$q .= ($q != '' ? ', ' : '') . $this->separator . $key . $this->separator . '=' . (is_int($v) || is_null($v) ? (is_null($v) ? 'NULL' : $v)
-							: "'$v'");
+			$q .= ($q != '' ? ', ' : '') . $this->separator . $key . $this->separator . '=' . (is_int($v) || is_null($v) ? (is_null($v) ? 'NULL' : $v) : "'$v'");
 		}
 		return $q;
 

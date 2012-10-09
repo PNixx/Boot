@@ -46,7 +46,7 @@ class Boot_Auth {
 	public function getAuth() {
 		if( $this->_me === null ) {
 
-			//Записываем токен в куки
+			//Читаем токен
 			$token = Boot_Cookie::get("auth_token");
 
 			//Разбиваем токен
@@ -78,7 +78,11 @@ class Boot_Auth {
 		$skey = Boot_Skey::get();
 
 		//Записываем токен в куки
-		Boot_Cookie::set("auth_token", $id . "#" . $skey . "#" . md5($id . $skey));
+		$token = $id . "#" . $skey . "#" . md5($id . $skey);
+		Boot_Cookie::set("auth_token", $token);
+
+		//Возвращаем токен
+		return $token;
 	}
 
 	public function clear() {

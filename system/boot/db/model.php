@@ -81,6 +81,18 @@ class Model {
 	}
 
 	/**
+	 * Поиск записей по условию key => value
+	 * @param array $where
+	 */
+	public function where(array $where) {
+		$query = "";
+		foreach($where as $key => $value) {
+			$query .= ($query == "" ? "" : " AND ") . $this->_db->separator . $key . $this->_db->separator . '=' . $this->getStringQueryByValue($value);
+		}
+		return $this->find($query);
+	}
+
+	/**
 	 * Выбор всех записей в таблице по запросу
 	 * @param string $table Имя таблицы
 	 * @param string $where
@@ -201,6 +213,14 @@ class Model {
 	public function update($data, $where = null) {
 
 		return $this->_db->update($this->table, $data, $where);
+	}
+
+	/**
+	 * Получить строку представления для запроса по типу данного value
+	 * @param $value
+	 */
+	private function getStringQueryByValue($value) {
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $value) : "'{$value}'");
 	}
 
 	/**
