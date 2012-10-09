@@ -208,8 +208,12 @@ class postgres {
 			return false;
 		}
 
-		$this->query("INSERT INTO {$this->separator}{$table}{$this->separator} (" . $q['values'] . ")VALUES(" . $q['insert'] . ");");
-		return pg_last_oid($this->result);
+		$id = $this->query("INSERT INTO {$this->separator}{$table}{$this->separator} (" . $q['values'] . ")VALUES(" . $q['insert'] . ") RETURNING id;")->row();
+		if( $id ) {
+			return $id->id;
+		} else {
+			return false;
+		}
 	}
 
 	/**
