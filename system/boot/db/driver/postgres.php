@@ -64,7 +64,7 @@ class postgres {
 	 * @param $table
 	 * @param $column
 	 */
-	public function create_table($table, $column, $pkey = null) {
+	public function create_table($table, $column, $pkey = null, $ukey = null) {
 		$sql = "";
 		foreach($column as $col => $data) {
 			$sql .= ($sql == "" ? "" : ",") . $this->separator . $col . $this->separator . " {$data}";
@@ -72,11 +72,29 @@ class postgres {
 		$sql_pkey = "";
 		if( $pkey ) {
 			foreach($pkey as $key) {
-				$sql_pkey .= ($sql_pkey == "" ? "" : ",") . $this->separator . "{$key}" . $this->separator;
+				$sql_pkey .= ($sql_pkey == "" ? "" : ",") . $this->separator . $key . $this->separator;
 			}
 			$sql_pkey = ", PRIMARY KEY ({$sql_pkey})";
 		}
-		return $this->query("CREATE TABLE {$this->separator}{$table}{$this->separator} ({$sql}{$sql_pkey});");
+		$sql_ukey = "";
+		if( $ukey ) {
+			foreach($ukey as $key) {
+				$sql_ukey .= ($sql_ukey == "" ? "" : ",") . $this->separator . $key . $this->separator;
+			}
+			$sql_ukey = ", CONSTRAINT {$this->separator}ukey_{$table}_" . implode("_", $ukey) . "{$this->separator} UNIQUE  ({$sql_ukey})";
+		}
+		return $this->query("CREATE TABLE {$this->separator}{$table}{$this->separator} ({$sql}{$sql_pkey}{$sql_ukey});");
+	}
+
+	/**
+	 * Drop table
+	 * @param $table
+	 */
+	public function drop_table($table) {
+		return $this->query("BEGIN;
+		DROP TABLE {$this->separator}{$table}{$this->separator};
+		DROP SEQUENCE IF EXISTS {$this->separator}{$table}_id_seq{$this->separator};
+		COMMIT;");
 	}
 
 	/**

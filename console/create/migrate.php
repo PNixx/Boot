@@ -50,9 +50,29 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 			//Строим параметры
 			$schema = "array(\r\n";
 			if( count($argv) > 1 ) {
+
+				//Обозначаем первичные ключи
+				$pkey = null;
+				$ukey = null;
+
 				for($i = 2; $i < count($argv); $i++) {
-					list($column, $type) = explode(":", $argv[$i]);
-					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\"{$column}\" => \"{$type}\"";
+					if( preg_match("/^:PKEY=(.+?)$/", $argv[$i], $m) ) {
+						$pkey = explode(",", $m[1]);
+					} elseif(preg_match("/^:UKEY=(.+?)$/", $argv[$i], $m)) {
+						$ukey = explode(",", $m[1]);
+					} else {
+						list($column, $type) = explode(":", $argv[$i]);
+						$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\"{$column}\" => \"{$type}\"";
+					}
+				}
+
+				//Если были указаны ключи, добавляем их
+				if( $pkey ) {
+					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":PKEY\" => \"" . implode(",", $pkey) . "\"";
+				}
+				//Если были указаны ключи, добавляем их
+				if( $ukey ) {
+					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":UKEY\" => \"" . implode(",", $ukey) . "\"";
 				}
 			}
 			$schema .= "\r\n\t\t\t)";

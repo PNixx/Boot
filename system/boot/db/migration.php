@@ -113,30 +113,65 @@ class Boot_Migration extends Model {
 
 		foreach($tables as $table => $key) {
 
-			//Строим колонки
-			switch(Boot::getInstance()->config->db->adapter) {
+			//Обнуляем
+			$column = array();
+			$ukey = array();
+			$pkey = array();
 
-				case "postgres":
-					$column = array(
-						"id" => "serial",
-						"date" => "timestamp DEFAULT now() NOT NULL"
-					);
-					break;
-				case "mysql":
-					$column = array(
-						"id" => "int NOT NULL AUTO_INCREMENT",
-						"date" => "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-					);
-					break;
-
-				default:
-					exit("Unknown type db adapter");
+			//Если были указаны первичные ключи
+			if( array_key_exists(":PKEY", $key) ) {
+				$pkey = explode(",", $key[":PKEY"]);
+				unset($key[":PKEY"]);
 			}
-			$pkey = array("id");
+
+			//Если были указаны уникальные ключи
+			if( array_key_exists(":UKEY", $key) ) {
+				$ukey = explode(",", $key[":UKEY"]);
+				unset($key[":UKEY"]);
+			}
+
+			//Создаём колонку id
+			if( count($pkey) == 0 && array_key_exists("id", $key) == false ) {
+
+				//Создаём стандартный ключ
+				$pkey = array("id");
+
+				//Строим колонки
+				switch( Boot::getInstance()->config->db->adapter ) {
+
+					case "postgres":
+						$column = array(
+							"id" => "serial"
+						);
+						break;
+					case "mysql":
+						$column = array(
+							"id" => "int NOT NULL AUTO_INCREMENT"
+						);
+						break;
+
+					default:
+						exit("Unknown type db adapter");
+				}
+			}
+
+			//Делаем миграцию колонок
 			$column = array_merge($column, $key);
 
+			//Строим колонки
+			if( array_key_exists("date", $column) == false ) {
+				switch( Boot::getInstance()->config->db->adapter ) {
+					case "postgres":
+						$column["date"] = "timestamp DEFAULT now() NOT NULL";
+						break;
+					case "mysql":
+						$column["date"] = "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
+						break;
+				}
+			}
+
 			//Отправляем запрос на создание таблицы
-			$this->create_table($table, $column, $pkey);
+			$this->create_table($table, $column, $pkey, $ukey);
 			echo "Create table `{$table}`\r\n";
 		}
 	}
@@ -195,5 +230,4 @@ class Boot_Migration extends Model {
 			}
 		}
 	}
-
 }

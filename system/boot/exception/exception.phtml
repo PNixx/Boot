@@ -3,7 +3,7 @@
 <? if( APPLICATION_ENV == "production" && isset(Boot::getInstance()->config->mail->error)): ?>
 <?
   if( $e->getCode() != 404 ) {
-    Boot_Mail::send(Boot::getInstance()->config->mail->error, "PNixx: Ошибка страницы",
+    Boot_Mail::send(Boot::getInstance()->config->mail->error, Boot::getInstance()->config->host . ": Ошибка страницы",
       "<b>Error message:</b> " . $e->getMessage() . "<pre>" . $e->getTraceAsString() . "</pre>
       <pre>" . var_export($_COOKIE, true) . "
       				SERVER:
@@ -20,5 +20,7 @@
 ?>
 <? else: ?>
 <b>Error message:</b> <?= $e->getMessage() ?>
+<? if( APPLICATION_ENV != "production" ): ?>
 <pre><?= $e->getTraceAsString() ?></pre>
+<? endif ?>
 <? endif ?>

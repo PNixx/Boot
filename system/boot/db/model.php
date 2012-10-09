@@ -59,8 +59,8 @@ class Model {
 	 * @param $table
 	 * @param $column
 	 */
-	public function create_table($table, $column, $pkey = null) {
-		return $this->_db->create_table($table, $column, $pkey);
+	public function create_table($table, $column, $pkey = null, $ukey = null) {
+		return $this->_db->create_table($table, $column, $pkey, $ukey);
 	}
 
 	/**
@@ -68,7 +68,7 @@ class Model {
 	 * @param $table
 	 */
 	public function drop_table($table) {
-		return $this->_db->query("DROP TABLE {$this->_db->separator}{$table}{$this->_db->separator}");
+		return $this->_db->drop_table($table);
 	}
 
 	/**
