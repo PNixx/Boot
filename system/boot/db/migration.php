@@ -49,7 +49,7 @@ class Boot_Migration extends Model {
 	 */
 	public function getLatestMigration() {
 
-		$row = $this->find(null, "id", "id DESC", 1)->row();
+		$row = $this->query($this->select(null, "id", "id DESC", 1))->row();
 		return $row ? $row->id : null;
 	}
 
@@ -116,11 +116,14 @@ class Boot_Migration extends Model {
 			//Обнуляем
 			$column = array();
 			$ukey = array();
-			$pkey = array();
+			$pkey = null;
 
 			//Если были указаны первичные ключи
 			if( array_key_exists(":PKEY", $key) ) {
-				$pkey = explode(",", $key[":PKEY"]);
+				if( stristr($key[":PKEY"], ",") ) {
+					exit("Incorrect PKEY value");
+				}
+				$pkey = $key[":PKEY"];
 				unset($key[":PKEY"]);
 			}
 
@@ -131,10 +134,10 @@ class Boot_Migration extends Model {
 			}
 
 			//Создаём колонку id
-			if( count($pkey) == 0 && array_key_exists("id", $key) == false ) {
+			if( $pkey == null && array_key_exists("id", $key) == false ) {
 
 				//Создаём стандартный ключ
-				$pkey = array("id");
+				$pkey = "id";
 
 				//Строим колонки
 				switch( Boot::getInstance()->config->db->adapter ) {

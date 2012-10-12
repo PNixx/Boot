@@ -8,7 +8,32 @@ class Model {
 	private $_db = null;
 
 	private $_select = null;
+
+	/**
+	 * Рабочая таблица модели
+	 * @var null||string
+	 */
 	protected $table = null;
+
+	/**
+	 * Связь с таблицами
+	 * Многие к одному
+	 * @var null|array
+	 */
+	protected $belongs_to = null;
+
+	/**
+	 * Связь с таблицами
+	 * Один ко многим
+	 * @var null|array([table])
+	 */
+	protected $has_many = null;
+
+	/**
+	 * Первичный ключ
+	 * @var null|string
+	 */
+	protected $pkey = "id";
 
 	public function __construct() {
 
@@ -29,15 +54,24 @@ class Model {
 	}
 
 	/**
+	 * Получает первичный ключ таблицы
+	 */
+	public function getPkey() {
+		if( $this->pkey ) {
+			return $this->pkey;
+		} else {
+			throw new DB_Exeption("pkey is not found");
+		}
+	}
+
+	/**
 	 * Подключаемся к БД
 	 * @return void
 	 */
 	public function connect() {
 
 		//Проверяем было ли подключение
-		if( Boot::getInstance()->_connect === null ) {
-			Boot::getInstance()->_connect = $this->_db->connect();
-		}
+		Boot::getInstance()->_connect = $this->_db->connect();
 	}
 
 	/**
@@ -46,10 +80,14 @@ class Model {
 	 * @return Model
 	 */
 	public function query($query) {
-		$this->_select = $this->_db->query($query);
+		$this->_select = $this->_db->query((string)$query);
 		return $this;
 	}
 
+	/**
+	 * Показать список таблиц
+	 * @return array
+	 */
 	public function show_tables() {
 		return $this->_db->show_tables($this->table);
 	}
@@ -72,40 +110,38 @@ class Model {
 	}
 
 	/**
-	 * Поиск записей по условию, используя db_table
+	 * Поиск записей по первичному ключу
 	 * @param null $where
-	 * @return Model
+	 * @return Model_Row
 	 */
-	public function find($where = null, $colum = null, $order = null, $limit = null) {
-		return $this->select($this->table, $where, $colum, $order, $limit);
+	public function find($id) {
+		if( (int)$id < 1 ) {
+			return false;
+		}
+		return $this->query($this->select(array($this->getPkey() => $id)))->row();
 	}
 
 	/**
 	 * Поиск записей по условию key => value
-	 * @param array $where
+	 * @param string|array $where
 	 */
 	public function where(array $where) {
-		$query = "";
-		foreach($where as $key => $value) {
-			$query .= ($query == "" ? "" : " AND ") . $this->_db->separator . $key . $this->_db->separator . '=' . $this->getStringQueryByValue($value);
-		}
-		return $this->find($query);
+		return $this->query($this->select($where));
 	}
 
 	/**
 	 * Выбор всех записей в таблице по запросу
 	 * @param string $table Имя таблицы
 	 * @param string $where
-	 * @return Model
+	 * @return Select
 	 */
-	public function select($table, $where = null, $colum = null, $order = null, $limit = null) {
-		$this->_select = $this->_db->select($table, $where, $colum, $order, $limit);
-		return $this;
+	public function select($where = null, $colum = null, $order = null, $limit = null) {
+		return new Select($this->table, $where, $colum, $order, $limit);
 	}
 
 	/**
 	 * Чтение 1 записи, возврат объекта
-	 * @return dbrow
+	 * @return Model_Row
 	 */
 	public function row() {
 		try {
@@ -121,7 +157,7 @@ class Model {
 
 				//Если получили строку
 				if( $row ) {
-					return new $class($row, $this->table);
+					return new $class($row, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this);
 				} else {
 					return false;
 				}
@@ -132,19 +168,6 @@ class Model {
 		} catch( Exception $e ) {
 			return $this->_select->row();
 		}
-	}
-
-	/**
-	 * Получить по ID
-	 * @param $id
-	 * @return Model_User_Row
-	 */
-	public function getById($id) {
-		if( (int)$id < 1 ) {
-			return false;
-		}
-
-		return $this->find('id = ' . $id)->row();
 	}
 
 	/**
@@ -219,8 +242,8 @@ class Model {
 	 * Получить строку представления для запроса по типу данного value
 	 * @param $value
 	 */
-	private function getStringQueryByValue($value) {
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $value) : "'{$value}'");
+	public function getStringQueryByValue($value) {
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $this->_db->int_separator . $value . $this->_db->int_separator) : "'{$value}'");
 	}
 
 	/**
@@ -231,7 +254,7 @@ class Model {
 	 */
 	public function insert(array $data) {
 
-		return $this->_db->insert($this->table, $data);
+		return $this->_db->insert($this->table, $data, $this->pkey);
 	}
 
 	/**
@@ -244,19 +267,38 @@ class Model {
 	}
 
 	/**
-	 * Удаление
-	 * @param $id
+	 * Удаление по первичному ключу или по группе ключей с условием
+	 * @param int|array $id
 	 * @return void
 	 */
 	public function delete($id) {
-		$this->_db->delete($this->table, $id);
+
+		//Если передан массив
+		if( is_array($id) ) {
+
+			//Собираем в строку запрос
+			$where = "";
+			foreach($id as $k => $v) {
+				$where .= ($where == "" ? "" : " AND ") . $this->_db->separator . $k . $this->_db->separator . " = " . $this->getStringQueryByValue($v);
+			}
+
+			if( $where ) {
+				$this->query("DELETE FROM {$this->_db->separator}{$this->table}{$this->_db->separator} WHERE {$where};");
+			}
+		} else {
+			if( (int)$id < 1 ) {
+				throw new DB_Exeption("Wrong pkey value");
+			}
+			$this->query("DELETE FROM {$this->_db->separator}{$this->table}{$this->_db->separator} WHERE {$this->_db->separator}{$this->pkey}{$this->_db->separator} = " . $this->getStringQueryByValue($id) . ";");
+		}
 	}
 
 	/**
 	 * Создание строки
 	 * @param $data
+	 * @return Model_Row
 	 */
 	public function create($data) {
-		return new Model_Row((object)$data, $this->table, true);
+		return new Model_Row((object)$data, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this, true);
 	}
 }

@@ -2,12 +2,15 @@
 class Boot_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
-		self::ex(new Exception($message, $code));
+		$this->message = $message;
+		self::ex($this);
 	}
 
 	public static function ex(Exception $e) {
 		header('HTTP/1.0 ' . $e->getCode());
-		require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
+		if( get_class($e) != "DB_Exeption" ) {
+			require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
+		}
 		exit;
 	}
 
@@ -39,18 +42,20 @@ class Boot_Exception extends Exception {
 					break;
 			}
 
-			$r = ob_get_contents();
-			ob_end_clean();
-			$exception = new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
-			echo "<pre>";
-			echo "<b>Error message:</b> " . $exception->getMessage() . "<br>";
-			if( APPLICATION_ENV != "production" ) {
-				print_r($exception->getTraceAsString());
-			}
-			echo "</pre>";
-			exit;
+//			throw new Boot_Exception($type . ': ' . $errstr);
+
+//			$r = ob_get_contents();
+//			ob_end_clean();
+//			$exception = new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
+//			echo "<pre>";
+//			echo "<b>Error message:</b> " . $exception->getMessage() . "<br>";
+//			if( APPLICATION_ENV != "production" ) {
+//				print_r($exception->getTraceAsString());
+//			}
+//			echo "</pre>";
+//			exit;
 		}
-		return false;
+		return true;
 	}
 }
 

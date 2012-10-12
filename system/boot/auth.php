@@ -66,7 +66,7 @@ class Boot_Auth {
 			}
 
 			//Получаем юзера
-			$this->_me = Model_User::model()->getById($id);
+			$this->_me = Model_User::model()->find($id);
 		}
 
 		return $this->_me;

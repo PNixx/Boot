@@ -57,7 +57,11 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 
 				for($i = 2; $i < count($argv); $i++) {
 					if( preg_match("/^:PKEY=(.+?)$/", $argv[$i], $m) ) {
-						$pkey = explode(",", $m[1]);
+						if( stristr($m[1], ",") ) {
+							exit("Incorrect PKEY value");
+						} else {
+							$pkey = $m[1];
+						}
 					} elseif(preg_match("/^:UKEY=(.+?)$/", $argv[$i], $m)) {
 						$ukey = explode(",", $m[1]);
 					} else {
@@ -68,7 +72,7 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 
 				//Если были указаны ключи, добавляем их
 				if( $pkey ) {
-					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":PKEY\" => \"" . implode(",", $pkey) . "\"";
+					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":PKEY\" => \"{$pkey}\"";
 				}
 				//Если были указаны ключи, добавляем их
 				if( $ukey ) {
@@ -82,6 +86,12 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 
 			//Получаем вставленный шаблон
 			$model = str_replace(array("[{MODEL_NAME}]", "[{TABLE}]"), array("Model_" . ucfirst($table), $table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.template"));
+
+			if( isset($pkey) && $pkey ) {
+				$model = str_replace("[{PKEY}]", "\r\n\tprotected \$pkey = \"{$pkey}\";\r\n", $model);
+			} else {
+				$model = str_replace("[{PKEY}]", "", $model);
+			}
 
 			//Получаем вставленный шаблон
 			$model_row = str_replace("[{MODEL_NAME}]", "Model_" . ucfirst($table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.row.template"));

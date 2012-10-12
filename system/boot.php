@@ -180,6 +180,11 @@ class Boot {
 		));
 	}
 
+	/**
+	 * Автозагрузка моделей
+	 * @param $name
+	 * @return bool
+	 */
 	static public function autoload($name) {
 
 		//Имя файла
@@ -223,6 +228,7 @@ class Boot {
 			require_once 'boot/db/driver/' . $this->config->db->adapter . '.php';
 			require_once 'boot/db/model.php';
 			require_once 'boot/db/row.php';
+			require_once 'boot/db/select.php';
 
 		} else {
 

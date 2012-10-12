@@ -7,12 +7,49 @@
 class Model_Row {
 
 	private $_row = null;
-	private $_row_update = array();
-	protected $_table = null;
 
-	public function __construct($data, $table = null, $create = false) {
+	private $_row_update = array();
+
+	/**
+	 * Рабочая таблица модели
+	 * @var null||string
+	 */
+	private $_table = null;
+
+	/**
+	 * Связь с таблицами
+	 * Многие к одному
+	 * @var null|array
+	 */
+	private $_belongs_to = null;
+
+	/**
+	 * Связь с таблицами
+	 * Один ко многим
+	 * @var null|array([column] => [table])
+	 */
+	private $_has_many = null;
+
+	/**
+	 * Первичный ключ
+	 * @var null|array
+	 */
+	private $_pkey = null;
+
+	/**
+	 * Инстанс модели
+	 * @var Model
+	 */
+	private $_model_instance = null;
+
+	public function __construct($data, $table, $belongs_to, $has_many, $pkey, $model, $create = false) {
+
 		$this->_row = $data;
 		$this->_table = $table;
+		$this->_belongs_to = $belongs_to;
+		$this->_has_many = $has_many;
+		$this->_pkey = $pkey;
+		$this->_model_instance = $model;
 		if( $create ) {
 			foreach($data as $name => $value) {
 				if( in_array($name, $this->_row_update) == false ) {
@@ -28,6 +65,7 @@ class Model_Row {
 	 * @param $value
 	 */
 	public function __set($name, $value) {
+
 		$this->_row->$name = $value;
 		if( in_array($name, $this->_row_update) == false ) {
 			array_push($this->_row_update, $name);
@@ -40,6 +78,7 @@ class Model_Row {
 	 * @return void
 	 */
 	public function __get($name) {
+
 		if( isset($this->_row->$name) ) {
 			return $this->_row->$name;
 		} else {
@@ -47,12 +86,46 @@ class Model_Row {
 		}
 	}
 
+	/**
+	 * Запрос функции
+	 * @param $name
+	 * @param $params
+	 * @throws Exception
+	 */
 	public function __call($name, $params) {
+
 		if( preg_match("/^get([A-Z].*?)$/", $name, $match) ) {
 			if( array_key_exists(strtolower($match[1]), $this->_row) ) {
 				return $this->{strtolower($match[1])};
 			} else {
 				throw new Exception("Функция {$name} не определена");
+			}
+		}
+	}
+
+	/**
+	 * Удаляет текущую запись
+	 */
+	public function destroy() {
+
+		//Делаем запрос на удаление
+		$this->_model_instance->delete($this->{$this->_pkey});
+
+		//Если есть связь с другими таблицами
+		if( $this->_has_many ) {
+			foreach( $this->_has_many as $table ) {
+
+				//Строим название модели
+				$model = "Model_" . ucfirst($table);
+
+				/**
+				 * Получаем объект записи
+				 * @var $model Model
+				 */
+				$model = new $model;
+
+				//Удаляем все значения
+				$model->delete(array($model->getPkey() => $this->{$this->_pkey}));
 			}
 		}
 	}

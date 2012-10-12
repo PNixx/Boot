@@ -15,6 +15,7 @@ class postgres {
 	private $_dbase = null;
 
 	public $separator = '"';
+	public $int_separator = "'";
 	private $_connect = null;
 
 	/**
@@ -33,7 +34,7 @@ class postgres {
 	}
 
 	private function error($query = null) {
-		throw new DB_Exeption(pg_result_error($this->_connect) . ($query ? ", query: " . $query : "") . "\n", 500);
+		throw new DB_Exeption(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
 	/**
@@ -51,7 +52,7 @@ class postgres {
 	 * @return Model
 	 */
 	public function query($query) {
-		$this->result = pg_query($this->_connect, $query) or $this->error($query);
+		$this->result = @pg_query($this->_connect, $query) or $this->error($query);
 		return $this;
 	}
 
@@ -71,10 +72,7 @@ class postgres {
 		}
 		$sql_pkey = "";
 		if( $pkey ) {
-			foreach($pkey as $key) {
-				$sql_pkey .= ($sql_pkey == "" ? "" : ",") . $this->separator . $key . $this->separator;
-			}
-			$sql_pkey = ", PRIMARY KEY ({$sql_pkey})";
+			$sql_pkey = ", PRIMARY KEY ({$this->separator}{$pkey}{$this->separator})";
 		}
 		$sql_ukey = "";
 		if( $ukey ) {
@@ -218,7 +216,7 @@ class postgres {
 
 	}
 
-	public function insert($table, array $data) {
+	public function insert($table, array $data, $pkey = null) {
 
 		$q = $this->getInsertStringByArray($data);
 		//Если данных в массиве не было, выходим
@@ -226,9 +224,9 @@ class postgres {
 			return false;
 		}
 
-		$id = $this->query("INSERT INTO {$this->separator}{$table}{$this->separator} (" . $q['values'] . ")VALUES(" . $q['insert'] . ") RETURNING id;")->row();
+		$id = $this->query("INSERT INTO {$this->separator}{$table}{$this->separator} (" . $q['values'] . ")VALUES(" . $q['insert'] . ")" . ($pkey ? " RETURNING " . $this->separator . $pkey . $this->separator : "") . ";")->row();
 		if( $id ) {
-			return $id->id;
+			return $id->$pkey;
 		} else {
 			return false;
 		}

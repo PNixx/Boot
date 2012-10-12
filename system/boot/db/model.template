@@ -17,7 +17,7 @@ class [{MODEL_NAME}] extends Model {
 	 * @var [{MODEL_NAME}]
 	 */
 	static private $_instance = null;
-
+	[{PKEY}]
 	/**
 	 * Получаем инстанс
 	 * @static

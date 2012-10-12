@@ -15,6 +15,7 @@ class mysql {
 	private $_dbase = null;
 
 	public $separator = "`";
+	public $int_separator = "";
 
 	/**
 	 * Результат запроса
@@ -41,11 +42,15 @@ class mysql {
 	 */
 	public function connect() {
 
-		$connect = mysql_connect($this->_host . ":" . $this->_port, $this->_user, $this->_pass) or self::error();
-		mysql_select_db($this->_dbase, $connect) or self::error();
-		mysql_query("SET NAMES utf8", $connect) or self::error();
+		if( Boot::getInstance()->_connect === null ) {
+			$connect = mysql_connect($this->_host . ":" . $this->_port, $this->_user, $this->_pass) or self::error();
+			mysql_select_db($this->_dbase, $connect) or self::error();
+			mysql_query("SET NAMES utf8", $connect) or self::error();
 
-		return $connect;
+			return $connect;
+		} else {
+			return Boot::getInstance()->_connect;
+		}
 	}
 
 	/**
@@ -74,10 +79,7 @@ class mysql {
 		}
 		$sql_pkey = "";
 		if( $pkey ) {
-			foreach($pkey as $key) {
-				$sql_pkey .= ($sql_pkey == "" ? "" : ",") . "`{$key}`";
-			}
-			$sql_pkey = ", PRIMARY KEY ({$sql_pkey})";
+			$sql_pkey = ", PRIMARY KEY ({$this->separator}{$pkey}{$this->separator})";
 		}
 		$sql_ukey = "";
 		if( $ukey ) {
