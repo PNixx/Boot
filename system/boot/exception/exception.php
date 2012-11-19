@@ -41,19 +41,12 @@ class Boot_Exception extends Exception {
 					$exit = true;
 					break;
 			}
+			if( Boot_Controller::getInstance()->isAjax() ) {
+				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
+			} else {
+				echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)<pre>";
+			}
 
-//			throw new Boot_Exception($type . ': ' . $errstr);
-
-//			$r = ob_get_contents();
-//			ob_end_clean();
-//			$exception = new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
-//			echo "<pre>";
-//			echo "<b>Error message:</b> " . $exception->getMessage() . "<br>";
-//			if( APPLICATION_ENV != "production" ) {
-//				print_r($exception->getTraceAsString());
-//			}
-//			echo "</pre>";
-//			exit;
 		}
 		return true;
 	}

@@ -157,8 +157,6 @@ class Boot {
 		set_error_handler( 'Boot_Exception::err_handler' );
 		set_exception_handler("Boot_Exception::ex");
 
-		ob_start();
-
 		//Загружаем конфиг
 		$this->config();
 

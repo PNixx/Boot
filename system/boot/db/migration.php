@@ -38,7 +38,7 @@ class Boot_Migration extends Model {
 		if( !(self::$_instance instanceof Boot_Migration) ) {
 			self::$_instance = new Boot_Migration();
 			if( self::$_instance->show_tables() == false ) {
-				self::$_instance->create_table(self::$_instance->table, array("id" => "varchar(100) NOT NULL"), array("id"));
+				self::$_instance->create_table(self::$_instance->table, array("id" => "varchar(100) NOT NULL"), "id");
 			}
 		}
 		return self::$_instance;

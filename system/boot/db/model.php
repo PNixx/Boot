@@ -7,6 +7,9 @@ class Model {
 	 */
 	private $_db = null;
 
+	/**
+	 * @var null|Object|Model_Row
+	 */
 	private $_select = null;
 
 	/**
@@ -111,7 +114,7 @@ class Model {
 
 	/**
 	 * Поиск записей по первичному ключу
-	 * @param null $where
+	 * @param int $id
 	 * @return Model_Row
 	 */
 	public function find($id) {
@@ -125,7 +128,7 @@ class Model {
 	 * Поиск записей по условию key => value
 	 * @param string|array $where
 	 */
-	public function where(array $where) {
+	public function where($where = null) {
 		return $this->query($this->select($where));
 	}
 
@@ -250,17 +253,21 @@ class Model {
 	 * Добавить строку в таблицу
 	 * @param	$table
 	 * @param array $data
-	 * @return void
+	 * @return int
 	 */
 	public function insert(array $data) {
 
-		return $this->_db->insert($this->table, $data, $this->pkey);
+		$id = $this->_db->insert($this->table, $data, $this->pkey);
+//		if( $id == false ) {
+//			throw new DB_Exeption("Error insert value");
+//		}
+		return $id;
 	}
 
 	/**
 	 * Кол-во строк по колонке
 	 * @param $colum
-	 * @return void
+	 * @return int
 	 */
 	public function count($where = null) {
 		return $this->query("SELECT count(1) AS id FROM {$this->table} " . ($where ? "WHERE " . $where : ""))->row()->id;

@@ -101,7 +101,7 @@ class Boot_Controller {
 	/**
 	 * Получить параметр запроса
 	 * @param $name
-	 * @return void
+	 * @return null|string
 	 */
 	public function getParam($name) {
 
@@ -116,6 +116,15 @@ class Boot_Controller {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Получение декодированного параметра запроса
+	 * @param $name
+	 * @return string
+	 */
+	public function getParamDecode($name) {
+		return trim(urldecode($this->getParam($name)));
 	}
 
 	/**

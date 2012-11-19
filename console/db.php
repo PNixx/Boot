@@ -69,6 +69,19 @@ switch( $type ) {
 		}
 		break;
 
+	//Поиск в таблице по ID
+	case "find":
+		if( isset($argv[2]) == false ) {
+			exit("You must write table");
+		}
+		$model = new Model($argv[2]);
+		if( isset($argv[3]) && (int)$argv[3] > 0 ) {
+			print_r($model->find($argv[3]));
+		} else {
+			print_r($model->where()->row_all());
+		}
+		break;
+
 	default:
 		break;
 }
