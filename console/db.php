@@ -74,11 +74,32 @@ switch( $type ) {
 		if( isset($argv[2]) == false ) {
 			exit("You must write table");
 		}
-		$model = new Model($argv[2]);
+		$class = "Model_" . $argv[2];
+		if( class_exists($class) == false ) {
+			exit("Unknown class: " . $class);
+		}
+		/**
+		 * @var $model Model
+		 */
+		$model = new $class();
 		if( isset($argv[3]) && (int)$argv[3] > 0 ) {
-			print_r($model->find($argv[3]));
+			$row = $model->find_array($argv[3]);
+			foreach($row as $column => $value) {
+				if (mb_strlen($value, 'utf-8') > 100 ) {
+					$row[$column] = mb_substr($value, 0, 97, 'utf-8') . "...";
+				}
+			}
+			print_r($row);
 		} else {
-			print_r($model->where()->row_all());
+			$rows = $model->where()->read_all();
+			foreach($rows as $i => $row) {
+				foreach($row as $column => $value) {
+					if (mb_strlen($value, 'utf-8') > 100 ) {
+						$rows[$i][$column] = mb_substr($value, 0, 97, 'utf-8') . "...";
+					}
+				}
+			}
+			print_r($rows);
 		}
 		break;
 

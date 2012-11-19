@@ -125,6 +125,18 @@ class Model {
 	}
 
 	/**
+	 * Поиск записей по первичному ключу
+	 * @param int $id
+	 * @return Model_Row
+	 */
+	public function find_array($id) {
+		if( (int)$id < 1 ) {
+			return false;
+		}
+		return $this->query($this->select(array($this->getPkey() => $id)))->read();
+	}
+
+	/**
 	 * Поиск записей по условию key => value
 	 * @param string|array $where
 	 */
