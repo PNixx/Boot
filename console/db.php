@@ -72,11 +72,11 @@ switch( $type ) {
 	//Поиск в таблице по ID
 	case "find":
 		if( isset($argv[2]) == false ) {
-			exit("You must write table");
+			exit("You must write table" . PHP_EOL);
 		}
 		$class = "Model_" . $argv[2];
 		if( class_exists($class) == false ) {
-			exit("Unknown class: " . $class);
+			exit("Unknown class: " . $class . PHP_EOL);
 		}
 		/**
 		 * @var $model Model

@@ -31,7 +31,7 @@ if( isset($argv[1]) && trim($argv[1]) ) {
 	exit;
 }
 
-if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
+if( preg_match("/^(create_table|alter_table)_?(.*)$/i", $name, $match) ) {
 	switch( $match[1] ) {
 
 		//Создание таблицы
@@ -48,7 +48,7 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 			}
 
 			//Строим параметры
-			$schema = "array(\r\n";
+			$schema = array();
 			if( count($argv) > 1 ) {
 
 				//Обозначаем первичные ключи
@@ -66,20 +66,19 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 						$ukey = explode(",", $m[1]);
 					} else {
 						list($column, $type) = explode(":", $argv[$i]);
-						$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\"{$column}\" => \"{$type}\"";
+						$schema[$column] = $type;
 					}
 				}
 
 				//Если были указаны ключи, добавляем их
 				if( $pkey ) {
-					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":PKEY\" => \"{$pkey}\"";
+					$schema[":PKEY"] = $pkey;
 				}
 				//Если были указаны ключи, добавляем их
 				if( $ukey ) {
-					$schema .= ($schema == "array(\r\n" ? "\t\t\t\t" : ",\r\n\t\t\t\t") . "\":UKEY\" => \"" . implode(",", $ukey) . "\"";
+					$schema[":UKEY"] = $ukey;
 				}
 			}
-			$schema .= "\r\n\t\t\t)";
 
 			//Указываем тип
 			$migrate_type = Boot_Migration::TYPE_CHANGE;
@@ -98,6 +97,52 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 
 			break;
 
+		//Изменение колонок в таблице
+		case "alter_table":
+
+			//Редактируемая таблица таблица
+			$table = $match[2];
+
+			//Проверяем данные
+			if( $table == null ) {
+				exit("You must write table name, example: create_table_user");
+			}
+			if( file_exists(APPLICATION_PATH . "/models/{$table}.php") == false ) {
+				exit("Model_{$table} is not exist");
+			}
+
+			//Строим параметры
+			$schema = array();
+
+			if( count($argv) > 1 ) {
+
+				//Действия
+				$rename = array();
+				$add = array();
+
+				for($i = 2; $i < count($argv); $i++) {
+					//Если было указано изменение имени колонки
+					if( preg_match("/^(.+?)=(.+?)$/", $argv[$i], $m) ) {
+						$rename[$m[1]] = $m[2];
+					}
+					//Если было указано изменение добавление колонки
+					if( preg_match("/^\+([^\+-]+):(.+?)$/", $argv[$i], $m) ) {
+						$add[$m[1]] = $m[2];
+					}
+				}
+				if( $rename ) {
+					$schema["rename"] = $rename;
+				}
+				if( $add ) {
+					$schema["add"] = $add;
+				}
+			}
+
+			//Указываем тип
+			$migrate_type = Boot_Migration::TYPE_CHANGE;
+
+			break;
+
 		default:
 			$migrate_type = null;
 			break;
@@ -107,13 +152,13 @@ if( preg_match("/^(create_table)_?(.*)$/i", $name, $match) ) {
 	switch( $migrate_type ) {
 
 		case Boot_Migration::TYPE_CHANGE:
-			$insert = "\$migration = array(
-	\"change\" => array(
-		\"{$match[1]}\" => array(
-			\"{$table}\" => {$schema}
-		)
-	)
-);";
+			$insert = "\$migration = " . var_export(array(
+				"change" => array(
+					$match[1] => array(
+						$table => $schema
+					)
+				)
+			), true) . ";";
 
 			break;
 

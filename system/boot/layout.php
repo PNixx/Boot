@@ -75,10 +75,20 @@ class Boot_Layout {
 	/**
 	 * Вставить шаблон вьюхи
 	 * @param $name
-	 * @return void
+	 * @param null $params
+	 * @return string
 	 */
 	public function view($name, $params = null) {
-
 		return Boot_View::getInstance()->view($name, $params);
 	}
+
+	/**
+	 * Вставить шаблон вьюхи
+	 * @param $name
+	 * @return string
+	 */
+	public function render($name) {
+		return Boot_View::getInstance()->render($name);
+	}
+
 }

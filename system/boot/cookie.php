@@ -25,7 +25,7 @@ class Boot_Cookie {
 	 * Получить куку
 	 * @static
 	 * @param $name
-	 * @return void
+	 * @return boolean|String
 	 */
 	static public function get($name) {
 		if( isset($_COOKIE[$name]) ) {

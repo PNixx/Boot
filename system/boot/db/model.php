@@ -99,9 +99,41 @@ class Model {
 	 * Create table
 	 * @param $table
 	 * @param $column
+	 * @param null $pkey
+	 * @param null $ukey
+	 * @return \Model
 	 */
 	public function create_table($table, $column, $pkey = null, $ukey = null) {
 		return $this->_db->create_table($table, $column, $pkey, $ukey);
+	}
+
+	/**
+	 * Изменение имени колонки
+	 * @param $column
+	 * @param $new_name
+	 * @internal param $table
+	 */
+	public function rename_column($column, $new_name) {
+		$this->_db->rename_column($this->table, $column, $new_name);
+	}
+
+	/**
+	 * Добавление колонки
+	 * @param $column
+	 * @param $type
+	 * @internal param $table
+	 */
+	public function add_column($column, $type) {
+		$this->_db->add_column($this->table, $column, $type);
+	}
+
+	/**
+	 * Добавление колонки
+	 * @param $column
+	 * @internal param $table
+	 */
+	public function drop_column($column) {
+		$this->_db->drop_column($this->table, $column);
 	}
 
 	/**
@@ -139,6 +171,7 @@ class Model {
 	/**
 	 * Поиск записей по условию key => value
 	 * @param string|array $where
+	 * @return \Model
 	 */
 	public function where($where = null) {
 		return $this->query($this->select($where));
@@ -146,8 +179,11 @@ class Model {
 
 	/**
 	 * Выбор всех записей в таблице по запросу
-	 * @param string $table Имя таблицы
-	 * @param string $where
+	 * @param string|array $where
+	 * @param null $colum
+	 * @param null $order
+	 * @param null $limit
+	 * @internal param string $table Имя таблицы
 	 * @return Select
 	 */
 	public function select($where = null, $colum = null, $order = null, $limit = null) {

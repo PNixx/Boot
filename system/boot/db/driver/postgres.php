@@ -64,6 +64,9 @@ class postgres {
 	 * Create table
 	 * @param $table
 	 * @param $column
+	 * @param null $pkey
+	 * @param null $ukey
+	 * @return \Model
 	 */
 	public function create_table($table, $column, $pkey = null, $ukey = null) {
 		$sql = "";
@@ -85,8 +88,38 @@ class postgres {
 	}
 
 	/**
+	 * Изменение имени колонки
+	 * @param $table
+	 * @param $column
+	 * @param $new_name
+	 */
+	public function rename_column($table, $column, $new_name) {
+		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} RENAME {$this->separator}{$column}{$this->separator} TO {$this->separator}{$new_name}{$this->separator};");
+	}
+
+	/**
+	 * Добавление колонки
+	 * @param $table
+	 * @param $column
+	 * @param $type
+	 */
+	public function add_column($table, $column, $type) {
+		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} ADD COLUMN {$this->separator}{$column}{$this->separator} {$type};");
+	}
+
+	/**
+	 * Удаление колонки
+	 * @param $table
+	 * @param $column
+	 */
+	public function drop_column($table, $column) {
+		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} DROP COLUMN {$this->separator}{$column}{$this->separator};");
+	}
+
+	/**
 	 * Drop table
 	 * @param $table
+	 * @return \Model
 	 */
 	public function drop_table($table) {
 		return $this->query("BEGIN;

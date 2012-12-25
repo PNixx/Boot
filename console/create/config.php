@@ -53,7 +53,8 @@ $directories = array(
 	"/application/views/home",
 	"/application/models",
 	"/application/layouts",
-	"/db"
+	"/db",
+	"/public"
 );
 
 //Создаём необходимые директории
@@ -158,5 +159,54 @@ $layout_file = "/application/layouts/home.phtml";
 if( file_exists(APPLICATION_ROOT . $layout_file) == false ) {
 	if( file_put_contents(APPLICATION_ROOT . $layout_file, $layout) ) {
 		echo "Layout home create: {$layout_file}\r\n";
+	}
+}
+
+$index = <<<PHP
+<?php
+session_start();
+
+//Путь до структуры
+define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application'));
+define('APPLICATION_ROOT', realpath(dirname(__FILE__) . '/..'));
+define('LIBRARY_PATH', realpath(dirname(__FILE__) . '/../library'));
+
+//Устанавливаем загрузку библиотек
+set_include_path(implode(PATH_SEPARATOR, array(
+																							realpath(realpath(dirname(__FILE__)) . '/../system'),
+																							get_include_path(),
+																				 )));
+
+date_default_timezone_set("Europe/Moscow");
+
+//Загружаем фреймворк
+require_once 'boot.php';
+
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+//Запускаем
+Boot::getInstance()->run();
+PHP;
+$index_file = "/public/index.php";
+if( file_exists(APPLICATION_ROOT . $index_file) == false ) {
+	if( file_put_contents(APPLICATION_ROOT . $index_file, $index) ) {
+		echo "Create: {$index_file}\r\n";
+	}
+}
+
+$htaccess = <<<PHP
+SetEnv APPLICATION_ENV development
+
+RewriteEngine on
+RewriteCond $1 !^(index\.php|img|css|js|robots\.txt|sitemap\.xml|favicon\.ico)
+RewriteCond %{REQUEST_URI} !-f
+RewriteCond %{REQUEST_URI} !-d
+RewriteRule ^(.*)$ ./index.php/$1 [L,QSA]
+PHP;
+$htaccess_file = "/public/.htaccess";
+if( file_exists(APPLICATION_ROOT . $htaccess_file) == false ) {
+	if( file_put_contents(APPLICATION_ROOT . $htaccess_file, $htaccess) ) {
+		echo "Create: {$htaccess_file}\r\n";
 	}
 }

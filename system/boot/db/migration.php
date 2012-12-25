@@ -98,6 +98,9 @@ class Boot_Migration extends Model {
 				case "create_table":
 					$this->create_tables($data);
 					break;
+				case "alter_table":
+					$this->alter_table($data);
+					break;
 
 				default:
 					exit("Unknown type of migration");
@@ -107,7 +110,9 @@ class Boot_Migration extends Model {
 
 	/**
 	 * Создание таблицы
-	 * @param array $table
+	 * @param array $tables
+	 * @return void
+	 * @internal param array $table
 	 */
 	private function create_tables(array $tables) {
 
@@ -179,6 +184,84 @@ class Boot_Migration extends Model {
 		}
 	}
 
+	/**
+	 * @param array $data
+	 */
+	private function alter_table(array $data) {
+
+		//Проходим по таблицам
+		foreach($data as $table => $actions) {
+
+			$model = "Model_" . $table;
+			/**
+			 * @var $model Model
+			 */
+			$model = new $model();
+
+			//Проходим по действиям
+			foreach($actions as $action => $values) {
+
+				//Проходим по значениям
+				foreach($values as $key => $value) {
+					switch($action) {
+
+						case "rename":
+							$model->rename_column($key, $value);
+							echo $table . ": rename column `{$key}` => `{$value}` \r\n";
+							break;
+
+						case "add":
+							$model->add_column($key, $value);
+							echo $table . ": add column `{$key}` {$value} \r\n";
+							break;
+
+						default:
+							exit("Unknown action");
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param array $data
+	 */
+	private function rollback_alter_table(array $data) {
+
+		//Проходим по таблицам
+		foreach($data as $table => $actions) {
+
+			$model = "Model_" . $table;
+			/**
+			 * @var $model Model
+			 */
+			$model = new $model();
+
+			//Проходим по действиям
+			foreach($actions as $action => $values) {
+
+				//Проходим по значениям
+				foreach($values as $key => $value) {
+					switch($action) {
+
+						case "rename":
+							$model->rename_column($value, $key);
+							echo $table . ": rename column `{$value}` => `{$key}` \r\n";
+							break;
+
+						case "add":
+							$model->drop_column($key);
+							echo $table . ": drop column `{$key}` {$value} \r\n";
+							break;
+
+						default:
+							exit("Unknown action");
+					}
+				}
+			}
+		}
+	}
+
 	//---------------------------------ROLLBACK---------------------------------->
 	/**
 	 * Rollback миграции
@@ -226,6 +309,10 @@ class Boot_Migration extends Model {
 						$this->drop_table($table);
 						echo "DROP TABLE `{$table}`;\r\n";
 					}
+					break;
+
+				case "alter_table":
+					$this->rollback_alter_table($data);
 					break;
 
 				default:

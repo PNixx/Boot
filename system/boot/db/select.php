@@ -46,6 +46,10 @@ class Select {
 	/**
 	 * Конструктор
 	 * @param string|array $table
+	 * @param null $where
+	 * @param null $colum
+	 * @param null $order
+	 * @param null $limit
 	 */
 	public function __construct($table, $where = null, $colum = null, $order = null, $limit = null) {
 

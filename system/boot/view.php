@@ -99,7 +99,9 @@ class Boot_View {
 
 	/**
 	 * @param $name
-	 * @return void
+	 * @param null $params
+	 * @throws Exception
+	 * @return string
 	 */
 	public function view($name, $params = null) {
 
