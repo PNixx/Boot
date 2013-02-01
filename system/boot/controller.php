@@ -130,7 +130,7 @@ class Boot_Controller {
 	/**
 	 * Получить параметр запроса
 	 * @param $name
-	 * @return void
+	 * @return boolean
 	 */
 	public function hasParam($name) {
 

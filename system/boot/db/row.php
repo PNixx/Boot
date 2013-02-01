@@ -14,27 +14,27 @@ class Model_Row {
 	 * Рабочая таблица модели
 	 * @var null||string
 	 */
-	private $_table = null;
+	protected $_table = null;
 
 	/**
 	 * Связь с таблицами
 	 * Многие к одному
 	 * @var null|array
 	 */
-	private $_belongs_to = null;
+	protected $_belongs_to = null;
 
 	/**
 	 * Связь с таблицами
 	 * Один ко многим
 	 * @var null|array([column] => [table])
 	 */
-	private $_has_many = null;
+	protected $_has_many = null;
 
 	/**
 	 * Первичный ключ
 	 * @var null|array
 	 */
-	private $_pkey = null;
+	protected $_pkey = null;
 
 	/**
 	 * Инстанс модели
@@ -125,7 +125,7 @@ class Model_Row {
 				$model = new $model;
 
 				//Удаляем все значения
-				$model->delete(array($model->getPkey() => $this->{$this->_pkey}));
+				$model->delete(array($this->_table . "_id" => $this->{$this->_pkey}));
 			}
 		}
 	}

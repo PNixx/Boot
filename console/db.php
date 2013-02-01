@@ -84,9 +84,11 @@ switch( $type ) {
 		$model = new $class();
 		if( isset($argv[3]) && (int)$argv[3] > 0 ) {
 			$row = $model->find_array($argv[3]);
-			foreach($row as $column => $value) {
-				if (mb_strlen($value, 'utf-8') > 100 ) {
-					$row[$column] = mb_substr($value, 0, 97, 'utf-8') . "...";
+			if( $row ) {
+				foreach($row as $column => $value) {
+					if (mb_strlen($value, 'utf-8') > 100 ) {
+						$row[$column] = mb_substr($value, 0, 97, 'utf-8') . "...";
+					}
 				}
 			}
 			print_r($row);

@@ -160,7 +160,7 @@ class postgres {
 	 */
 	public function read_cols() {
 		$r = array();
-		while( $line = @pg_fetch_array($this->result, MYSQL_NUM) ) {
+		while( $line = pg_fetch_array($this->result) ) {
 			$r[] = $line[0];
 		}
 		return $r;
