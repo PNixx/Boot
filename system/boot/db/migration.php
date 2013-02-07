@@ -70,7 +70,12 @@ class Boot_Migration extends Model {
 				switch( $key ) {
 
 					case "change":
+					case "up":
 						$this->change_up($migrate);
+						break;
+
+					//Пропускаем кейс
+					case "down":
 						break;
 
 					default:
@@ -100,6 +105,9 @@ class Boot_Migration extends Model {
 					break;
 				case "alter_table":
 					$this->alter_table($data);
+					break;
+				case "sql":
+					$this->model()->query($data);
 					break;
 
 				default:
@@ -279,7 +287,12 @@ class Boot_Migration extends Model {
 				switch( $key ) {
 
 					case "change":
+					case "down":
 						$this->change_down($migrate);
+						break;
+
+					//Пропускаем кейс
+					case "up":
 						break;
 
 					default:
@@ -313,6 +326,10 @@ class Boot_Migration extends Model {
 
 				case "alter_table":
 					$this->rollback_alter_table($data);
+					break;
+
+				case "sql":
+					$this->model()->query($data);
 					break;
 
 				default:

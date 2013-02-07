@@ -31,7 +31,7 @@ if( isset($argv[1]) && trim($argv[1]) ) {
 	exit;
 }
 
-if( preg_match("/^(create_table|alter_table)_?(.*)$/i", $name, $match) ) {
+if( preg_match("/^(create_table|alter_table|sql)_?(.*)$/i", $name, $match) ) {
 	switch( $match[1] ) {
 
 		//Создание таблицы
@@ -143,6 +143,13 @@ if( preg_match("/^(create_table|alter_table)_?(.*)$/i", $name, $match) ) {
 
 			break;
 
+		//Выполнение sql кода
+		case "sql":
+
+			//Указываем тип
+			$migrate_type = Boot_Migration::TYPE_UP;
+			break;
+
 		default:
 			$migrate_type = null;
 			break;
@@ -159,6 +166,13 @@ if( preg_match("/^(create_table|alter_table)_?(.*)$/i", $name, $match) ) {
 					)
 				)
 			), true) . ";";
+
+		case Boot_Migration::TYPE_UP:
+			$insert = "\$migration = " . var_export(array(
+				"up" => array("sql" => isset($argv[2]) ? $argv[2] : ""),
+				"down" => array("sql" => isset($argv[3]) ? $argv[3] : "")
+			), true) . ";";
+			break;
 
 			break;
 
