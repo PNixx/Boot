@@ -47,10 +47,8 @@ class Boot_Migration extends Model {
 	/**
 	 * Получение последней миграции
 	 */
-	public function getLatestMigration() {
-
-		$row = $this->query($this->select(null, "id", "id DESC", 1))->row();
-		return $row ? $row->id : null;
+	public function getLatestMigration($limit = 1) {
+		return $this->query($this->select(null, "id", "id DESC", $limit))->read_cols();
 	}
 
 	//----------------------------MIGRATE------------------------------->

@@ -34,6 +34,11 @@ switch( $type ) {
 	case "migrate":
 		//Получаем последнюю миграцию
 		$latest_migration = Boot_Migration::model()->getLatestMigration();
+		if( $latest_migration ) {
+			$latest_migration = $latest_migration[0];
+		} else {
+			$latest_migration = 0;
+		}
 
 		//Получаем файлы
 		$files = array();
@@ -53,17 +58,27 @@ switch( $type ) {
 
 	case "rollback":
 
+		//Если указано удаление всех rollback или определённое кол-во
+		$limit = 1;
+		if( isset($argv[2]) && $argv[2] == "all" ) {
+			$limit = null;
+		} elseif( isset($argv[2]) ) {
+			$limit = (int)$argv[2];
+		}
+
 		//Получаем последнюю миграцию
-		$latest_migration = Boot_Migration::model()->getLatestMigration();
+		$latest_migration = Boot_Migration::model()->getLatestMigration($limit);
 
 		if( $latest_migration ) {
 			//Получаем файлы
-			$files = array();
-			foreach(glob(APPLICATION_ROOT . "/db/*.php") as $file) {
-				$file = pathinfo($file, PATHINFO_BASENAME);
-				if( preg_match("/^{$latest_migration}_/", $file) ) {
-					Boot_Migration::model()->rollback($file);
-					break;
+			$files = glob(APPLICATION_ROOT . "/db/*.php");
+			foreach( $latest_migration as $migration ) {
+				foreach($files as $file) {
+					$file = pathinfo($file, PATHINFO_BASENAME);
+					if( preg_match("/^{$migration}_/", $file) ) {
+						Boot_Migration::model()->rollback($file);
+						break;
+					}
 				}
 			}
 		}

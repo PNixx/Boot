@@ -83,6 +83,9 @@ class postgres {
 		}
 		$sql_ukey = "";
 		if( $ukey ) {
+			if( !is_array($ukey) ) {
+				$ukey = explode(",", $ukey);
+			}
 			foreach($ukey as $key) {
 				$sql_ukey .= ($sql_ukey == "" ? "" : ",") . $this->separator . $key . $this->separator;
 			}
