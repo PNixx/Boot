@@ -35,7 +35,7 @@ class postgres {
 
 	/**
 	 * @param null $query
-	 * @throws DB_Exeption
+	 * @throws DB_Exception
 	 */
 	private function error($query = null) {
 		throw new DB_Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
