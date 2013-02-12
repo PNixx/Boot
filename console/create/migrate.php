@@ -95,6 +95,22 @@ if( preg_match("/^(create_table|alter_table|sql)_?(.*)$/i", $name, $match) ) {
 			//Получаем вставленный шаблон
 			$model_row = str_replace("[{MODEL_NAME}]", "Model_" . ucfirst($table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.row.template"));
 
+			//Строим схему переменных
+			$schema_string = "";
+			$schema_column = array_keys($schema);
+			if( !isset($pkey) ) {
+				$schema_column[] = "id";
+			}
+			$schema_column[] = "date";
+			foreach( $schema_column as $column ) {
+				if( !in_array($column, array(":UKEY", ":PKEY")) ) {
+					$schema_string .= "public \${$column};\r\n\t";
+				}
+			}
+
+			//Заменяем в шаблоне
+			$model_row = str_replace("[{MODEL_SCHEME}]", $schema_string, $model_row);
+
 			break;
 
 		//Изменение колонок в таблице
@@ -166,14 +182,13 @@ if( preg_match("/^(create_table|alter_table|sql)_?(.*)$/i", $name, $match) ) {
 					)
 				)
 			), true) . ";";
+			break;
 
 		case Boot_Migration::TYPE_UP:
 			$insert = "\$migration = " . var_export(array(
 				"up" => array("sql" => isset($argv[2]) ? $argv[2] : ""),
 				"down" => array("sql" => isset($argv[3]) ? $argv[3] : "")
 			), true) . ";";
-			break;
-
 			break;
 
 		default:

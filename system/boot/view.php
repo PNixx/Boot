@@ -52,7 +52,7 @@ class Boot_View {
 	/**
 	 * Получаем данные для вьюхи
 	 * @param $name
-	 * @return void
+	 * @return mixed
 	 */
 	public function __get($name) {
 		if( isset(Boot_Controller::getInstance()->view->$name) ) {
@@ -74,7 +74,8 @@ class Boot_View {
 
 	/**
 	 * Стартуем
-	 * @return void
+	 * @throws Exception
+	 * @return string
 	 */
 	public function run() {
 
@@ -125,6 +126,11 @@ class Boot_View {
 		}
 	}
 
+	/**
+	 * @param $name
+	 * @return string
+	 * @throws Exception
+	 */
 	public function render($name) {
 
 		$file = APPLICATION_PATH . "/views/" . $name . ".phtml";
@@ -144,6 +150,7 @@ class Boot_View {
 	/**
 	 * Get flash value by name
 	 * @param $name
+	 * @return bool|string
 	 */
 	public function flash($name) {
 		return Boot_Flash::get($name);

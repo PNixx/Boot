@@ -8,7 +8,7 @@ class Model {
 	private $_db = null;
 
 	/**
-	 * @var null|Object|Model_Row
+	 * @var postgres|mysql
 	 */
 	private $_select = null;
 
@@ -63,7 +63,7 @@ class Model {
 		if( $this->pkey ) {
 			return $this->pkey;
 		} else {
-			throw new DB_Exeption("pkey is not found");
+			throw new DB_Exception("pkey is not found");
 		}
 	}
 
@@ -342,7 +342,7 @@ class Model {
 			}
 		} else {
 			if( (int)$id < 1 ) {
-				throw new DB_Exeption("Wrong pkey value");
+				throw new DB_Exception("Wrong pkey value");
 			}
 			$this->query("DELETE FROM {$this->_db->separator}{$this->table}{$this->_db->separator} WHERE {$this->_db->separator}{$this->pkey}{$this->_db->separator} = " . $this->getStringQueryByValue($id) . ";");
 		}

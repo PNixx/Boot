@@ -41,6 +41,10 @@ class Boot_Flash {
 		setcookie('flash', serialize($this->_flash), null, "/", Boot::getInstance()->config->host);
 	}
 
+	/**
+	 * @param $name
+	 * @return bool|string
+	 */
 	static public function get($name) {
 		if( isset(self::getInstance()->_flash[$name]) ) {
 			return self::getInstance()->_flash[$name];

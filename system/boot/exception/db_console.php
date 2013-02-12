@@ -7,7 +7,6 @@ class DB_Exeption extends Exception {
 
 	public static function ex(Exception $e) {
 		echo "Error message: " . $e->getMessage() . "\r\n";
-		echo $e->getTraceAsString();
-		exit;
+		throw $e;
 	}
 }

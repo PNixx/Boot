@@ -45,6 +45,11 @@ class Model_Row {
 	public function __construct($data, $table, $belongs_to, $has_many, $pkey, $model, $create = false) {
 
 		$this->_row = $data;
+		foreach($data as $name => $value) {
+			if( property_exists($this, $name) ) {
+				$this->$name = $value;
+			}
+		}
 		$this->_table = $table;
 		$this->_belongs_to = $belongs_to;
 		$this->_has_many = $has_many;
@@ -67,6 +72,9 @@ class Model_Row {
 	public function __set($name, $value) {
 
 		$this->_row->$name = $value;
+		if( property_exists($this, $name) ) {
+			$this->$name = $value;
+		}
 		if( in_array($name, $this->_row_update) == false ) {
 			array_push($this->_row_update, $name);
 		}
@@ -75,7 +83,7 @@ class Model_Row {
 	/**
 	 * Получаем данные
 	 * @param $name
-	 * @return void
+	 * @return string
 	 */
 	public function __get($name) {
 
@@ -91,16 +99,16 @@ class Model_Row {
 	 * @param $name
 	 * @param $params
 	 * @throws Exception
+	 * @return string
 	 */
 	public function __call($name, $params) {
 
 		if( preg_match("/^get([A-Z].*?)$/", $name, $match) ) {
 			if( array_key_exists(strtolower($match[1]), $this->_row) ) {
 				return $this->{strtolower($match[1])};
-			} else {
-				throw new Exception("Функция {$name} не определена");
 			}
 		}
+		throw new Exception("Функция {$name} не определена");
 	}
 
 	/**
@@ -113,7 +121,7 @@ class Model_Row {
 
 		//Если есть связь с другими таблицами
 		if( $this->_has_many ) {
-			foreach( $this->_has_many as $table ) {
+			foreach($this->_has_many as $table) {
 
 				//Строим название модели
 				$model = "Model_" . ucfirst($table);

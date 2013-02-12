@@ -20,7 +20,7 @@ class postgres {
 
 	/**
 	 * Результат запроса
-	 * @var null
+	 * @var $result object
 	 */
 	private $result = null;
 
@@ -33,16 +33,20 @@ class postgres {
 		$this->_dbase = $dbase;
 	}
 
+	/**
+	 * @param null $query
+	 * @throws DB_Exeption
+	 */
 	private function error($query = null) {
-		throw new DB_Exeption(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
+		throw new DB_Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
 	/**
 	 * Подключаемся к БД
-	 * @return void
+	 * @return object
 	 */
 	public function connect() {
-		$this->_connect = pg_connect("host={$this->_host} port={$this->_port} dbname={$this->_dbase} user={$this->_user} password={$this->_pass} options='--client_encoding=UTF8'") or new DB_Exeption("Could not connect");
+		$this->_connect = pg_connect("host={$this->_host} port={$this->_port} dbname={$this->_dbase} user={$this->_user} password={$this->_pass} options='--client_encoding=UTF8'") or new DB_Exception("Could not connect");
 		return $this->_connect;
 	}
 
@@ -140,10 +144,44 @@ class postgres {
 
 	/**
 	 * Чтение 1 записи, возврат объекта
-	 * @return dbrow
+	 * @return object
 	 */
 	public function row() {
-		return pg_fetch_object($this->result);
+
+		//Сохраняем результат
+		$result = $this->result;
+
+		//Результат возврата
+		$return = pg_fetch_object($this->result);
+		if( $return == false ) {
+			return $return;
+		}
+
+		//Прооходим по колонкам, собираем массив
+		foreach( $return as $column => $value ) {
+
+			//Получаем номер столбца
+			$num = pg_field_num($result, $column);
+
+			//Если значение нулевое, идём дальше
+			if( pg_field_is_null($result, null, $num) ) {
+				$return->$column = null;
+				continue;
+			}
+
+			//В зависимости от типа присваиваем значение
+			switch( pg_field_type($this->result, $num) ) {
+
+				case "bool":
+					$return->$column = $value == "t" ? true : false;
+					break;
+				case "int4":
+				case "int8":
+				$return->$column = (int)$value;
+					break;
+			}
+		}
+		return $return;
 	}
 
 	/**

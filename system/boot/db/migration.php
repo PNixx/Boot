@@ -62,30 +62,39 @@ class Boot_Migration extends Model {
 
 		//Подключаем файл миграции
 		require APPLICATION_ROOT . "/db/{$file}";
+		try {
+			if( isset($migration) ) {
+				foreach($migration as $key => $migrate) {
 
-		if( isset($migration) ) {
-			foreach($migration as $key => $migrate) {
+					//Выбираем тип миграции
+					switch( $key ) {
 
-				//Выбираем тип миграции
-				switch( $key ) {
+						case "change":
+						case "up":
+							$this->change_up($migrate);
+							break;
 
-					case "change":
-					case "up":
-						$this->change_up($migrate);
-						break;
+						//Пропускаем кейс
+						case "down":
+							break;
 
-					//Пропускаем кейс
-					case "down":
-						break;
-
-					default:
-						exit("Unknown migration type\r\n");
+						default:
+							exit("Unknown migration type\r\n");
+					}
+				}
+				if( preg_match("/^(\d+)/", $file, $match) ) {
+					$this->insert(array("id" => $match[1]));
+					echo "Migration `{$match[1]}` success.\r\n";
 				}
 			}
-			if( preg_match("/^(\d+)/", $file, $match) ) {
-				$this->insert(array("id" => $match[1]));
-				echo "Migration `{$match[1]}` success.\r\n";
+		} catch( Exception $e ) {
+			echo "!!! Migration error, start rollback\r\n";
+			try {
+				$this->rollback($file);
+			} catch( Exception $ee ) {
 			}
+			echo "!!! Rollback end\r\n\r\n";
+			throw $e;
 		}
 	}
 
@@ -142,7 +151,7 @@ class Boot_Migration extends Model {
 
 			//Если были указаны уникальные ключи
 			if( array_key_exists(":UKEY", $key) ) {
-				$ukey = explode(",", $key[":UKEY"]);
+				$ukey = $key[":UKEY"];
 				unset($key[":UKEY"]);
 			}
 
@@ -211,7 +220,7 @@ class Boot_Migration extends Model {
 
 				//Проходим по значениям
 				foreach($values as $key => $value) {
-					switch($action) {
+					switch( $action ) {
 
 						case "rename":
 							$model->rename_column($key, $value);
@@ -250,7 +259,7 @@ class Boot_Migration extends Model {
 
 				//Проходим по значениям
 				foreach($values as $key => $value) {
-					switch($action) {
+					switch( $action ) {
 
 						case "rename":
 							$model->rename_column($value, $key);

@@ -78,15 +78,25 @@ class Select {
 	/**
 	 * Получить строку представления для запроса по типу данного value
 	 * @param $value
+	 * @return int|string
 	 */
 	private function getStringQueryByValue($value) {
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $this->driver->int_separator . $value . $this->driver->int_separator) : "'{$value}'");
+		if( is_int($value) ) {
+			return $value;
+		}
+		if( is_null($value) ) {
+			return "NULL";
+		}
+		if( is_bool($value) ) {
+			return $value ? "TRUE" : "FALSE";
+		}
+		return $this->driver->int_separator . $value . $this->driver->int_separator;
 	}
 
 	private function getStringQueryByArray($array) {
 		$string = "";
 		foreach($array as $v) {
-			$string .= ($string == "" ? "" : ",") . "{$this->driver->separator}{$v}{$this->driver->separator}";
+			$string .= ($string == "" ? "" : ",") . ($v instanceof DB_Expr ? $v : "{$this->driver->separator}{$v}{$this->driver->separator}");
 		}
 		return $string;
 	}
@@ -103,7 +113,7 @@ class Select {
 
 	/**
 	 * AND WHERE
-	 * @param $where
+	 * @param array|string $where
 	 * @return Select
 	 */
 	public function where($where) {
@@ -176,5 +186,18 @@ class Select {
 		$where = $this->_where ? " WHERE " . $this->_where : "";
 
 		return "SELECT {$column} FROM {$table}{$where}{$this->_order}{$this->_limit};";
+	}
+}
+
+/**
+ * DB вставка
+ */
+class DB_Expr {
+	private $value;
+	public function __construct($value) {
+		$this->value = $value;
+	}
+	public function __toString() {
+		return $this->value;
 	}
 }

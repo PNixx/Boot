@@ -30,7 +30,7 @@ class Boot_Controller {
 
 	/**
 	 * Переменная для передачи по вьюху
-	 * @var null
+	 * @var Boot_View
 	 */
 	public $view = null;
 
@@ -93,6 +93,9 @@ class Boot_Controller {
 			}
 		}
 		$query = $path_info;
+		if( preg_match("/^(.*?)\?/", $path_info, $match) ) {
+			$query = $match[1];
+		}
 
 		//Созраняем параметры запроса
 		$this->_param = Boot_Routes::getInstance()->getParam(substr($query, 1, strlen($query)));
@@ -149,19 +152,19 @@ class Boot_Controller {
 
 	/**
 	 * Загружем контроллер
+	 * @throws Exception
 	 * @return void
 	 */
 	private function includeController() {
 
 		if( isset($this->_param->module) ) {
-			$file = "../application/controllers/" . $this->_param->module . "/" . $this->_param->controller . ".php";
+			$file = APPLICATION_PATH . "/controllers/" . $this->_param->module . "/" . $this->_param->controller . ".php";
 		} else {
-			$file = "../application/controllers/" . $this->_param->controller . ".php";
+			$file = APPLICATION_PATH . "/controllers/" . $this->_param->controller . ".php";
 		}
 
 		//Проверяем существование файла
 		if( is_file($file) == false ) {
-
 			throw new Exception("File {$file} not found", 404);
 		}
 
@@ -171,7 +174,6 @@ class Boot_Controller {
 		if( class_exists((isset($this->_param->module) ? $this->_param->module . "_" : "") . $this->_param->controller . "Controller", false) == false ) {
 			throw new Exception($this->_param->controller . "Controller not exists");
 		}
-
 	}
 
 	/**

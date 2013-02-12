@@ -6,4 +6,6 @@
 */
 class [{MODEL_NAME}]_Row extends Model_Row {
 
+	//Схема таблицы
+	[{MODEL_SCHEME}]
 }

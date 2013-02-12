@@ -30,4 +30,12 @@ class [{MODEL_NAME}] extends Model {
 		}
 		return self::$_instance;
 	}
+
+	/**
+	 * @param int $id
+	 * @return [{MODEL_NAME}]_Row
+	 */
+	public function find($id) {
+		return parent::find($id);
+	}
 }
