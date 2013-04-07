@@ -185,7 +185,7 @@ class Select {
 		$table = $this->getStringQueryByArray($this->_table);
 		$where = $this->_where ? " WHERE " . $this->_where : "";
 
-		return "SELECT {$column} FROM {$table}{$where}{$this->_order}{$this->_limit};";
+		return "SELECT {$column} FROM {$table}{$where}{$this->_order}{$this->_limit}";
 	}
 }
 

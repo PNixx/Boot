@@ -6,6 +6,6 @@ class Boot_Mail {
 						'Content-type: text/html; charset=utf-8' . "\r\n" .
 						'From: ' . ($from ? $from : 'info@' . Boot::getInstance()->config->host) . "\r\n";
 
-		mail($mail, $title, $message, $headers);
+		return mail($mail, $title, $message, $headers);
 	}
 }

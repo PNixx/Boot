@@ -194,7 +194,7 @@ class Model {
 	 * Чтение 1 записи, возврат объекта
 	 * @return Model_Row
 	 */
-	public function row() {
+	public function row($i = null) {
 		try {
 			$exist = class_exists(get_class($this) . "_Row");
 
@@ -204,7 +204,7 @@ class Model {
 				$class = get_class($this) . "_Row";
 
 				//Получае строку
-				$row = $this->_select->row();
+				$row = $this->_select->row($i);
 
 				//Если получили строку
 				if( $row ) {
@@ -213,11 +213,11 @@ class Model {
 					return false;
 				}
 			} else {
-				return $this->_select->row();
+				return $this->_select->row($i);
 			}
 
 		} catch( Exception $e ) {
-			return $this->_select->row();
+			return $this->_select->row($i);
 		}
 	}
 
@@ -227,7 +227,8 @@ class Model {
 	 */
 	public function row_all() {
 		$r = array();
-		while( $line = $this->row() ) {
+		$i = 0;
+		while( $line = $this->row($i++) ) {
 			$r[] = $line;
 		}
 		return $r;
@@ -292,6 +293,7 @@ class Model {
 	/**
 	 * Получить строку представления для запроса по типу данного value
 	 * @param $value
+	 * @return string
 	 */
 	public function getStringQueryByValue($value) {
 		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $this->_db->int_separator . $value . $this->_db->int_separator) : "'{$value}'");

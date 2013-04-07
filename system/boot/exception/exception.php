@@ -3,12 +3,19 @@ class Boot_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
 		$this->message = $message;
+		$this->code = 500;
 		self::ex($this);
 	}
 
 	public static function ex(Exception $e) {
 		header('HTTP/1.0 ' . $e->getCode());
-		if( get_class($e) != "DB_Exeption" ) {
+
+		//Если на продакшене выводим в лог
+		if( APPLICATION_ENV == 'production' && $e->getCode() != 404 ) {
+			Model_Log::log("error.log", "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+		}
+
+		if( get_class($e) != "DB_Exception" ) {
 			require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
 		}
 		exit;
@@ -41,7 +48,7 @@ class Boot_Exception extends Exception {
 					$exit = true;
 					break;
 			}
-			if( Boot_Controller::getInstance()->isAjax() ) {
+			if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
 				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
 			} else {
 				echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)<pre>";

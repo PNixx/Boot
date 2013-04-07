@@ -58,27 +58,27 @@ class Boot_Auth {
 				return false;
 			}
 
+			//Получаем юзера
+			$this->_me = Model_User::model()->find($id);
+
 			//Проверяем корректность
-			if( $skey != Boot_Skey::get() || $sig != md5($id . $skey) ) {
+			if( $this->_me == false || $skey != Boot_Skey::get() || $sig != md5($id . $skey . $this->_me->skey) ) {
 				$this->_me = false;
 				Boot_Cookie::clear("auth_token");
 				return false;
 			}
-
-			//Получаем юзера
-			$this->_me = Model_User::model()->find($id);
 		}
 
 		return $this->_me;
 	}
 
-	public function setAuth($id) {
+	public function setAuth($id, $user_key) {
 
 		//Получаем секретный ключ
 		$skey = Boot_Skey::get();
 
 		//Записываем токен в куки
-		$token = $id . "#" . $skey . "#" . md5($id . $skey);
+		$token = $id . "#" . $skey . "#" . md5($id . $skey . $user_key);
 		Boot_Cookie::set("auth_token", $token);
 
 		//Возвращаем токен

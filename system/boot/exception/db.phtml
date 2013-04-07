@@ -1,3 +1,5 @@
 <h1>Database Oops</h1>
+<? if( APPLICATION_ENV != 'production' ): ?>
 <b>Error message:</b> <?= $this->getMessage() ?>
 <pre><?= $this->getTraceAsString() ?></pre>
+<? endif ?>

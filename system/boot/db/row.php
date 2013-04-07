@@ -137,4 +137,8 @@ class Model_Row {
 			}
 		}
 	}
+
+	public function toArray() {
+		return (array)$this->_row;
+	}
 }

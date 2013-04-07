@@ -149,13 +149,15 @@ class postgres {
 	 * Чтение 1 записи, возврат объекта
 	 * @return object
 	 */
-	public function row() {
+	public function row($i = null) {
 
-		//Сохраняем результат
-		$result = $this->result;
+		//Если значение больше, чем строк в запросе, выходим
+		if( $i >= pg_num_rows($this->result) ) {
+			return false;
+		}
 
 		//Результат возврата
-		$return = pg_fetch_object($this->result);
+		$return = pg_fetch_object($this->result, $i);
 		if( $return == false ) {
 			return $return;
 		}
@@ -164,10 +166,10 @@ class postgres {
 		foreach( $return as $column => $value ) {
 
 			//Получаем номер столбца
-			$num = pg_field_num($result, $column);
+			$num = pg_field_num($this->result, $column);
 
 			//Если значение нулевое, идём дальше
-			if( pg_field_is_null($result, null, $num) ) {
+			if( pg_field_is_null($this->result, $i, $num) ) {
 				$return->$column = null;
 				continue;
 			}
@@ -224,6 +226,21 @@ class postgres {
 	}
 
 	/**
+	 * Получить строку представления для запроса по типу данного value
+	 * @param $value
+	 * @return string
+	 */
+	public function getStringQueryByValue($value) {
+		if( $value instanceof DB_Expr ) {
+			return $value;
+		}
+		if( is_bool($value) ) {
+			return $value ? "TRUE" : "FALSE";
+		}
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "$$" . stripslashes($value) . "$$");
+	}
+
+	/**
 	 * Преобразовывает массив в строку для запроса UPDATE
 	 * @param array $data
 	 * @return string
@@ -237,11 +254,11 @@ class postgres {
 		$q = '';
 		foreach( $data as $key => $v ) {
 
-			if( is_null($v) == false && is_int($v) == false ) {
+			if( is_null($v) == false && is_int($v) == false && is_bool($v) == false && !($v instanceof DB_Expr) ) {
 				$v = addslashes($v);
 			}
 
-			$q .= ($q != '' ? ', ' : '') . $this->separator . $key . $this->separator . '=' . (is_int($v) || is_null($v) ? (is_null($v) ? 'NULL' : $v) : "'$v'");
+			$q .= ($q != '' ? ', ' : '') . $this->separator . $key . $this->separator . '=' . $this->getStringQueryByValue($v);
 		}
 		return $q;
 
@@ -264,7 +281,7 @@ class postgres {
 			//Ключи VALUES
 			$i .= ($i != '' ? ',' : '') . $this->separator . $key . $this->separator;
 			//Ключи INSERT
-			$q .= ($q != '' ? ', ' : '') . (is_int($v) || is_null($v) ? (is_null($v) ? 'NULL' : addslashes($v)) : "'" . addslashes($v) . "'");
+			$q .= ($q != '' ? ', ' : '') . $this->getStringQueryByValue($v);
 		}
 		return array('insert' => $q, 'values' => $i);
 

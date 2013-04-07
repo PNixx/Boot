@@ -67,7 +67,6 @@ class Boot {
 	public function run() {
 
 		$this->root = realpath(dirname(__FILE__));
-
 		header("Content-type: text/html; charset=UTF-8");
 
 		//Загружаем класс ошибок
@@ -266,7 +265,7 @@ class Boot {
 
 	/**
 	 * Инициализируем вьюху
-	 * @return void
+	 * @return string
 	 */
 	private function init_view() {
 

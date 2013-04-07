@@ -26,9 +26,29 @@ class Boot_Config {
 	 */
 	public function __construct() {
 
+		//Объявляем конфиг классом
+		$this->_config = new stdClass();
+
 		if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
 			define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
-		} else {
+		} elseif( file_exists(APPLICATION_ROOT . "/public/.htaccess") ) {
+
+			//Читаем файл
+			$htaccess = file_get_contents(APPLICATION_ROOT . "/public/.htaccess");
+			if( $htaccess ) {
+				$htaccess = explode("\n", $htaccess);
+			}
+
+			//Проходим по списску ищем строку с APPLICATION_ENV
+			if( is_array($htaccess) ) {
+				foreach($htaccess as $row) {
+					if( preg_match("/^SetEnv APPLICATION_ENV\s+(.*?)$/", $row, $match) ) {
+						define('APPLICATION_ENV', trim($match[1]));
+					}
+				}
+			}
+		}
+		if( getenv('APPLICATION_ENV') === false && defined("APPLICATION_ENV") === false ) {
 			define('APPLICATION_ENV', "production");
 		}
 
@@ -93,9 +113,14 @@ class Boot_Config {
 	 * Добавление в оъект
 	 * @param $array
 	 * @param $input
-	 * @return void
+	 * @return stdClass
 	 */
 	private function object_megre_recursive($array, $input) {
+
+		//Если класс еще не объявлен
+		if( $array == null ) {
+			$array = new stdClass();
+		}
 
 		if( is_object($input) || is_array($input) ) {
 			foreach($input as $i => $value) {

@@ -45,6 +45,11 @@ class Boot_Controller {
 	 */
 	public $me = null;
 
+	public function __construct() {
+		$this->me = new stdClass();
+		$this->view = new stdClass();
+	}
+
 	/**
 	 * Получаем инстанс
 	 * @static
@@ -181,7 +186,6 @@ class Boot_Controller {
 	 * @return void
 	 */
 	protected function initizlize() {
-
 		//Получаем данные запроса
 		$this->getQuery();
 
@@ -200,7 +204,7 @@ class Boot_Controller {
 		$controller = new $Cname();
 
 		//Передаём авторизацию в контроллер
-		$controller->me = &Boot_Auth::getInstance()->getAuth();
+		$controller->me = Boot_Auth::getInstance()->getAuth();
 
 		if( $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");

@@ -4,9 +4,9 @@
  * Date: 18.08.11
  * Time: 18:53
  */
-if( session_name() == false ) {
-	session_start();
-}
+//if( session_name() == false ) {
+//	session_start();
+//}
 class Boot_Cookie {
 
 	/**
@@ -17,7 +17,7 @@ class Boot_Cookie {
 	 * @return void
 	 */
 	static public function set($name, $value) {
-		$_SESSION[$name] = $value;
+//		$_SESSION[$name] = $value;
 		setcookie($name, $value, time() + 2678400, "/");
 	}
 
@@ -32,14 +32,14 @@ class Boot_Cookie {
 			return $_COOKIE[$name];
 		}
 
-		if( isset($_SESSION[$name]) ) {
-			return $_SESSION[$name];
-		}
+//		if( isset($_SESSION[$name]) ) {
+//			return $_SESSION[$name];
+//		}
 		return false;
 	}
 
 	static public function clear($name) {
-		unset($_SESSION[$name]);
+//		unset($_SESSION[$name]);
 		setcookie($name, "", time() - 1, "/");
 	}
 }
