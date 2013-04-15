@@ -7,10 +7,11 @@ class DB_Exception extends Exception {
 
 		//Если на продакшене выводим в лог
 		if( APPLICATION_ENV == 'production' ) {
+			//@todo перенести модель в систему
 			Model_Log::log("db.error.log", "Error {$code}: {$message}\r\n{$this->getTraceAsString()}");
 		}
 		header('HTTP/1.0 ' . $code);
-		if( Boot_Controller::getInstance()->isAjax() ) {
+		if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
 			echo json_encode(array(
 				'error' => $code,
 				'error_code' => $error_code,

@@ -72,7 +72,7 @@ class Boot_Auth {
 		return $this->_me;
 	}
 
-	public function setAuth($id, $user_key) {
+	public function setAuth($id, $user_key = "") {
 
 		//Получаем секретный ключ
 		$skey = Boot_Skey::get();

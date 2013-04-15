@@ -237,7 +237,7 @@ class postgres {
 		if( is_bool($value) ) {
 			return $value ? "TRUE" : "FALSE";
 		}
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "$$" . stripslashes($value) . "$$");
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : (stristr($value, "'") ? "$$" . stripslashes($value) . "$$" : "'" . stripslashes($value) . "'"));
 	}
 
 	/**

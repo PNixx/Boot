@@ -39,7 +39,7 @@ class Select {
 
 	/**
 	 * Драйвер
-	 * @var null
+	 * @var postgres|mysql
 	 */
 	private $driver = null;
 
@@ -75,24 +75,6 @@ class Select {
 		}
 	}
 
-	/**
-	 * Получить строку представления для запроса по типу данного value
-	 * @param $value
-	 * @return int|string
-	 */
-	private function getStringQueryByValue($value) {
-		if( is_int($value) ) {
-			return $value;
-		}
-		if( is_null($value) ) {
-			return "NULL";
-		}
-		if( is_bool($value) ) {
-			return $value ? "TRUE" : "FALSE";
-		}
-		return $this->driver->int_separator . $value . $this->driver->int_separator;
-	}
-
 	private function getStringQueryByArray($array) {
 		$string = "";
 		foreach($array as $v) {
@@ -121,7 +103,7 @@ class Select {
 		if( is_array($where) ) {
 			$sql = "";
 			foreach($where as $k => $v) {
-				$sql .= ($sql == "" ? "" : " AND ") . $this->driver->separator . $k . $this->driver->separator . " = " . $this->getStringQueryByValue($v);
+				$sql .= ($sql == "" ? "" : " AND ") . $this->driver->separator . $k . $this->driver->separator . " = " . $this->driver->getStringQueryByValue($v);
 			}
 
 			$where = $sql;

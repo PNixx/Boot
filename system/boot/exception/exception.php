@@ -3,7 +3,7 @@ class Boot_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
 		$this->message = $message;
-		$this->code = 500;
+		$this->code = $code;
 		self::ex($this);
 	}
 
@@ -12,7 +12,7 @@ class Boot_Exception extends Exception {
 
 		//Если на продакшене выводим в лог
 		if( APPLICATION_ENV == 'production' && $e->getCode() != 404 ) {
-			Model_Log::log("error.log", "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+			Model_Log::log("error.log", $_SERVER['PATH_INFO'] . $_SERVER['QUERY_STRING'] . PHP_EOL . "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
 		}
 
 		if( get_class($e) != "DB_Exception" ) {

@@ -350,8 +350,10 @@ class Boot {
 	public function init_translate() {
 
 		//Получаем из куков язык
-		if( class_exists("Boot_Cookie") ) {
+		if( class_exists("Boot_Cookie") && Boot_Cookie::get("lang") ) {
 			$lang = Boot_Cookie::get("lang");
+		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
+			$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
 		} else {
 			$lang = "ru";
 		}
