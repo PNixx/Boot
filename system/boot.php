@@ -32,9 +32,9 @@ class Boot {
 	private $_nameLayout = null;
 
 	/**
-	 * @var translate
+	 * @var Boot_Library $library
 	 */
-	public $translate = null;
+	public $library;
 
 	/**
 	 * Список маршрутов
@@ -55,7 +55,14 @@ class Boot {
 		return self::$_instance;
 	}
 
+	/**
+	 * Конструктор
+	 */
 	public function __construct() {
+
+		/**
+		 * @const SYSTEM_PATH
+		 */
 		define('SYSTEM_PATH', realpath(dirname(__FILE__)));
 		date_default_timezone_set("Europe/Moscow");
 	}
@@ -74,10 +81,14 @@ class Boot {
 		require_once 'boot/exception/db.php';
 		require_once 'boot/cookie.php';
 		require_once 'boot/skey.php';
-		require_once 'boot/auth.php';
 		require_once 'boot/routes.php';
 		require_once 'boot/flash.php';
 		require_once 'boot/mail.php';
+
+		//Инклудим абстрактные классы
+		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {
+			require_once $path;
+		}
 
 		//Устанавливаем отлавливатели ошибок
 		set_error_handler( 'Boot_Exception::err_handler' );
@@ -94,9 +105,6 @@ class Boot {
 		//Инициализируем защищённый ключ
 		Boot_Skey::getInstance();
 
-		//Инициализируем авторизацию
-		Boot_Auth::getInstance();
-
 		//Получаем имя шаблона
 		$this->_nameLayout = $this->config->default->layout ? $this->config->default->layout : "index";
 
@@ -109,12 +117,6 @@ class Boot {
 		//Загружаем модель контроллера
 		$this->load_controller();
 
-		//Загружаем переводчик
-		$this->load_translate();
-
-		//Инициализируем переводчик
-		$this->init_translate();
-
 		//Устанавливаем путь подключения моделей
 		set_include_path(APPLICATION_PATH . '/models/');
 
@@ -122,6 +124,9 @@ class Boot {
 			"Boot",
 			"autoload"
 		));
+
+		//Загружаем библиотеки
+		$this->load_library();
 
 		//Инициализируем контроллер
 		$this->init_controller();
@@ -135,7 +140,6 @@ class Boot {
 
 		//Загружаем шаблон
 		$this->load_layout($view);
-
 	}
 
 	/**
@@ -162,12 +166,6 @@ class Boot {
 		//Загружаем драйвер БД
 		$this->load_model();
 
-		//Загружаем переводчик
-		$this->load_translate();
-
-		//Инициализируем переводчик
-		$this->init_translate();
-
 		//Устанавливаем путь подключения моделей
 		set_include_path(APPLICATION_PATH . '/models/');
 
@@ -175,6 +173,9 @@ class Boot {
 			"Boot",
 			"autoload"
 		));
+
+		//Загружаем библиотеки
+		$this->load_library();
 	}
 
 	/**
@@ -214,6 +215,7 @@ class Boot {
 
 	/**
 	 * Загружаем драйвер доступа к базе
+	 * @throws Exception
 	 * @return void
 	 */
 	private function load_model() {
@@ -275,6 +277,7 @@ class Boot {
 
 	/**
 	 * Загрузка шаблона
+	 * @param $view
 	 * @return void
 	 */
 	private function load_layout(&$view) {
@@ -293,14 +296,13 @@ class Boot {
 	/**
 	 * Получение или установка текущего шаблона
 	 * @param string $set
-	 * @return void
+	 * @return string
 	 */
 	public function  layout($set = null) {
 		if( $set ) {
 			$this->_nameLayout = $set;
-		} else {
-			return $this->_nameLayout;
 		}
+		return $this->_nameLayout;
 	}
 
 	/**
@@ -336,33 +338,51 @@ class Boot {
 	}
 
 	/**
-	 * Загрузка переводчика
+	 * Загрузка библиотек
+	 * @throws Boot_Exception
 	 */
-	public function load_translate() {
+	public function load_library() {
 
-		//Загружаем модель
-		require_once 'boot/translate.php';
-	}
+		//Подключаем клас библиотек
+		require_once "boot/library.php";
 
-	/**
-	 * Инициализация переводчика
-	 */
-	public function init_translate() {
+		//Инициализируем библиотеки
+		$this->library = new Boot_Library();
 
-		//Получаем из куков язык
-		if( class_exists("Boot_Cookie") && Boot_Cookie::get("lang") ) {
-			$lang = Boot_Cookie::get("lang");
-		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
-			$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-		} else {
-			$lang = "ru";
+		//Файл библиотеки
+		$file = APPLICATION_PATH . "/config/library.conf";
+
+		//Проверяем доступность
+		if( file_exists($file) == false ) {
+			throw new Boot_Exception("Config library is not found: " . $file);
 		}
 
-		if( $lang ) {
-			$this->config->translate->lang = $lang;
-		}
+		//Получаем список библиотек
+		$libs = explode(PHP_EOL, file_get_contents($file));
 
-		$this->translate = new translate($this->config->translate->dir, $this->config->translate->lang);
+		//Проходим по списску
+		foreach( $libs as $lib ) {
+			if( trim($lib) ) {
+
+				//Проверяем существование файла
+				if( file_exists(LIBRARY_PATH . "/" . $lib . ".php") == false ) {
+					throw new Boot_Exception("Library not found: $lib");
+				}
+
+				//Подключаем файл
+				require_once LIBRARY_PATH . "/" . $lib . ".php";
+
+				//Проверяем существование класса
+				$class = "Boot_" . ucfirst($lib) . "_Lib";
+				if( class_exists($class, false) == false ) {
+					throw new Boot_Exception("Class library not found: $class");
+				}
+
+				//Инициализируем
+				$this->library->$lib = new $class();
+				$this->library->$lib->key = $lib;
+			}
+		}
 	}
 
 	/**

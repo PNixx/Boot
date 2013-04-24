@@ -5,7 +5,7 @@
  * Time: 17:57
  */
 
-class translate {
+class Boot_Translate_Lib extends Boot_Abstract_Library {
 
   /**
    * Найденные языки
@@ -31,14 +31,25 @@ class translate {
    */
   private $_parse = array();
 
-  /**
-   * Строим переводчик
-   * @param $dir - путь до базы
-   * @param $lang
-   */
-  public function __construct($dir, $lang) {
+	/**
+	 * Строим переводчик
+	 * @throws Exception
+	 */
+  public function __construct() {
 
-    //Проверяем директорию
+		//Строим путь до базы
+		$dir = APPLICATION_PATH . "/lang/";
+
+		//Получаем из куков язык
+		if( class_exists("Boot_Cookie") && Boot_Cookie::get("lang") ) {
+			$lang = Boot_Cookie::get("lang");
+		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
+			$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+		} else {
+			$lang = "ru";
+		}
+
+		//Проверяем директорию
     if( is_dir($dir) == false ) {
       throw new Exception("База перевода не найдена");
     }
@@ -52,7 +63,6 @@ class translate {
 
     //Парсим язык по умолчанию
     $this->parse($lang);
-
   }
 
   /**

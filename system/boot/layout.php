@@ -1,12 +1,6 @@
 <?php
 class Boot_Layout {
 
-  /**
-   * Переводчик
-   * @var translate
-   */
-  public $translate = null;
-
 	/**
 	 * @var null
 	 */
@@ -27,8 +21,6 @@ class Boot_Layout {
 
 		if( !(self::$_instance instanceof Boot_Layout) ) {
 			self::$_instance = new Boot_Layout();
-      self::$_instance->translate = Boot::getInstance()->translate;
-      self::$_instance->me = Boot_Auth::getInstance()->getAuth();
 		}
 		return self::$_instance;
 	}
@@ -42,18 +34,21 @@ class Boot_Layout {
 
 		$this->file = APPLICATION_PATH ."/layouts/" . Boot::getInstance()->layout() . ".phtml";
 
-			//Проверяем наличие шаблона
-			if( file_exists($this->file) == false ) {
-				throw new Exception('Layout "' . $this->file . '" not exist');
-			}
+		//Проверяем наличие шаблона
+		if( file_exists($this->file) == false ) {
+			throw new Exception('Layout "' . $this->file . '" not exist');
+		}
 
-
+		//Инициализируем бибилиотеки
+		foreach(Boot::getInstance()->library->getLibraries() as $library) {
+			$library->init($this);
+		}
 	}
 
 	/**
 	 * Получаем данные для вьюхи
 	 * @param $name
-	 * @return void
+	 * @return string|bool
 	 */
 	public function __get($name) {
 		if( isset(Boot_Controller::getInstance()->view->$name) ) {

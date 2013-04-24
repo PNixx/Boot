@@ -12,7 +12,7 @@ class Boot_Exception extends Exception {
 
 		//Если на продакшене выводим в лог
 		if( APPLICATION_ENV == 'production' && $e->getCode() != 404 ) {
-			Model_Log::log("error.log", $_SERVER['PATH_INFO'] . $_SERVER['QUERY_STRING'] . PHP_EOL . "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+			file_put_contents(APPLICATION_ROOT . "/log/error.log", $_SERVER['PATH_INFO'] . $_SERVER['QUERY_STRING'] . PHP_EOL . "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString(), FILE_APPEND);
 		}
 
 		if( get_class($e) != "DB_Exception" ) {

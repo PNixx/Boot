@@ -54,7 +54,8 @@ $directories = array(
 	"/application/models",
 	"/application/layouts",
 	"/db",
-	"/public"
+	"/public",
+	"/library"
 );
 
 //Создаём необходимые директории
@@ -73,6 +74,16 @@ if( file_exists(APPLICATION_ROOT . $config_file) == false ) {
 	}
 } else {
 	echo "Config file is exists: {$config_file}\r\n";
+}
+
+//Создаем файл библиотек
+$library_file = "/application/config/library.conf";
+if( file_exists(APPLICATION_ROOT . $library_file) == false ) {
+	if( file_put_contents(APPLICATION_ROOT . $library_file, "translate" . PHP_EOL . "auth" . PHP_EOL) ) {
+		echo "Config library create: {$library_file}\r\n";
+	}
+} else {
+	echo "Config library is exists: {$library_file}\r\n";
 }
 
 //Создание роутера
@@ -112,7 +123,7 @@ $home = <<<CONTROLLER
  * homeController
  */
 
-class homeController extends Boot_Controller {
+class homeController extends Boot_Abstract_Controller {
 
 	public function indexAction() {
 

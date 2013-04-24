@@ -2,12 +2,6 @@
 class Boot_View {
 
 	/**
-	 * Переводчик
-	 * @var translate
-	 */
-	public $translate = null;
-
-	/**
 	 * Инстанс
 	 * @var Boot_View
 	 */
@@ -27,9 +21,6 @@ class Boot_View {
 
 		if( !(self::$_instance instanceof Boot_View) ) {
 			self::$_instance = new Boot_View();
-			self::$_instance->translate = Boot::getInstance()->translate;
-			self::$_instance->me = Boot_Auth::getInstance()->getAuth();
-
 		}
 		return self::$_instance;
 	}
@@ -47,6 +38,10 @@ class Boot_View {
 	 */
 	public function __construct() {
 
+		//Инициализируем бибилиотеки
+		foreach(Boot::getInstance()->library->getLibraries() as $library) {
+			$library->init($this);
+		}
 	}
 
 	/**

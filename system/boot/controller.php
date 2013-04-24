@@ -34,19 +34,8 @@ class Boot_Controller {
 	 */
 	public $view = null;
 
-	/**
-	 * Переводчик
-	 * @var translate
-	 */
-	public $translate = null;
-
-	/**
-	 * @var Model_User_Row
-	 */
-	public $me = null;
-
+	//Конструктор
 	public function __construct() {
-		$this->me = new stdClass();
 		$this->view = new stdClass();
 	}
 
@@ -130,6 +119,7 @@ class Boot_Controller {
 	 * Получение декодированного параметра запроса
 	 * @param $name
 	 * @return string
+	 * @deprecated
 	 */
 	public function getParamDecode($name) {
 		return trim(urldecode($this->getParam($name)));
@@ -183,6 +173,7 @@ class Boot_Controller {
 
 	/**
 	 * Инициализиуем
+	 * @throws Exception
 	 * @return void
 	 */
 	protected function initizlize() {
@@ -200,11 +191,16 @@ class Boot_Controller {
 			throw new Exception('Controller "' . $Cname . '" not exist', 404);
 		}
 
-		//Инициализируем
+		/**
+		 * Инициализируем
+		 * @var Boot_Abstract_Controller $controller
+		 */
 		$controller = new $Cname();
 
-		//Передаём авторизацию в контроллер
-		$controller->me = Boot_Auth::getInstance()->getAuth();
+		//Инициализируем бибилиотеки
+		foreach(Boot::getInstance()->library->getLibraries() as $library) {
+			$library->init($controller);
+		}
 
 		if( $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");
@@ -214,9 +210,6 @@ class Boot_Controller {
 			//Сохраняем в куку
 			Boot_Cookie::set("lang", $lang);
 		}
-
-		//Цепляем переводчик
-		$controller->translate = &Boot::getInstance()->translate;
 
 		//Если есть функция init
 		if( method_exists($controller, 'init') ) {
@@ -241,12 +234,13 @@ class Boot_Controller {
 	/**
 	 * Получить имя модуля
 	 * @static
-	 * @return
+	 * @return string|bool
 	 */
 	static public function getModule() {
 		if( isset(self::getInstance()->_param->module) ) {
 			return self::getInstance()->_param->module;
 		}
+		return false;
 	}
 
 	/**
@@ -267,6 +261,10 @@ class Boot_Controller {
 		return self::getInstance()->_param->action;
 	}
 
+	/**
+	 * @static
+	 * @return null
+	 */
 	static public function getViewName() {
 		return self::getInstance()->_render !== null ? self::getInstance()->_render : self::getAction();
 	}
@@ -274,7 +272,8 @@ class Boot_Controller {
 	/**
 	 * Получить имя экшена
 	 * @static
-	 * @return
+	 * @param $name
+	 * @return void
 	 */
 	static private function setAction($name) {
 		self::getInstance()->_param->action = $name;
@@ -282,7 +281,8 @@ class Boot_Controller {
 
 	/**
 	 * Выполнить экшен
-	 * @param $name
+	 * @param $action
+	 * @throws Exception
 	 * @return void
 	 */
 	public function _action($action) {
@@ -309,6 +309,11 @@ class Boot_Controller {
 		return Boot_View::getInstance()->render($name);
 	}
 
+	/**
+	 * Был аяксовый запрос или нет
+	 * @return bool
+	 * @deprecated
+	 */
 	public function isAjax() {
 		if( isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest' ) {
 			return true;
@@ -329,6 +334,7 @@ class Boot_Controller {
 	 * Записать сообщение
 	 * @param $name
 	 * @param $value
+	 * @deprecated
 	 */
 	public function setFlash($name, $value) {
 		Boot_Flash::getInstance()->set($name, $value);
@@ -337,6 +343,8 @@ class Boot_Controller {
 	/**
 	 * Получить flash сообщение
 	 * @param $name
+	 * @return bool|string
+	 * @deprecated
 	 */
 	public function getFlash($name) {
 		return Boot_Flash::get($name);

@@ -5,11 +5,11 @@
  * Time: 20:42
  */
 
-class Boot_Auth {
+class Boot_Auth_Lib extends Boot_Abstract_Library {
 
 	/**
 	 * Инстанс
-	 * @var Boot_Auth
+	 * @var Boot_Auth_Lib
 	 */
 	static private $_instance = null;
 
@@ -25,15 +25,29 @@ class Boot_Auth {
 	 */
 	private $_me = null;
 
+	//Коструктор
+	public function __construct() {
+
+		//Проверяем существование моделей
+		if( class_exists("Model_User") == false ) {
+			throw new Boot_Exception("Model_User is not found");
+		}
+
+		//Проверяем существование моделей
+		if( class_exists("Model_User_Row") == false ) {
+			throw new Boot_Exception("Model_User_Row is not found");
+		}
+	}
+
 	/**
 	 * Получаем инстанс
 	 * @static
-	 * @return Boot_Auth
+	 * @return Boot_Auth_Lib
 	 */
 	static public function getInstance() {
 
-		if( !(self::$_instance instanceof Boot_Auth) ) {
-			self::$_instance = new Boot_Auth();
+		if( !(self::$_instance instanceof Boot_Auth_Lib) ) {
+			self::$_instance = new Boot_Auth_Lib();
 			self::$_instance->skey = Boot::getInstance()->config->auth_skey;
 		}
 		return self::$_instance;
@@ -102,5 +116,17 @@ class Boot_Auth {
 			header('HTTP/1.0 401 Unauthorized');
 			die("В доступе отказано.");
 		}
+	}
+
+	/**
+	 * Инициализация библиотеки во вьюхе и контроллере
+	 * @param Boot_View|Boot_Layout|Boot_Controller $class
+	 * @return void
+	 */
+	public function init(&$class) {
+		parent::init($class);
+
+		//Добавляем объект юзера к классу
+		$class->me = Boot_Auth_Lib::getInstance()->getAuth();
 	}
 }
