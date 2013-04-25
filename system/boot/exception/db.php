@@ -5,11 +5,13 @@ class DB_Exception extends Exception {
 		$this->message = $message;
 		$this->code = $code;
 
-		//Если на продакшене выводим в лог
-		if( APPLICATION_ENV == 'production' ) {
-			//@todo перенести модель в систему
-			Model_Log::log("db.error.log", "Error {$code}: {$message}\r\n{$this->getTraceAsString()}");
+		//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
+		foreach( Boot::getInstance()->library->getLibraries() as $library) {
+			if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {
+				$library->onException($this);
+			}
 		}
+
 		header('HTTP/1.0 ' . $code);
 		if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
 			echo json_encode(array(

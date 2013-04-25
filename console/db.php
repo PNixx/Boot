@@ -120,6 +120,32 @@ switch( $type ) {
 		}
 		break;
 
+	//Удаление записи
+	case "destroy":
+		if( isset($argv[2]) == false ) {
+			exit("You must write table" . PHP_EOL);
+		}
+		$class = "Model_" . $argv[2];
+		if( class_exists($class) == false ) {
+			exit("Unknown class: " . $class . PHP_EOL);
+		}
+		if( isset($argv[3]) == false && (int)$argv[3] < 1 ) {
+			exit("You must write destroyed ID" . PHP_EOL);
+		}
+		/**
+		 * @var $model Model
+		 */
+		$model = new $class();
+
+		//Ищем запись
+		$row = $model->find($argv[3]);
+		if( $row ) {
+			$row->destroy();
+		} else {
+			exit($argv[3] . " is not found" . PHP_EOL);
+		}
+		break;
+
 	default:
 		break;
 }

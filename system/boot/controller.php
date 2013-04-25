@@ -205,7 +205,7 @@ class Boot_Controller {
 		if( $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");
 
-			Boot::getInstance()->translate->setLocale($lang);
+			Boot::getInstance()->library->translate->setLocale($lang);
 
 			//Сохраняем в куку
 			Boot_Cookie::set("lang", $lang);

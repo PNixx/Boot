@@ -90,6 +90,11 @@ class Boot {
 			require_once $path;
 		}
 
+		//Инклудим интерфейсы
+		foreach(glob(SYSTEM_PATH . '/boot/interface/' . '*.php') as $path) {
+			require_once $path;
+		}
+
 		//Устанавливаем отлавливатели ошибок
 		set_error_handler( 'Boot_Exception::err_handler' );
 		set_exception_handler("Boot_Exception::ex");
@@ -155,6 +160,16 @@ class Boot {
 		//Загружаем класс ошибок
 		require_once 'boot/exception/exception_console.php';
 		require_once 'boot/exception/db_console.php';
+
+		//Инклудим абстрактные классы
+		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {
+			require_once $path;
+		}
+
+		//Инклудим интерфейсы
+		foreach(glob(SYSTEM_PATH . '/boot/interface/' . '*.php') as $path) {
+			require_once $path;
+		}
 
 		//Устанавливаем отлавливатели ошибок
 		set_error_handler( 'Boot_Exception::err_handler' );

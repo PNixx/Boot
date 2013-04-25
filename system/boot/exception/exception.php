@@ -8,14 +8,25 @@ class Boot_Exception extends Exception {
 	}
 
 	public static function ex(Exception $e) {
-		header('HTTP/1.0 ' . $e->getCode());
 
-		//Если на продакшене выводим в лог
-		if( APPLICATION_ENV == 'production' && $e->getCode() != 404 ) {
-			file_put_contents(APPLICATION_ROOT . "/log/error.log", $_SERVER['PATH_INFO'] . $_SERVER['QUERY_STRING'] . PHP_EOL . "Error " . $e->getCode() . ": " . $e->getMessage() . PHP_EOL . $e->getTraceAsString(), FILE_APPEND);
+		//Устанавливаем код ошибки
+		if($e->getCode() == 0 ) {
+			$e->code = 500;
 		}
 
+		//Устанавливаем заголовок
+		header('HTTP/1.0 ' . $e->getCode());
+
+		//Если ошибка была не в БД
 		if( get_class($e) != "DB_Exception" ) {
+
+			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
+			foreach( Boot::getInstance()->library->getLibraries() as $library) {
+				if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {
+					$library->onException($e);
+				}
+			}
+
 			require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
 		}
 		exit;
