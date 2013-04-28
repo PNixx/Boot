@@ -82,7 +82,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
       }
 
       //Читаем файл
-      if( preg_match_all("/mid:([^\n\r]*)[\n\r]+mstr:([^\n\r]*)/", file_get_contents($this->_dir . $lang . ".po"), $po) ) {
+      if( preg_match_all("/msgid \"([^\n\r]*)\"[\n\r]+msgstr \"([^\n\r]*)\"/", file_get_contents($this->_dir . $lang . ".po"), $po) ) {
 
         $return = array();
 

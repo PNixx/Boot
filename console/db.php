@@ -146,6 +146,43 @@ switch( $type ) {
 		}
 		break;
 
+	//Выборка из базы
+	case "select":
+		if( isset($argv[2]) == false ) {
+			exit("You must write table" . PHP_EOL);
+		}
+		$class = "Model_" . $argv[2];
+		if( class_exists($class) == false ) {
+			exit("Unknown class: " . $class . PHP_EOL);
+		}
+		if( isset($argv[3]) == false ) {
+			exit("You must write columns" . PHP_EOL);
+		}
+		if( count($argv) > 5 ) {
+			exit("Has many params" . PHP_EOL);
+		}
+
+		/**
+		 * @var $model Model
+		 */
+		$model = new $class();
+
+		//Строим запрос
+		$select = $model->select();
+
+		if( $argv[3] != "*" ) {
+			$select->column(explode(",", $argv[3]));
+		}
+
+		//Если есть условие
+		if( isset($argv[4]) ) {
+			$select->where($argv[4]);
+		}
+
+		//Выводим данные
+		print_r($model->query($select)->read_all());
+		break;
+
 	default:
 		break;
 }

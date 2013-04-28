@@ -108,6 +108,15 @@ abstract class Boot_Abstract_Controller {
 	}
 
 	/**
+	 * Рендер вьюхи
+	 * @param $name
+	 * @return string
+	 */
+	public function _render($name) {
+		return Boot_View::getInstance()->render($name);
+	}
+
+	/**
 	 * Получить имя контроллера
 	 * @static
 	 * @return

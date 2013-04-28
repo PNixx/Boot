@@ -180,7 +180,7 @@ class Model {
 	/**
 	 * Выбор всех записей в таблице по запросу
 	 * @param string|array $where
-	 * @param null $colum
+	 * @param string|array $colum
 	 * @param null $order
 	 * @param null $limit
 	 * @internal param string $table Имя таблицы
