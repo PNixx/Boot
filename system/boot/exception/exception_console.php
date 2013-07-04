@@ -41,9 +41,7 @@ class Boot_Exception extends Exception {
 
 //			$r = ob_get_contents();
 //			ob_end_clean();
-			$exception = new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
-			self::ex($exception);
-			exit;
+			throw new ErrorException($type . ': ' . $errstr, 0, $errno, $errfile, $errline);
 		}
 		return false;
 	}

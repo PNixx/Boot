@@ -202,7 +202,7 @@ class Boot_Controller {
 			$library->init($controller);
 		}
 
-		if( $this->hasParam("lang") ) {
+		if( class_exists("Boot_Translate_Lib", false) && $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");
 
 			Boot::getInstance()->library->translate->setLocale($lang);
@@ -285,11 +285,11 @@ class Boot_Controller {
 	 * @throws Exception
 	 * @return void
 	 */
-	public function _action($action) {
+	public function _action($action, Boot_Abstract_Controller $controller) {
 		self::setAction($action);
 		$name = $action . "Action";
-		if( method_exists($this, $name) ) {
-			$this->$name();
+		if( method_exists($controller, $name) ) {
+			$controller->$name();
 		} else {
 			throw new Exception('Action "' . $action . '", controller "' . self::getController() . '" not exist', 404);
 		}

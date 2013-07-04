@@ -26,6 +26,12 @@ class Select {
 	private $_order = null;
 
 	/**
+	 * Группировка
+	 * @var null
+	 */
+	private $_group_by = null;
+
+	/**
 	 * Лимит
 	 * @var null
 	 */
@@ -145,6 +151,11 @@ class Select {
 		return $this;
 	}
 
+	public function group_by($column) {
+		$this->_group_by = " GROUP BY " . $column;
+		return $this;
+	}
+
 	/**
 	 * Указываем лимит выборки
 	 * @param $limit
@@ -167,7 +178,7 @@ class Select {
 		$table = $this->getStringQueryByArray($this->_table);
 		$where = $this->_where ? " WHERE " . $this->_where : "";
 
-		return "SELECT {$column} FROM {$table}{$where}{$this->_order}{$this->_limit}";
+		return "SELECT {$column} FROM {$table}{$where}{$this->_group_by}{$this->_order}{$this->_limit}";
 	}
 }
 

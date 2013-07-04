@@ -96,10 +96,9 @@ class Boot {
 		}
 
 		//Устанавливаем отлавливатели ошибок
-		set_error_handler( 'Boot_Exception::err_handler' );
+		set_error_handler('Boot_Exception::err_handler');
 		set_exception_handler("Boot_Exception::ex");
-
-		ob_start();
+		ob_start("Boot_Exception::shutdown");
 
 		//Загружаем конфиг
 		$this->config();

@@ -8,6 +8,11 @@
 abstract class Boot_Abstract_Controller {
 
 	/**
+	 * @var Model_User_row|Model_row
+	 */
+	public $me;
+
+	/**
 	 * Переменная для передачи по вьюху
 	 * @var Boot_View
 	 */
@@ -104,7 +109,7 @@ abstract class Boot_Abstract_Controller {
 	 * @return void
 	 */
 	public function _action($action) {
-		Boot_Controller::getInstance()->_action($action);
+		Boot_Controller::getInstance()->_action($action, $this);
 	}
 
 	/**
