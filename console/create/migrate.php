@@ -31,7 +31,7 @@ if( isset($argv[1]) && trim($argv[1]) ) {
 	exit;
 }
 
-if( preg_match("/^(create_table|alter_table|sql)_?(.*)$/i", $name, $match) ) {
+if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $match) ) {
 	switch( $match[1] ) {
 
 		//Создание таблицы
@@ -110,6 +110,23 @@ if( preg_match("/^(create_table|alter_table|sql)_?(.*)$/i", $name, $match) ) {
 
 			//Заменяем в шаблоне
 			$model_row = str_replace("[{MODEL_SCHEME}]", $schema_string, $model_row);
+
+			break;
+
+		//Удаление таблицы
+		case "drop_table":
+
+			//Удаляемая таблица
+			$table = $match[2];
+			if( $table == null ) {
+				exit("You must write table name, example: drop_table_user");
+			}
+
+			//Указываем тип
+			$migrate_type = Boot_Migration::TYPE_UP;
+
+			//Указываем sql
+			$argv[2] = "DROP TABLE \"{$table}\";";
 
 			break;
 

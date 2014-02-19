@@ -103,7 +103,7 @@ class Boot_Routes {
 	static private function getResourceRoute($param = null) {
 		return (object)array(
 			"module" => isset($param[0]) ? $param[0] : Boot::getInstance()->config->default->page,
-			"controller" => isset($param[1]) && $param[1] ? $param[1] : "index",
+			"controller" => isset($param[1]) && $param[1] ? str_replace("-", "", $param[1]) : "index",
 			"action" => isset($param[2]) && $param[2] ? $param[2] : "index"
 		);
 	}

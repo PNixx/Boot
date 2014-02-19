@@ -55,6 +55,7 @@ class Boot_Migration extends Model {
 	/**
 	 * Выполняет миграцию
 	 * @param $file
+	 * @throws Exception
 	 */
 	public function migrate($file) {
 
@@ -113,12 +114,21 @@ class Boot_Migration extends Model {
 				case "alter_table":
 					$this->alter_table($data);
 					break;
+
+				//Удаление таблицы
+				case "drop_table":
+					foreach($data as $table) {
+						$this->drop_table($table);
+						echo "DROP TABLE `{$table}`;\r\n";
+					}
+					break;
+
 				case "sql":
 					$this->model()->query($data);
 					break;
 
 				default:
-					exit("Unknown type of migration");
+					exit("Unknown type of migration" . PHP_EOL);
 			}
 		}
 	}
@@ -294,8 +304,10 @@ class Boot_Migration extends Model {
 				switch( $key ) {
 
 					case "change":
-					case "down":
 						$this->change_down($migrate);
+						break;
+					case "down":
+						$this->down($migrate);
 						break;
 
 					//Пропускаем кейс
@@ -340,7 +352,36 @@ class Boot_Migration extends Model {
 					break;
 
 				default:
-					exit("Unknown type of rollback");
+					exit("Unknown type of rollback" . PHP_EOL);
+			}
+		}
+	}
+
+	/**
+	 * Down function of migration
+	 * @param $migrate
+	 */
+	private function down(array $migrate) {
+
+		//Проходим по типам миграции
+		foreach($migrate as $type => $data) {
+			switch( $type ) {
+
+				//Создание таблицы
+				case "create_table":
+					$this->create_tables($data);
+					break;
+
+				case "alter_table":
+					$this->rollback_alter_table($data);
+					break;
+
+				case "sql":
+					$this->model()->query($data);
+					break;
+
+				default:
+					exit("Unknown type of rollback" . PHP_EOL);
 			}
 		}
 	}

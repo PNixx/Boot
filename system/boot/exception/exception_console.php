@@ -7,7 +7,7 @@ class Boot_Exception extends Exception {
 
 	public static function ex(Exception $e) {
 		echo "Error message: " . $e->getMessage() . "\r\n";
-		echo $e->getTraceAsString();
+		echo $e->getTraceAsString() . PHP_EOL;
 		exit;
 	}
 

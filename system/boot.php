@@ -9,7 +9,7 @@ class Boot {
 
 	/**
 	 * Хранилище конфига
-	 * @var Boot_Config
+	 * @var Boot_Config|stdClass
 	 */
 	public $config = null;
 
@@ -202,15 +202,16 @@ class Boot {
 		//Имя файла
 		if( preg_match("/^Model_.+_Row$/", $name) ) {
 			$file = "row/" . strtolower(preg_replace("/^Model_(.+)_Row$/", "$1", $name)) . "_row.php";
+		} elseif( preg_match("/^Model_.+_Collection$/", $name) ) {
+			$file = "collection/" . strtolower(preg_replace("/^Model_(.+)_Collection$/", "$1", $name)) . "_collection.php";
 		} elseif( preg_match("/^Model_.+$/", $name) ) {
 			$file = strtolower(preg_replace("/^Model_/", "", $name)) . ".php";
 		}
 
 		if( isset($file) && file_exists(get_include_path() . $file) ) {
 			require_once $file;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**
@@ -242,6 +243,7 @@ class Boot {
 			require_once 'boot/db/model.php';
 			require_once 'boot/db/row.php';
 			require_once 'boot/db/select.php';
+			require_once 'boot/db/collection.php';
 
 		} else {
 

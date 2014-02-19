@@ -35,10 +35,10 @@ class postgres {
 
 	/**
 	 * @param null $query
-	 * @throws DB_Exception
+	 * @throws Exception
 	 */
 	private function error($query = null) {
-		throw new DB_Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
+		throw new Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
 	/**
@@ -292,7 +292,7 @@ class postgres {
 	 * @param string $table
 	 * @param array $data
 	 * @param string $where
-	 * @return <type>
+	 * @return bool|int <type>
 	 */
 	public function update($table, $data, $where = null) {
 

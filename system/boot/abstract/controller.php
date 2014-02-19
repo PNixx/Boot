@@ -155,4 +155,18 @@ abstract class Boot_Abstract_Controller {
 	public function getModule() {
 		return Boot_Controller::getModule();
 	}
+
+	/**
+	 * Http авторизация
+	 * @param $login
+	 * @param $passw
+	 */
+	public function httpAuth($login, $passw) {
+		if( isset($_SERVER['PHP_AUTH_USER']) == false || isset($_SERVER['PHP_AUTH_PW']) == false || $_SERVER['PHP_AUTH_USER'] != $login || $_SERVER['PHP_AUTH_PW'] != $passw ) {
+			$_SESSION['http_logged'] = 1;
+			header('WWW-Authenticate: Basic realm="realm"');
+			header('HTTP/1.0 401 Unauthorized');
+			die("В доступе отказано.");
+		}
+	}
 }

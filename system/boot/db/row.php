@@ -70,7 +70,6 @@ class Model_Row {
 	 * @param $value
 	 */
 	public function __set($name, $value) {
-
 		$this->_row->$name = $value;
 		if( property_exists($this, $name) ) {
 			$this->$name = $value;
@@ -81,12 +80,20 @@ class Model_Row {
 	}
 
 	/**
+	 * Запись параметра
+	 * @param $name
+	 * @param $value
+	 */
+	public function set($name, $value) {
+		$this->__set($name, $value);
+	}
+
+	/**
 	 * Получаем данные
 	 * @param $name
 	 * @return string
 	 */
 	public function __get($name) {
-
 		if( isset($this->_row->$name) ) {
 			return $this->_row->$name;
 		} else {
@@ -132,9 +139,36 @@ class Model_Row {
 				 */
 				$model = new $model;
 
-				//Удаляем все значения
-				$model->delete(array($this->_table . "_id" => $this->{$this->_pkey}));
+				//Ищем объекты
+				$rows = $model->where(array($this->_table . "_id" => $this->{$this->_pkey}))->row_all();
+				if( $rows ) {
+					/**
+					 * @var $row Model_Row
+					 */
+					foreach($rows as $row) {
+						$row->destroy();
+					}
+				}
 			}
+		}
+	}
+
+	/**
+	 * Сохраняет данные
+	 */
+	public function save() {
+		//Если был прочитан из базы
+		if( isset($this->_row->id) && count($this->_row_update) > 0 ) {
+			$update = array();
+
+			//Собираем массив
+			foreach($this->_row_update as $column) {
+				$update[$column] = $this->_row->$column;
+			}
+
+			//Обновляем
+			$this->_model_instance->update($update, "id = " . $this->_row->id);
+			$this->_row_update = array();
 		}
 	}
 

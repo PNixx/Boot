@@ -235,11 +235,26 @@ class mysql {
 	}
 
 	/**
+	 * Получить строку представления для запроса по типу данного value
+	 * @param $value
+	 * @return string
+	 */
+	public function getStringQueryByValue($value) {
+		if( $value instanceof DB_Expr ) {
+			return $value;
+		}
+		if( is_bool($value) ) {
+			return $value ? "TRUE" : "FALSE";
+		}
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "'" . mysql_real_escape_string($value) . "'");
+	}
+
+	/**
 	 * Обновить данные таблицы из массива
 	 * @param string $table
 	 * @param array $data
 	 * @param string $where
-	 * @return <type>
+	 * @return bool|int <type>
 	 */
 	public function update($table, $data, $where = null) {
 

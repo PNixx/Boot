@@ -64,6 +64,7 @@ class Boot_View {
 	 * @return void
 	 */
 	public function __set($name, $value) {
+		$this->$name = $value;
 		Boot_Controller::getInstance()->view->$name = $value;
 	}
 

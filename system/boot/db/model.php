@@ -192,46 +192,47 @@ class Model {
 
 	/**
 	 * Чтение 1 записи, возврат объекта
+	 * @param null $i
 	 * @return Model_Row
 	 */
 	public function row($i = null) {
-		try {
-			$exist = class_exists(get_class($this) . "_Row");
 
-			if( $exist ) {
+		//Имя класса
+		$class = class_exists(get_class($this) . "_Row") ? get_class($this) . "_Row" : "Model_Row";
 
-				//Имя класса
-				$class = get_class($this) . "_Row";
+		//Получае строку
+		$row = $this->_select->row($i);
 
-				//Получае строку
-				$row = $this->_select->row($i);
-
-				//Если получили строку
-				if( $row ) {
-					return new $class($row, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this);
-				} else {
-					return false;
-				}
-			} else {
-				return $this->_select->row($i);
-			}
-
-		} catch( Exception $e ) {
-			return $this->_select->row($i);
+		//Если получили строку
+		if( $row ) {
+			return new $class($row, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this);
+		} else {
+			return false;
 		}
 	}
 
 	/**
 	 * Чтение записей, возврат массива
-	 * @return array
+	 * @return Model_Collection
 	 */
 	public function row_all() {
 		$r = array();
 		$i = 0;
-		while( $line = $this->row($i++) ) {
+		while( $line = $this->_select->row($i++) ) {
 			$r[] = $line;
 		}
-		return $r;
+
+		//Если ничего не найдено
+		if( count($r) == 0 ) {
+			return null;
+		}
+
+		//Строим класс коллекции
+		$class = class_exists(get_class($this) . "_Collection") ? get_class($this) . "_Collection" : "Model_Collection";
+		$class_row = class_exists(get_class($this) . "_Row") ? get_class($this) . "_Row" : "Model_Row";
+
+		//Возвращаем данные
+		return new $class($this->table, $this->belongs_to, $this->has_many, $this->pkey, $class_row, $this, $r);
 	}
 
 	/**
@@ -280,10 +281,10 @@ class Model {
 
 	/**
 	 * Обновить данные таблицы из массива
-	 * @param string $table
 	 * @param array $data
 	 * @param string $where
-	 * @return <type>
+	 * @internal param string $table
+	 * @return bool|int <type>
 	 */
 	public function update($data, $where = null) {
 
@@ -296,12 +297,11 @@ class Model {
 	 * @return string
 	 */
 	public function getStringQueryByValue($value) {
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $this->_db->int_separator . $value . $this->_db->int_separator) : "'{$value}'");
+		return $this->_db->getStringQueryByValue($value);
 	}
 
 	/**
 	 * Добавить строку в таблицу
-	 * @param	$table
 	 * @param array $data
 	 * @return int
 	 */
@@ -316,7 +316,8 @@ class Model {
 
 	/**
 	 * Кол-во строк по колонке
-	 * @param $colum
+	 * @param null $where
+	 * @internal param $colum
 	 * @return int
 	 */
 	public function count($where = null) {
@@ -326,6 +327,7 @@ class Model {
 	/**
 	 * Удаление по первичному ключу или по группе ключей с условием
 	 * @param int|array $id
+	 * @throws DB_Exception
 	 * @return void
 	 */
 	public function delete($id) {
