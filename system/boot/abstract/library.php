@@ -14,6 +14,12 @@ abstract class Boot_Abstract_Library {
 	public $key = 'interface';
 
 	/**
+	 * Нужно ли инициализировать библиотеку в системе?
+	 * @var bool
+	 */
+	public static $is_init = true;
+
+	/**
 	 * Инициализация библиотеки во вьюхе и контроллере
 	 * @param Boot_View|Boot_Layout|Boot_Controller $class
 	 * @return void

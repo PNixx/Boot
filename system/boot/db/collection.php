@@ -164,7 +164,15 @@ class Model_Collection implements Iterator, ArrayAccess  {
 	 * @return mixed Can return all value types.
 	 */
 	public function offsetGet($offset) {
-		return $this->_rows[$offset];
+		try {
+			if( class_exists($this->_model_row) ) {
+				return new $this->_model_row($this->_rows[$offset], $this->_table, $this->_belongs_to, $this->_has_many, $this->_pkey, $this->_model_instance);
+			} else {
+				return $this->_rows[$offset];
+			}
+		} catch( Exception $e ) {
+			return $this->_rows[$offset];
+		}
 	}
 
 	/**

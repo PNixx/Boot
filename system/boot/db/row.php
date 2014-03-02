@@ -37,6 +37,12 @@ class Model_Row {
 	protected $_pkey = null;
 
 	/**
+	 * Список ошибок валидации, при сохранении
+	 * @var array
+	 */
+	public $errors = array();
+
+	/**
 	 * Инстанс модели
 	 * @var Model
 	 */
@@ -155,6 +161,7 @@ class Model_Row {
 
 	/**
 	 * Сохраняет данные
+	 * @return bool|int
 	 */
 	public function save() {
 		//Если был прочитан из базы
@@ -167,11 +174,29 @@ class Model_Row {
 			}
 
 			//Обновляем
-			$this->_model_instance->update($update, "id = " . $this->_row->id);
+			$result = $this->_model_instance->update($update, "id = " . $this->_row->id);
 			$this->_row_update = array();
+			return $result;
 		}
+		return false;
 	}
 
+	/**
+	 * Обновление данных
+	 * @param array $params
+	 * @return bool|int
+	 */
+	public function update(array $params) {
+		foreach($params as $key => $value) {
+			$this->set($key, $value);
+		}
+		return $this->save();
+	}
+
+	/**
+	 * Преобразоване в массив
+	 * @return array
+	 */
 	public function toArray() {
 		return (array)$this->_row;
 	}

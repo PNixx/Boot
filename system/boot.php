@@ -1,4 +1,7 @@
 <?
+/**
+ * Class Boot
+ */
 class Boot {
 
 	/**
@@ -395,8 +398,10 @@ class Boot {
 				}
 
 				//Инициализируем
-				$this->library->$lib = new $class();
-				$this->library->$lib->key = $lib;
+				if( $class::$is_init ) {
+					$this->library->$lib = new $class();
+					$this->library->$lib->key = $lib;
+				}
 			}
 		}
 	}

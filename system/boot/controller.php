@@ -282,6 +282,7 @@ class Boot_Controller {
 	/**
 	 * Выполнить экшен
 	 * @param $action
+	 * @param Boot_Abstract_Controller $controller
 	 * @throws Exception
 	 * @return void
 	 */

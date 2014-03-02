@@ -357,7 +357,12 @@ class Model {
 	 * @param $data
 	 * @return Model_Row
 	 */
-	public function create($data) {
-		return new Model_Row((object)$data, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this, true);
+	public function create($data = array()) {
+		if( class_exists(get_class($this) . "_Row") ) {
+			$class = get_class($this) . "_Row";
+		} else {
+			$class = "Model_Row";
+		}
+		return new $class((object)$data, $this->table, $this->belongs_to, $this->has_many, $this->pkey, $this, true);
 	}
 }
