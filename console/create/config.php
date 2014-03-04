@@ -55,7 +55,8 @@ $directories = array(
 	"/application/layouts",
 	"/db",
 	"/public",
-	"/library"
+	"/library",
+	"/deploy"
 );
 
 //Создаём необходимые директории

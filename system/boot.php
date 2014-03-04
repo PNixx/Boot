@@ -384,12 +384,12 @@ class Boot {
 			if( trim($lib) ) {
 
 				//Проверяем существование файла
-				if( file_exists(LIBRARY_PATH . "/" . $lib . ".php") == false ) {
+				if( file_exists(APPLICATION_ROOT . "/system/library/" . $lib . ".php") == false ) {
 					throw new Boot_Exception("Library not found: $lib");
 				}
 
 				//Подключаем файл
-				require_once LIBRARY_PATH . "/" . $lib . ".php";
+				require_once APPLICATION_ROOT . "/system/library/" . $lib . ".php";
 
 				//Проверяем существование класса
 				$class = "Boot_" . ucfirst($lib) . "_Lib";
