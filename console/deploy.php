@@ -43,6 +43,10 @@ switch( $argv[2] ) {
 		$deploy->deploy();
 		break;
 
+	case "deploy:migrate":
+		$deploy->migrate();
+		break;
+
 	case "setup":
 		$deploy->setup();
 		break;

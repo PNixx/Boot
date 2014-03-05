@@ -181,6 +181,18 @@ abstract class Boot_Deploy_Abstract {
 	}
 
 	/**
+	 * Выполняет миграции на сервере
+	 */
+	public function migrate() {
+
+		//Проверяем настройки
+		$this->check_variables();
+
+		//Выполняем код
+		$this->ssh_exec("cd {$this->deploy_to}/current && php console/db.php migrate");
+	}
+
+	/**
 	 * Вывод ошибки
 	 * @param $message
 	 */

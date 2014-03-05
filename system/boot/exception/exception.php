@@ -79,7 +79,12 @@ class Boot_Exception extends Exception {
 			if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
 				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
 			} else {
-				echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)<pre>";
+				if( APPLICATION_ENV != "production" ) {
+					echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)</pre>";
+				} else {
+					Model_Log::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
+					echo "<pre>" . $type . ": " . $errstr . "</pre>";
+				}
 			}
 			if( $exit ) {
 				exit();
