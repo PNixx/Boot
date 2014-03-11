@@ -25,15 +25,15 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	/**
 	 * Конструктор и инициализатор фукнции
 	 * @param string $name имя массива хранилища
-	 * @param Model_Row $row
+	 * @param Model_Row|Form_Row $row
 	 * @param array $params
 	 */
-	public function __construct($name, Model_Row &$row, $params = array()) {
+	public function __construct($name, $row, $params = array()) {
 		$this->_row = &$row;
 		$this->_name = $name;
 
 		//Сразу рисуем форму
-		print "<form" . $this->implode($params) . ">";
+		print "<form id=\"{$name}\"" . $this->implode($params) . ">";
 
 		//Если запись сохранена и имеет id
 		if( $row->id ) {
@@ -69,7 +69,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Собираем параметры для полей ввода
 		$p = array();
-		foreach( array("type", "style", "class", "placeholder", "rows", "cols") as $key ) {
+		foreach( array("type", "style", "class", "placeholder", "rows", "cols", "disabled") as $key ) {
 			if( isset($params[$key]) ) {
 				$p[$key] = $params[$key];
 			}
@@ -146,11 +146,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 	/**
 	 * Submit button
-	 * @param $name
-	 * @param $params
+	 * @param string $name
+	 * @param array $params
 	 * @return string
 	 */
-	public function submit($name, $params) {
+	public function submit($name, $params = []) {
 		return "<button id=\"submit\"" . $this->implode($params) . ">$name</button>";
 	}
 
@@ -188,4 +188,17 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 		return $string;
 	}
-} 
+}
+
+//Form default model
+class Form_Row {
+
+	/**
+	 * Получаем данные
+	 * @param $name
+	 * @return string
+	 */
+	public function __get($name) {
+		return false;
+	}
+}

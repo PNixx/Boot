@@ -100,7 +100,9 @@ abstract class Boot_Deploy_Abstract {
 			"rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/console && ln -s -- {$this->boot_path}/console {$this->deploy_to}/releases/{$this->timestamp}/console",
 			"rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/system && ln -s -- {$this->boot_path}/system {$this->deploy_to}/releases/{$this->timestamp}/system",
 			//Добавляем права группе
-			"chmod -R -- g+w {$this->deploy_to}/releases/{$this->timestamp}"
+			"chmod -R -- g+w {$this->deploy_to}/releases/{$this->timestamp}",
+			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/*.sh",
+			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/cron/*.sh"
 		];
 
 		//Создаем комманды, для прокидывания ссылок

@@ -111,6 +111,9 @@ class Boot_Exception extends Exception {
 			//Отправляем данные об ошибке в библиотеки
 			self::sendLibraryException($e);
 
+			//Устанавливаем код ошибки
+			header("HTTP/1.0 500");
+
 			//Выводим текст ошибки
 			return "<h1>Oops</h1>" . (APPLICATION_ENV != "production" ? $e->getMessage() : "");
 		} else {
