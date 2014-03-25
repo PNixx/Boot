@@ -177,6 +177,7 @@ class Boot_Controller {
 	 * @return void
 	 */
 	protected function initizlize() {
+
 		//Получаем данные запроса
 		$this->getQuery();
 
@@ -302,6 +303,7 @@ class Boot_Controller {
 	 * @return void
 	 */
 	public function _redirect($url) {
+		Boot_Flash::getInstance()->set("referer", "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
 		header("Location: " . $url);
 		exit;
 	}

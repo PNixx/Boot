@@ -32,8 +32,8 @@ class Boot_Flash {
 	public function __construct() {
 		if( isset($_COOKIE['flash']) ) {
 			$this->_flash = unserialize($_COOKIE['flash']);
+			setcookie('flash', null, time() - 1, "/", Boot::getInstance()->config->host);
 		}
-		setcookie('flash', null, time() - 1, "/", Boot::getInstance()->config->host);
 	}
 
 	public function set($name, $value) {
