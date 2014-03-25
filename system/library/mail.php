@@ -4,7 +4,7 @@ class Boot_Mail_Lib extends Boot_Abstract_Library implements Boot_Exception_Inte
 	static public function send($mail, $title, $message) {
 		$headers = 'MIME-Version: 1.0' . "\r\n" .
 						'Content-type: text/html; charset=utf-8' . "\r\n" .
-						'From: info@' . Boot::getInstance()->config->host . "\r\n";
+						'From: ' . (isset(Boot::getInstance()->config->mail->from) ? Boot::getInstance()->config->mail->from : 'no-reply@' . Boot::getInstance()->config->host) . "\r\n";
 
 		mail($mail, $title, $message, $headers);
 	}
