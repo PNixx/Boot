@@ -69,7 +69,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Собираем параметры для полей ввода
 		$p = array();
-		foreach( array("type", "style", "class", "placeholder", "rows", "cols", "disabled") as $key ) {
+		foreach( array("type", "style", "class", "placeholder", "rows", "cols", "disabled", "maxlength") as $key ) {
 			if( isset($params[$key]) ) {
 				$p[$key] = $params[$key];
 			}
