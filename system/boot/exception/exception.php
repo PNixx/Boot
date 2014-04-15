@@ -62,14 +62,17 @@ class Boot_Exception extends Exception {
 				case E_USER_WARNING:
 				case E_WARNING:
 					$type = 'Warning';
+					$exit = true;
 					break;
 				case E_USER_NOTICE:
 				case E_NOTICE:
 				case @E_STRICT:
 					$type = 'Notice';
+					$exit = true;
 					break;
 				case @E_RECOVERABLE_ERROR:
 					$type = 'Catchable';
+					$exit = true;
 					break;
 				default:
 					$type = 'Unknown Error';
@@ -82,12 +85,12 @@ class Boot_Exception extends Exception {
 				if( APPLICATION_ENV != "production" ) {
 					echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)</pre>";
 				} else {
-					Model_Log::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
+					Boot_Log_Lib::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
 					echo "<pre>" . $type . ": " . $errstr . "</pre>";
 				}
 			}
 			if( $exit ) {
-				exit();
+				throw new ErrorException($errstr);
 			}
 
 		}

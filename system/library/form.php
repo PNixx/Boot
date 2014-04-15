@@ -33,7 +33,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		$this->_name = $name;
 
 		//Сразу рисуем форму
-		print "<form id=\"{$name}\"" . $this->implode($params) . ">";
+		print "<form id=\"{$name}\"" . $this->implode($params) . (isset($params['method']) && strtolower($params['method']) == 'post' ? ' enctype="multipart/form-data"' : '') . ">";
 
 		//Если запись сохранена и имеет id
 		if( $row->id ) {
@@ -69,8 +69,8 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Собираем параметры для полей ввода
 		$p = array();
-		foreach( array("type", "style", "class", "placeholder", "rows", "cols", "disabled", "maxlength") as $key ) {
-			if( isset($params[$key]) ) {
+		foreach( $params as $key => $value ) {
+			if( !in_array($key, ["as", "label"]) ) {
 				$p[$key] = $params[$key];
 			}
 		}
@@ -85,6 +85,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			case "checkbox":
 				$print .= "<div class='checkbox'>" .
+					"<input name=\"{$this->_name}[$name]\" type=\"hidden\" value=\"0\">" .
 					"<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"checkbox\" value=\"1\"" . ($this->_row->$name ? " checked=\"checked\"" : "") . $this->implode($p) . ">" .
 					$this->label($name, $params) .
 					"</div>";

@@ -86,4 +86,19 @@ class Boot_Layout {
 		return Boot_View::getInstance()->render($name);
 	}
 
+	/**
+	 * @param string|array $names
+	 * @return string
+	 */
+	public function js($names) {
+		return Boot_View::getInstance()->js($names);
+	}
+
+	/**
+	 * @param string|array $names
+	 * @return string
+	 */
+	public function css($names) {
+		return Boot_View::getInstance()->css($names);
+	}
 }

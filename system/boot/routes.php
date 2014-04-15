@@ -55,6 +55,8 @@ class Boot_Routes {
 	 * Разбиваем строку на: module/controller/action
 	 * @static
 	 * @param $query
+	 * @throws Exception
+	 * @return object
 	 */
 	public function getParam($query) {
 

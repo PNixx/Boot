@@ -151,4 +151,32 @@ class Boot_View {
 	public function flash($name) {
 		return Boot_Flash::get($name);
 	}
+
+	/**
+	 * @param string|array $names
+	 * @return string
+	 */
+	public function js($names) {
+		$html = "";
+
+		//Проходим по списку
+		foreach((array)$names as $name) {
+			$html .= "<script src=\"/js/{$name}.js" . (file_exists(APPLICATION_ROOT . '/public/js/' . $name . '.js') ? "?" . filemtime(APPLICATION_ROOT . '/public/js/' . $name . '.js') : "") . "\" type=\"text/javascript\"></script>";
+		}
+		return $html;
+	}
+
+	/**
+	 * @param string|array $names
+	 * @return string
+	 */
+	public function css($names) {
+		$html = "";
+
+		//Проходим по списку
+		foreach((array)$names as $name) {
+			$html .= "<link href=\"/css/{$name}.css" . (file_exists(APPLICATION_ROOT . '/public/css/' . $name . '.css') ? "?" . filemtime(APPLICATION_ROOT . '/public/css/' . $name . '.css') : "") . "\" media=\"screen\" rel=\"stylesheet\" type=\"text/css\">";
+		}
+		return $html;
+	}
 }
