@@ -74,6 +74,7 @@ class Boot_View {
 	 * @return string
 	 */
 	public function run() {
+		$mktime = Boot::mktime();
 
 		if( Boot_Controller::getModule() ) {
 			$this->file_dir_name = APPLICATION_PATH . "/views/" . Boot_Controller::getModule() . "/" . Boot_Controller::getController() . "/" . Boot_Controller::getViewName() . ".phtml";
@@ -91,6 +92,9 @@ class Boot_View {
 		$html = ob_get_contents();
 		ob_end_clean();
 
+		//Debug
+		Boot::getInstance()->debug("  Rendered " . str_replace(APPLICATION_PATH . "/", "", $this->file_dir_name) . " (" . Boot::check_time($mktime) . "ms)");
+
 		return $html;
 	}
 
@@ -101,6 +105,7 @@ class Boot_View {
 	 * @return string
 	 */
 	public function view($name, $params = null) {
+		$mktime = Boot::mktime();
 
 		$file = APPLICATION_PATH . "/views/" . $name . ".phtml";
 
@@ -116,6 +121,9 @@ class Boot_View {
 			$html = ob_get_contents();
 			ob_end_clean();
 
+			//Debug
+			Boot::getInstance()->debug("  Rendered views/{$name}.phtml (" . Boot::check_time($mktime) . "ms)");
+
 			return $html;
 		} else {
 			throw new Exception("Views \"$name.phtml\" not found.");
@@ -128,6 +136,7 @@ class Boot_View {
 	 * @throws Exception
 	 */
 	public function render($name) {
+		$mktime = Boot::mktime();
 
 		$file = APPLICATION_PATH . "/views/" . $name . ".phtml";
 
@@ -136,6 +145,9 @@ class Boot_View {
 			require($file);
 			$html = ob_get_contents();
 			ob_end_clean();
+
+			//Debug
+			Boot::getInstance()->debug("  Rendered views/{$name}.phtml (" . Boot::check_time($mktime) . "ms)");
 
 			return $html;
 		} else {

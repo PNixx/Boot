@@ -3,39 +3,8 @@
  * Boot framework
  * Author: P.Nixx
  * Site: pnixx.ru
+ * Схема таблицы[{MODEL_SCHEME}]
 */
-class [{MODEL_NAME}] extends Model {
+class [{MODEL_NAME}] extends ActiveRecord {
 
-	/**
-	 * Таблица [{TABLE}]
-	 * @var string
-	 */
-	protected $table = "[{TABLE}]";
-
-	/**
-	 * Инстанс
-	 * @var [{MODEL_NAME}]
-	 */
-	static private $_instance = null;
-	[{PKEY}]
-	/**
-	 * Получаем инстанс
-	 * @static
-	 * @return [{MODEL_NAME}]
-	 */
-	static public function model() {
-
-		if( !(self::$_instance instanceof [{MODEL_NAME}]) ) {
-			self::$_instance = new [{MODEL_NAME}]();
-		}
-		return self::$_instance;
-	}
-
-	/**
-	 * @param int $id
-	 * @return [{MODEL_NAME}]_Row
-	 */
-	public function find($id) {
-		return parent::find($id);
-	}
 }

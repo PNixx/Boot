@@ -47,6 +47,7 @@ class Boot_Exception extends Exception {
 	 * @param $errfile
 	 * @param $errline
 	 * @param $errcontext
+	 * @throws ErrorException
 	 * @return bool
 	 */
 	public static function err_handler($errno, $errstr, $errfile, $errline, $errcontext) {

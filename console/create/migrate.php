@@ -84,32 +84,25 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 			$migrate_type = Boot_Migration::TYPE_CHANGE;
 
 			//Получаем вставленный шаблон
-			$model = str_replace(array("[{MODEL_NAME}]", "[{TABLE}]"), array("Model_" . ucfirst($table), $table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.template"));
+			$model = str_replace("[{MODEL_NAME}]", "Model_" . ucfirst($table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.template"));
 
 			if( isset($pkey) && $pkey ) {
-				$model = str_replace("[{PKEY}]", "\r\n\tprotected \$pkey = \"{$pkey}\";\r\n", $model);
+				$model = str_replace("[{PKEY}]", "\r\n\tprotected static \$pkey = \"{$pkey}\";\r\n", $model);
 			} else {
 				$model = str_replace("[{PKEY}]", "", $model);
 			}
 
-			//Получаем вставленный шаблон
-			$model_row = str_replace("[{MODEL_NAME}]", "Model_" . ucfirst($table), file_get_contents(APPLICATION_ROOT . "/system/boot/db/model.row.template"));
-
 			//Строим схему переменных
 			$schema_string = "";
 			$schema_column = array_keys($schema);
-			if( !isset($pkey) ) {
-				$schema_column[] = "id";
-			}
-			$schema_column[] = "date";
 			foreach( $schema_column as $column ) {
 				if( !in_array($column, array(":UKEY", ":PKEY")) ) {
-					$schema_string .= "public \${$column};\r\n\t";
+					$schema_string .= "\r\n * @property \${$column}";
 				}
 			}
 
 			//Заменяем в шаблоне
-			$model_row = str_replace("[{MODEL_SCHEME}]", $schema_string, $model_row);
+			$model = str_replace("[{MODEL_SCHEME}]", $schema_string, $model);
 
 			break;
 
@@ -226,15 +219,15 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 		);
 		echo "create model: " . APPLICATION_PATH . "/models/" . $table . ".php\r\n";
 	}
-	if( isset($model_row) ) {
-		if( is_dir(APPLICATION_PATH . "/models/row/") == false ) {
-			mkdir(APPLICATION_PATH . "/models/row/");
-			chmod(APPLICATION_PATH . "/models/row/", 0777);
-		}
-		file_put_contents(
-			APPLICATION_PATH . "/models/row/" . $table . "_row.php",
-			$model_row
-		);
-		echo "create row model: " . APPLICATION_PATH . "/models/row/" . $table . "_row.php\r\n";
-	}
+//	if( isset($model_row) ) {
+//		if( is_dir(APPLICATION_PATH . "/models/row/") == false ) {
+//			mkdir(APPLICATION_PATH . "/models/row/");
+//			chmod(APPLICATION_PATH . "/models/row/", 0777);
+//		}
+//		file_put_contents(
+//			APPLICATION_PATH . "/models/row/" . $table . "_row.php",
+//			$model_row
+//		);
+//		echo "create row model: " . APPLICATION_PATH . "/models/row/" . $table . "_row.php\r\n";
+//	}
 }

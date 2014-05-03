@@ -76,7 +76,7 @@ switch( $type ) {
 				foreach($files as $file) {
 					$file = pathinfo($file, PATHINFO_BASENAME);
 					if( preg_match("/^{$migration}_/", $file) ) {
-						Boot_Migration::model()->rollback($file);
+						Boot_Migration::model()->rollback_migration($file);
 						break;
 					}
 				}

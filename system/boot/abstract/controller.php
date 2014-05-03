@@ -8,7 +8,7 @@
 abstract class Boot_Abstract_Controller {
 
 	/**
-	 * @var Model_User_row|Model_row
+	 * @var Model_User|Model_row
 	 */
 	public $me;
 

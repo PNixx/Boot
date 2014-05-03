@@ -5,7 +5,7 @@
  * Time: 20:56
  */
 
-class Boot_Migration extends Model {
+class Boot_Migration extends ActiveRecord {
 
 	//При миграции
 	const TYPE_UP = 1;
@@ -17,16 +17,12 @@ class Boot_Migration extends Model {
 	const TYPE_CHANGE = 3;
 
 	/**
-	 * Таблица migration
-	 * @var string
+	 * Получение имени таблицы
+	 * @return string
 	 */
-	protected $table = "migration";
-
-	/**
-	 * Инстанс
-	 * @var Boot_Migration
-	 */
-	static private $_instance = null;
+	static protected function getTable() {
+		return "migration";
+	}
 
 	/**
 	 * Получаем инстанс
@@ -35,20 +31,17 @@ class Boot_Migration extends Model {
 	 */
 	static public function model() {
 
-		if( !(self::$_instance instanceof Boot_Migration) ) {
-			self::$_instance = new Boot_Migration();
-			if( self::$_instance->show_tables() == false ) {
-				self::$_instance->create_table(self::$_instance->table, array("id" => "varchar(100) NOT NULL"), "id");
-			}
+		if( self::show_tables() == false ) {
+			self::create_table(self::getTable(), array("id" => "varchar(100) NOT NULL"), "id");
 		}
-		return self::$_instance;
+		return new static;
 	}
 
 	/**
 	 * Получение последней миграции
 	 */
-	public function getLatestMigration($limit = 1) {
-		return $this->query($this->select(null, "id", "id DESC", $limit))->read_cols();
+	static public function getLatestMigration($limit = 1) {
+		return self::column("id")->order("id DESC")->limit($limit)->read_cols();
 	}
 
 	//----------------------------MIGRATE------------------------------->
@@ -57,7 +50,7 @@ class Boot_Migration extends Model {
 	 * @param $file
 	 * @throws Exception
 	 */
-	public function migrate($file) {
+	static public function migrate($file) {
 
 		//Подключаем файл миграции
 		require APPLICATION_ROOT . "/db/{$file}";
@@ -70,7 +63,7 @@ class Boot_Migration extends Model {
 
 						case "change":
 						case "up":
-							$this->change_up($migrate);
+							self::change_up($migrate);
 							break;
 
 						//Пропускаем кейс
@@ -82,14 +75,14 @@ class Boot_Migration extends Model {
 					}
 				}
 				if( preg_match("/^(\d+)/", $file, $match) ) {
-					$this->insert(array("id" => $match[1]));
+					self::insert(array("id" => $match[1]));
 					echo "Migration `{$match[1]}` success.\r\n";
 				}
 			}
 		} catch( Exception $e ) {
 			echo "!!! Migration error, start rollback\r\n";
 			try {
-				$this->rollback($file);
+				self::rollback_migration($file);
 			} catch( Exception $ee ) {
 			}
 			echo "!!! Rollback end\r\n\r\n";
@@ -101,7 +94,7 @@ class Boot_Migration extends Model {
 	 * Миграция
 	 * @param $migrate
 	 */
-	private function change_up(array $migrate) {
+	static private function change_up(array $migrate) {
 
 		//Проходим по типам миграции
 		foreach($migrate as $type => $data) {
@@ -109,22 +102,22 @@ class Boot_Migration extends Model {
 
 				//СОздание таблицы
 				case "create_table":
-					$this->create_tables($data);
+					self::create_tables($data);
 					break;
 				case "alter_table":
-					$this->alter_table($data);
+					self::alter_table($data);
 					break;
 
 				//Удаление таблицы
 				case "drop_table":
 					foreach($data as $table) {
-						$this->drop_table($table);
+						self::drop_table($table);
 						echo "DROP TABLE `{$table}`;\r\n";
 					}
 					break;
 
 				case "sql":
-					$this->model()->query($data);
+					self::model()->query($data);
 					break;
 
 				default:
@@ -137,9 +130,8 @@ class Boot_Migration extends Model {
 	 * Создание таблицы
 	 * @param array $tables
 	 * @return void
-	 * @internal param array $table
 	 */
-	private function create_tables(array $tables) {
+	static private function create_tables(array $tables) {
 
 		foreach($tables as $table => $key) {
 
@@ -204,7 +196,7 @@ class Boot_Migration extends Model {
 			}
 
 			//Отправляем запрос на создание таблицы
-			$this->create_table($table, $column, $pkey, $ukey);
+			self::create_table($table, $column, $pkey, $ukey);
 			echo "Create table `{$table}`\r\n";
 		}
 	}
@@ -212,14 +204,14 @@ class Boot_Migration extends Model {
 	/**
 	 * @param array $data
 	 */
-	private function alter_table(array $data) {
+	static private function alter_table(array $data) {
 
 		//Проходим по таблицам
 		foreach($data as $table => $actions) {
 
 			$model = "Model_" . $table;
 			/**
-			 * @var $model Model
+			 * @var $model ActiveRecord
 			 */
 			$model = new $model();
 
@@ -251,14 +243,14 @@ class Boot_Migration extends Model {
 	/**
 	 * @param array $data
 	 */
-	private function rollback_alter_table(array $data) {
+	static private function rollback_alter_table(array $data) {
 
 		//Проходим по таблицам
 		foreach($data as $table => $actions) {
 
 			$model = "Model_" . $table;
 			/**
-			 * @var $model Model
+			 * @var $model ActiveRecord
 			 */
 			$model = new $model();
 
@@ -292,7 +284,7 @@ class Boot_Migration extends Model {
 	 * Rollback миграции
 	 * @param $file
 	 */
-	public function rollback($file) {
+	static public function rollback_migration($file) {
 
 		//Подключаем файл миграции
 		require APPLICATION_ROOT . "/db/{$file}";
@@ -304,10 +296,10 @@ class Boot_Migration extends Model {
 				switch( $key ) {
 
 					case "change":
-						$this->change_down($migrate);
+						self::change_down($migrate);
 						break;
 					case "down":
-						$this->down($migrate);
+						self::down($migrate);
 						break;
 
 					//Пропускаем кейс
@@ -319,7 +311,7 @@ class Boot_Migration extends Model {
 				}
 			}
 			if( preg_match("/^(\d+)/", $file, $match) ) {
-				$this->delete($match[1]);
+				self::find($match[1])->destroy();
 				echo "Rollback `{$match[1]}` success.\r\n";
 			}
 		}
@@ -329,7 +321,7 @@ class Boot_Migration extends Model {
 	 * Rollback
 	 * @param $migrate
 	 */
-	private function change_down(array $migrate) {
+	static private function change_down(array $migrate) {
 
 		//Проходим по типам миграции
 		foreach($migrate as $type => $data) {
@@ -338,17 +330,18 @@ class Boot_Migration extends Model {
 				//СОздание таблицы
 				case "create_table":
 					foreach($data as $table => $column) {
-						$this->drop_table($table);
-						echo "DROP TABLE `{$table}`;\r\n";
+						if( self::drop_table($table) ) {
+							echo "DROP TABLE `{$table}`;\r\n";
+						}
 					}
 					break;
 
 				case "alter_table":
-					$this->rollback_alter_table($data);
+					self::rollback_alter_table($data);
 					break;
 
 				case "sql":
-					$this->model()->query($data);
+					self::model()->query($data);
 					break;
 
 				default:
@@ -361,7 +354,7 @@ class Boot_Migration extends Model {
 	 * Down function of migration
 	 * @param $migrate
 	 */
-	private function down(array $migrate) {
+	static private function down(array $migrate) {
 
 		//Проходим по типам миграции
 		foreach($migrate as $type => $data) {
@@ -369,15 +362,15 @@ class Boot_Migration extends Model {
 
 				//Создание таблицы
 				case "create_table":
-					$this->create_tables($data);
+					self::create_tables($data);
 					break;
 
 				case "alter_table":
-					$this->rollback_alter_table($data);
+					self::rollback_alter_table($data);
 					break;
 
 				case "sql":
-					$this->model()->query($data);
+					self::model()->query($data);
 					break;
 
 				default:

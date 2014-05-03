@@ -44,6 +44,12 @@ class Select {
 	private $_table = null;
 
 	/**
+	 * JOIN к таблице
+	 * @var null
+	 */
+	private $_joins = null;
+
+	/**
 	 * Драйвер
 	 * @var postgres|mysql
 	 */
@@ -53,11 +59,11 @@ class Select {
 	 * Конструктор
 	 * @param string|array $table
 	 * @param null $where
-	 * @param null $colum
+	 * @param null $column
 	 * @param null $order
 	 * @param null $limit
 	 */
-	public function __construct($table, $where = null, $colum = null, $order = null, $limit = null) {
+	public function __construct($table, $where = null, $column = null, $order = null, $limit = null) {
 
 		$this->_table = is_array($table) ? $table : array($table);
 
@@ -70,8 +76,8 @@ class Select {
 		if( $where ) {
 			$this->where($where);
 		}
-		if( $colum ) {
-			$this->column($colum);
+		if( $column ) {
+			$this->column($column);
 		}
 		if( $order ) {
 			$this->order($order);
@@ -84,14 +90,22 @@ class Select {
 	private function getStringQueryByArray($array) {
 		$string = "";
 		foreach($array as $v) {
-			$string .= ($string == "" ? "" : ",") . ($v instanceof DB_Expr ? $v : "{$this->driver->separator}{$v}{$this->driver->separator}");
+			$string .= ($string == "" ? "" : ",") . ($v instanceof DB_Expr ? $v : $this->driver->getStringQueryByValue($v));
+		}
+		return $string;
+	}
+
+	private function getIdentifierByArray($array) {
+		$string = "";
+		foreach($array as $v) {
+			$string .= ($string == "" ? "" : ",") . ($v instanceof DB_Expr ? $v : $this->driver->escape_identifier($v));
 		}
 		return $string;
 	}
 
 	/**
 	 * Указываем выборку колонок
-	 * @param $column
+	 * @param array|string $column
 	 * @return Select
 	 */
 	public function column($column) {
@@ -109,7 +123,7 @@ class Select {
 		if( is_array($where) ) {
 			$sql = "";
 			foreach($where as $k => $v) {
-				$sql .= ($sql == "" ? "" : " AND ") . $this->driver->separator . $k . $this->driver->separator . " = " . $this->driver->getStringQueryByValue($v);
+				$sql .= ($sql == "" ? "" : " AND ") . (count($this->_table) == 1 ? $this->driver->escape_identifier($this->_table[0]) . "." : "") . $this->driver->escape_identifier($k) . " = " . $this->driver->getStringQueryByValue($v);
 			}
 
 			$where = $sql;
@@ -118,6 +132,37 @@ class Select {
 		$this->_where .= ($this->_where == null ? "" : " AND ") . "({$where})";
 
 		return $this;
+	}
+
+	/**
+	 * Добавление join к запросу
+	 * @param string $table
+	 * @param string|array|null $on
+	 * @throws DB_Exception
+	 */
+	public function joins($table, $on = null) {
+
+		//Если указано кол-во таблиц больше 1, то хз че делать
+		if( count($this->_table) > 1 ) {
+			throw new DB_Exception("Must be table count 1");
+		}
+
+		//Добавочное условие
+		if( $on === null ) {
+			$where = null;
+		} else {
+			if( is_array($on) ) {
+				$where = "";
+				foreach( $on as $key => $v ) {
+					$where .= " AND " . $this->driver->escape_identifier($table) . "." . $this->driver->escape_identifier($key) . " = " . $this->driver->getStringQueryByValue($v);
+				}
+			} else {
+				$where = " AND " . $on;
+			}
+		}
+
+		//Добавляем
+		$this->_joins .= " INNER JOIN " . $this->driver->escape_identifier($table) . " ON " . $this->driver->escape_identifier($table) . "." . $this->driver->escape_identifier($this->_table[0] . "_id") . " = " . $this->driver->escape_identifier($this->_table[0]) . "." . $this->driver->escape_identifier("id") . $where;
 	}
 
 	/**
@@ -143,11 +188,15 @@ class Select {
 
 	/**
 	 * Указываем сортировку
-	 * @param $orderby
+	 * @param string $orderby
 	 * @return Select
 	 */
 	public function order($orderby) {
-		$this->_order = " ORDER BY " . $orderby;
+		if( $orderby === null ) {
+			$this->_order = null;
+		} else {
+			$this->_order = " ORDER BY " . $orderby;
+		}
 		return $this;
 	}
 
@@ -163,7 +212,11 @@ class Select {
 	 * @return Select
 	 */
 	public function limit($limit, $offset = null) {
-		$this->_limit = " LIMIT {$limit}" . ($offset ? (Boot::getInstance()->config->db == "mysql" ? "," : " OFFSET ") . $offset : "");
+		if( $limit ) {
+			$this->_limit = " LIMIT {$limit}" . ($offset ? (Boot::getInstance()->config->db == "mysql" ? "," : " OFFSET ") . $offset : "");
+		} else {
+			$this->_limit = null;
+		}
 		return $this;
 	}
 
@@ -174,11 +227,11 @@ class Select {
 	public function __toString() {
 
 		//Получаем колонки
-		$column = $this->_column ? $this->getStringQueryByArray($this->_column) : "*";
-		$table = $this->getStringQueryByArray($this->_table);
+		$column = $this->_column ? $this->getIdentifierByArray($this->_column) : "*";
+		$table = $this->getIdentifierByArray($this->_table);
 		$where = $this->_where ? " WHERE " . $this->_where : "";
 
-		return "SELECT {$column} FROM {$table}{$where}{$this->_group_by}{$this->_order}{$this->_limit}";
+		return "SELECT {$column} FROM {$table}{$this->_joins}{$where}{$this->_group_by}{$this->_order}{$this->_limit}";
 	}
 }
 

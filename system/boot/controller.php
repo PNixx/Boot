@@ -116,6 +116,25 @@ class Boot_Controller {
 	}
 
 	/**
+	 * Получить параметры запроса
+	 * @return null|array
+	 */
+	public function getParams() {
+
+		//Если есть в get запросе
+		if( isset(Boot_Controller::getInstance()->_request) ) {
+			return Boot_Controller::getInstance()->_request;
+		}
+
+		//Если есть в post запросе
+		if( isset($_POST) ) {
+			return $_POST;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Получение декодированного параметра запроса
 	 * @param $name
 	 * @return string
@@ -184,8 +203,12 @@ class Boot_Controller {
 		//Загружаем контроллер
 		$this->includeController();
 
-		$Cname = (isset($this->_param->module) ? $this->_param->module . "_" : "") . $this->_param->controller . self::PREFIX;
+		$Cname = (isset($this->_param->module) ? ucfirst($this->_param->module) . "_" : "") . ucfirst($this->_param->controller) . self::PREFIX;
 		$Aname = $this->_param->action . "Action";
+
+		//Debug
+		Boot::getInstance()->debug("Processing by " . (isset($this->_param->module) ? ucfirst($this->_param->module) . "::" : "") . ucfirst($this->_param->controller) . "#" . $this->_param->action);
+		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams()));
 
 		//Если найден такой класс
 		if( class_exists($Cname) == false ) {

@@ -1,5 +1,9 @@
 <?
-//@todo Написать эксепшены
+
+/**
+ * Class Model
+ * @deprecated
+ */
 class Model {
 
 	/**
@@ -139,6 +143,7 @@ class Model {
 	/**
 	 * Drop table
 	 * @param $table
+	 * @return \Model
 	 */
 	public function drop_table($table) {
 		return $this->_db->drop_table($table);
@@ -180,14 +185,14 @@ class Model {
 	/**
 	 * Выбор всех записей в таблице по запросу
 	 * @param string|array $where
-	 * @param string|array $colum
+	 * @param string|array $column
 	 * @param null $order
 	 * @param null $limit
 	 * @internal param string $table Имя таблицы
 	 * @return Select
 	 */
-	public function select($where = null, $colum = null, $order = null, $limit = null) {
-		return new Select($this->table, $where, $colum, $order, $limit);
+	public function select($where = null, $column = null, $order = null, $limit = null) {
+		return new Select($this->table, $where, $column, $order, $limit);
 	}
 
 	/**

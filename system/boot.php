@@ -1,6 +1,7 @@
 <?
 /**
  * Class Boot
+ * @method void debug(string $logger)
  */
 class Boot {
 
@@ -35,6 +36,12 @@ class Boot {
 	private $_nameLayout = null;
 
 	/**
+	 * Запоминаем время начала
+	 * @var int
+	 */
+	private $_time_start;
+
+	/**
 	 * @var Boot_Library $library
 	 */
 	public $library;
@@ -63,6 +70,9 @@ class Boot {
 	 */
 	public function __construct() {
 
+		//Запоминаем время начала
+		$this->_time_start = Boot::mktime();
+
 		/**
 		 * @const SYSTEM_PATH
 		 */
@@ -71,7 +81,19 @@ class Boot {
 	}
 
 	/**
+	 * Псевдо вызов функций
+	 */
+	public function __call($name, $params) {
+
+		//Если выполняем дебаг
+		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && APPLICATION_ENV == 'development' ) {
+			Boot_Debug_Lib::log($params[0]);
+		}
+	}
+
+	/**
 	 * Инициализация
+	 * @throws Exception
 	 * @return void
 	 */
 	public function run() {
@@ -135,18 +157,32 @@ class Boot {
 		//Загружаем библиотеки
 		$this->load_library();
 
-		//Инициализируем контроллер
-		$this->init_controller();
+		//Debug
+		$this->debug(PHP_EOL . PHP_EOL . $_SERVER['REQUEST_METHOD'] . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
 
-		//Если не отключали вьюху, запускаем
-		if( $this->_view ) {
-			$view = $this->init_view();
-		} else {
-			$view = null;
+		try {
+			//Инициализируем контроллер
+			$this->init_controller();
+
+			//Если не отключали вьюху, запускаем
+			if( $this->_view ) {
+				$view = $this->init_view();
+			} else {
+				$view = null;
+			}
+
+			//Загружаем шаблон
+			$this->load_layout($view);
+		} catch( Exception $e ) {
+			ob_end_clean();
+//			ob_end_flush();
+			@ob_clean();
+//			@ob_flush();
+			throw $e;
 		}
 
-		//Загружаем шаблон
-		$this->load_layout($view);
+		//Выводим время работы
+		Boot::getInstance()->debug("  Completed (" . Boot::check_time($this->_time_start) . "ms)");
 	}
 
 	/**
@@ -247,6 +283,7 @@ class Boot {
 			require_once 'boot/db/row.php';
 			require_once 'boot/db/select.php';
 			require_once 'boot/db/collection.php';
+			require_once 'boot/db/db.php';
 
 		} else {
 
@@ -412,5 +449,18 @@ class Boot {
 	 */
 	static public function getRealIp() {
 		return isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? $_SERVER["HTTP_X_FORWARDED_FOR"] : (isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR']);
+	}
+
+	/**
+	 * @return float
+	 */
+	static public function mktime() {
+//		list($usec, $sec) = explode(" ", microtime());
+//		return ((float)$usec + (float)$sec) * 1000000;
+		return microtime(true);
+	}
+
+	static public function check_time($mktime) {
+		return round((Boot::mktime() - $mktime) * 1000, 2);
 	}
 }

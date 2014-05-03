@@ -1,45 +1,10 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
  * User: nixx
  * Date: 21.07.13
  * Time: 10:49
- * To change this template use File | Settings | File Templates.
  */
-
 class Model_Collection implements Iterator, ArrayAccess  {
-
-	/**
-	 * Рабочая таблица модели
-	 * @var null||string
-	 */
-	protected $_table = null;
-
-	/**
-	 * Связь с таблицами
-	 * Многие к одному
-	 * @var null|array
-	 */
-	protected $_belongs_to = null;
-
-	/**
-	 * Связь с таблицами
-	 * Один ко многим
-	 * @var null|array([column] => [table])
-	 */
-	protected $_has_many = null;
-
-	/**
-	 * Первичный ключ
-	 * @var null|array
-	 */
-	protected $_pkey = null;
-
-	/**
-	 * Инстанс модели
-	 * @var Model
-	 */
-	private $_model_instance = null;
 
 	//Строка модели
 	private $_model_row = null;
@@ -49,26 +14,16 @@ class Model_Collection implements Iterator, ArrayAccess  {
 
 	/**
 	 * Коллекция строк
-	 * @var Model_Row[]
+	 * @var ActiveRecord[]
 	 */
 	private $_rows = array();
 
 	/**
 	 * Конструктор
-	 * @param $table
-	 * @param $belongs_to
-	 * @param $has_many
-	 * @param $pkey
 	 * @param $model_row
-	 * @param Model $model
 	 * @param array $rows
 	 */
-	public function __construct($table, $belongs_to, $has_many, $pkey, $model_row, Model &$model, array $rows) {
-		$this->_table = $table;
-		$this->_belongs_to = $belongs_to;
-		$this->_has_many = $has_many;
-		$this->_pkey = $pkey;
-		$this->_model_instance = $model;
+	public function __construct($model_row, array $rows) {
 		$this->_model_row = $model_row;
 		$this->_rows = $rows;
 	}
@@ -86,19 +41,10 @@ class Model_Collection implements Iterator, ArrayAccess  {
 	}
 
 	/**
-	 * @return Model_Row
+	 * @return ActiveRecord
 	 */
 	public function current() {
-		try {
-			if( class_exists($this->_model_row) ) {
-				return new $this->_model_row($this->_rows[$this->_position], $this->_table, $this->_belongs_to, $this->_has_many, $this->_pkey, $this->_model_instance);
-			} else {
-				return $this->_rows[$this->_position];
-			}
-
-		} catch( Exception $e ) {
-			return $this->_rows[$this->_position];
-		}
+		return new $this->_model_row($this->_rows[$this->_position], false);
 	}
 
 	/**
@@ -164,15 +110,7 @@ class Model_Collection implements Iterator, ArrayAccess  {
 	 * @return mixed Can return all value types.
 	 */
 	public function offsetGet($offset) {
-		try {
-			if( class_exists($this->_model_row) ) {
-				return new $this->_model_row($this->_rows[$offset], $this->_table, $this->_belongs_to, $this->_has_many, $this->_pkey, $this->_model_instance);
-			} else {
-				return $this->_rows[$offset];
-			}
-		} catch( Exception $e ) {
-			return $this->_rows[$offset];
-		}
+		return new $this->_model_row($this->_rows[$offset], false);
 	}
 
 	/**

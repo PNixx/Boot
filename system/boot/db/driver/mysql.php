@@ -53,10 +53,26 @@ class mysql {
 		}
 	}
 
+	public function escape_identifier($name) {
+		return "{$this->separator}{$name}{$this->separator}";
+	}
+
+	public function begin_transaction() {
+		$this->query("BEGIN");
+	}
+
+	public function commit() {
+		$this->query("COMMIT");
+	}
+
+	public function rollback() {
+		$this->query("ROLLBACK");
+	}
+
 	/**
 	 * SQL query
 	 * @param	$query
-	 * @return Model
+	 * @return mysql
 	 */
 	public function query($query) {
 		$this->result = mysql_query($query) or self::error($query);
@@ -284,10 +300,11 @@ class mysql {
 	/**
 	 * Удаление
 	 * @param $table
+	 * @param $column
 	 * @param $id
 	 * @return void
 	 */
-	public function delete($table, $id) {
-		$this->query("DELETE FROM `{$table}` WHERE id = {$id};");
+	public function delete($table, $column, $id) {
+		$this->query("DELETE FROM " . $this->escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = {$id};");
 	}
 }

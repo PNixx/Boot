@@ -38,6 +38,9 @@ class postgres {
 	 * @throws Exception
 	 */
 	private function error($query = null) {
+		//Debug
+		Boot::getInstance()->debug("  SQL Error: " . $query);
+
 		throw new Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
@@ -46,17 +49,53 @@ class postgres {
 	 * @return object
 	 */
 	public function connect() {
+
+		//Запоминаем время начала
+		$time = Boot::mktime();
+
+		//Коннектимся к БД
 		$this->_connect = pg_connect("host={$this->_host} port={$this->_port} dbname={$this->_dbase} user={$this->_user} password={$this->_pass} options='--client_encoding=UTF8'") or new DB_Exception("Could not connect");
+
+		//Debug
+		Boot::getInstance()->debug("  \x1b[35mPostgres (" . Boot::check_time($time) . "ms)\x1b[0m {$this->_host}:{$this->_port}");
+
+		//Возвращаем коннект
 		return $this->_connect;
+	}
+
+	public function escape_identifier($name) {
+		return '"' . $name . '"';
+	}
+
+	public function begin_transaction() {
+		$this->query("BEGIN");
+	}
+
+	public function commit() {
+		$this->query("COMMIT");
+	}
+
+	public function rollback() {
+		$this->query("ROLLBACK");
 	}
 
 	/**
 	 * SQL query
 	 * @param	$query
-	 * @return Model
+	 * @return postgres
 	 */
 	public function query($query) {
+
+		//Запоминаем время начала
+		$time = Boot::mktime();
+
+		//Делаем запрос
 		$this->result = @pg_query($this->_connect, $query) or $this->error($query);
+
+		//Debug
+		Boot::getInstance()->debug("  \x1b[36mSQL (" . Boot::check_time($time) . "ms)\x1b[0m " . $query);
+
+		//Return
 		return $this;
 	}
 
@@ -75,11 +114,11 @@ class postgres {
 	public function create_table($table, $column, $pkey = null, $ukey = null) {
 		$sql = "";
 		foreach($column as $col => $data) {
-			$sql .= ($sql == "" ? "" : ",") . $this->separator . $col . $this->separator . " {$data}";
+			$sql .= ($sql == "" ? "" : ",") . pg_escape_identifier($col) . " {$data}";
 		}
 		$sql_pkey = "";
 		if( $pkey ) {
-			$sql_pkey = ", PRIMARY KEY ({$this->separator}{$pkey}{$this->separator})";
+			$sql_pkey = ", PRIMARY KEY (" . pg_escape_identifier($pkey) . ")";
 		}
 		$sql_ukey = "";
 		if( $ukey ) {
@@ -89,9 +128,9 @@ class postgres {
 			foreach($ukey as $key) {
 				$sql_ukey .= ($sql_ukey == "" ? "" : ",") . $this->separator . $key . $this->separator;
 			}
-			$sql_ukey = ", CONSTRAINT {$this->separator}ukey_{$table}_" . implode("_", $ukey) . "{$this->separator} UNIQUE  ({$sql_ukey})";
+			$sql_ukey = ", CONSTRAINT " . pg_escape_identifier("ukey_{$table}_" . implode("_", $ukey)) . " UNIQUE  ({$sql_ukey})";
 		}
-		return $this->query("CREATE TABLE {$this->separator}{$table}{$this->separator} ({$sql}{$sql_pkey}{$sql_ukey});");
+		return $this->query("CREATE TABLE " . pg_escape_identifier($table) . " ({$sql}{$sql_pkey}{$sql_ukey});");
 	}
 
 	/**
@@ -101,7 +140,7 @@ class postgres {
 	 * @param $new_name
 	 */
 	public function rename_column($table, $column, $new_name) {
-		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} RENAME {$this->separator}{$column}{$this->separator} TO {$this->separator}{$new_name}{$this->separator};");
+		$this->query("ALTER TABLE " . pg_escape_identifier($table) . " RENAME " . pg_escape_identifier($column) . " TO " . pg_escape_identifier($new_name) . ";");
 	}
 
 	/**
@@ -111,7 +150,7 @@ class postgres {
 	 * @param $type
 	 */
 	public function add_column($table, $column, $type) {
-		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} ADD COLUMN {$this->separator}{$column}{$this->separator} {$type};");
+		$this->query("ALTER TABLE " . pg_escape_identifier($table) . " ADD COLUMN " . pg_escape_identifier($column) . " {$type};");
 	}
 
 	/**
@@ -120,7 +159,7 @@ class postgres {
 	 * @param $column
 	 */
 	public function drop_column($table, $column) {
-		$this->query("ALTER TABLE {$this->separator}{$table}{$this->separator} DROP COLUMN {$this->separator}{$column}{$this->separator};");
+		$this->query("ALTER TABLE " . pg_escape_identifier($table) . " DROP COLUMN " . pg_escape_identifier($column) . ";");
 	}
 
 	/**
@@ -130,8 +169,8 @@ class postgres {
 	 */
 	public function drop_table($table) {
 		return $this->query("BEGIN;
-		DROP TABLE {$this->separator}{$table}{$this->separator};
-		DROP SEQUENCE IF EXISTS {$this->separator}{$table}_id_seq{$this->separator};
+		DROP TABLE IF EXISTS " . pg_escape_identifier($table) . ";
+		DROP SEQUENCE IF EXISTS " . pg_escape_identifier($table . "_id_seq") . ";
 		COMMIT;");
 	}
 
@@ -139,14 +178,18 @@ class postgres {
 	 * Выбор всех записей в таблице по запросу
 	 * @param string $table Имя таблицы
 	 * @param string $where
-	 * @return Model
+	 * @param null $column
+	 * @param null $order
+	 * @param null $limit
+	 * @return postgres
 	 */
-	public function select($table, $where = null, $colum = null, $order = null, $limit = null) {
-		return $this->query('SELECT ' . ($colum === null ? '*' : $colum) . ' FROM ' . $this->separator . $table . $this->separator . ($where ? ' WHERE ' . $where : '') . ($order ? " ORDER BY " . $order : "") . ($limit ? " LIMIT " . $limit : ""));
+	public function select($table, $where = null, $column = null, $order = null, $limit = null) {
+		return $this->query('SELECT ' . ($column === null ? '*' : $column) . ' FROM ' . pg_escape_identifier($table) . ($where ? ' WHERE ' . $where : '') . ($order ? " ORDER BY " . $order : "") . ($limit ? " LIMIT " . $limit : ""));
 	}
 
 	/**
 	 * Чтение 1 записи, возврат объекта
+	 * @param null $i
 	 * @return object
 	 */
 	public function row($i = null) {
@@ -237,7 +280,7 @@ class postgres {
 		if( is_bool($value) ) {
 			return $value ? "TRUE" : "FALSE";
 		}
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : (stristr($value, "'") ? "$$" . stripslashes($value) . "$$" : "'" . stripslashes($value) . "'"));
+		return is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $value) : "'" . (pg_escape_string($value) . "'");
 	}
 
 	/**
@@ -253,12 +296,7 @@ class postgres {
 
 		$q = '';
 		foreach( $data as $key => $v ) {
-
-			if( is_null($v) == false && is_int($v) == false && is_bool($v) == false && !($v instanceof DB_Expr) ) {
-				$v = addslashes($v);
-			}
-
-			$q .= ($q != '' ? ', ' : '') . $this->separator . $key . $this->separator . '=' . $this->getStringQueryByValue($v);
+			$q .= ($q != '' ? ', ' : '') . pg_escape_identifier($key) . '=' . $this->getStringQueryByValue($v);
 		}
 		return $q;
 
@@ -302,7 +340,7 @@ class postgres {
 			return false;
 		}
 
-		$this->query("UPDATE {$this->separator}{$table}{$this->separator} SET $q" . ($where ? ' WHERE ' . $where : ''));
+		$this->query("UPDATE " . pg_escape_identifier($table) . " SET $q" . ($where ? ' WHERE ' . $where : ''));
 		return $this->affected_rows();
 
 	}
@@ -315,7 +353,7 @@ class postgres {
 			return false;
 		}
 
-		$id = $this->query("INSERT INTO {$this->separator}{$table}{$this->separator} (" . $q['values'] . ")VALUES(" . $q['insert'] . ")" . ($pkey ? " RETURNING " . $this->separator . $pkey . $this->separator : "") . ";")->row();
+		$id = $this->query("INSERT INTO " . pg_escape_identifier($table) . " (" . $q['values'] . ")VALUES(" . $q['insert'] . ")" . ($pkey ? " RETURNING " . pg_escape_identifier($pkey) : "") . ";")->row();
 		if( $id ) {
 			return $id->$pkey;
 		} else {
@@ -326,10 +364,11 @@ class postgres {
 	/**
 	 * Удаление
 	 * @param $table
-	 * @param $id
+	 * @param $column
+	 * @param int $id
 	 * @return void
 	 */
-	public function delete($table, $id) {
-		$this->query("DELETE FROM {$this->separator}{$table}{$this->separator} WHERE id = '{$id}';");
+	public function delete($table, $column, $id) {
+		$this->query("DELETE FROM " . pg_escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = " . pg_escape_literal($id) . ";");
 	}
 }
