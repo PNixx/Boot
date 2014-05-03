@@ -623,7 +623,7 @@ abstract class ActiveRecord {
 		$this->_row_update = $data;
 
 		//Пытаемся обновить
-		$result = DB::getDB()->update(static::getTable(), $data, self::getPKey() . " = " . $this->{self::getPKey()});
+		$result = DB::getDB()->update(static::getTable(), $data, self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
 		if( $result ) {
 
 			//Изменяем данные строки
