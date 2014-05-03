@@ -8,7 +8,7 @@ class Boot_View {
 	static private $_instance = null;
 
 	/**
-	 * @var Model_User_Row
+	 * @var Model_User
 	 */
 	public $me = null;
 
