@@ -66,9 +66,9 @@ abstract class ActiveRecord {
 
 	/**
 	 * Набор условий для поиска
-	 * @var Select
+	 * @var Select[]
 	 */
-	private static $select = null;
+	private static $select = [];
 
 	/**
 	 * Конструктор класса
@@ -236,17 +236,47 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * Инициализация запроса для конкретной модели
+	 */
+	private static function init_select() {
+		if( isset(self::$select[self::getTable()]) == false ) {
+			self::$select[self::getTable()] = new Select(static::getTable(), null, null, static::$default_order);
+		}
+	}
+
+	/**
+	 * Проверка, инициализирован ли select
+	 * @throws DB_Exception
+	 */
+	private static function check_select() {
+		if( isset(self::$select[self::getTable()]) == false ) {
+			throw new DB_Exception("Non select constructor");
+		}
+	}
+
+	/**
+	 * Выполнение запроса
+	 * @return mysql|postgres
+	 */
+	private static function query_select() {
+
+		//Выполняем запрос
+		$result = DB::getDB()->query(self::$select[self::getTable()]);
+		unset(self::$select[self::getTable()]);
+
+		//Возвращаем результат
+		return $result;
+	}
+
+	/**
 	 * @return static
 	 * @throws DB_Exception
 	 */
 	public static function row() {
-		if( self::$select == null ) {
-			throw new DB_Exception("Non select constructor");
-		}
+		self::check_select();
 
 		//Выполняем запрос
-		$result = DB::getDB()->query(self::$select);
-		self::$select = null;
+		$result = self::query_select();
 
 		//Получаем строку
 		$row = $result->row();
@@ -263,13 +293,10 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	public static function read_cols() {
-		if( self::$select == null ) {
-			throw new DB_Exception("Non select constructor");
-		}
+		self::check_select();
 
 		//Выполняем запрос
-		$result = DB::getDB()->query(self::$select);
-		self::$select = null;
+		$result = self::query_select();
 
 		//Получаем строку
 		return $result->read_cols();
@@ -280,13 +307,10 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	public static function read_all() {
-		if( self::$select == null ) {
-			throw new DB_Exception("Non select constructor");
-		}
+		self::check_select();
 
 		//Выполняем запрос
-		$result = DB::getDB()->query(self::$select);
-		self::$select = null;
+		$result = self::query_select();
 
 		$rows = array();
 		while( $line = $result->read() ) {
@@ -302,13 +326,10 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	public static function all() {
-		if( self::$select == null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
+		self::init_select();
 
 		//Выполняем запрос
-		$result = DB::getDB()->query(self::$select);
-		self::$select = null;
+		$result = self::query_select();
 
 		$rows = array();
 		$i = 0;
@@ -328,7 +349,7 @@ abstract class ActiveRecord {
 	public static function query($query) {
 
 		//Выполняем запрос
-		self::$select = $query;
+		self::$select[self::getTable()] = $query;
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -352,12 +373,10 @@ abstract class ActiveRecord {
 	public static function where($where) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем условие
-		self::$select->where($where);
+		self::$select[self::getTable()]->where($where);
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -371,12 +390,12 @@ abstract class ActiveRecord {
 	public static function joins($table, $on = null) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, new DB_Expr(static::getTable() . ".*"), static::$default_order);
+		if( isset(self::$select[self::getTable()]) == false ) {
+			self::$select[self::getTable()] = new Select(static::getTable(), null, new DB_Expr(static::getTable() . ".*"), static::$default_order);
 		}
 
 		//Добавляем join
-		self::$select->joins($table, $on);
+		self::$select[self::getTable()]->joins($table, $on);
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -391,12 +410,10 @@ abstract class ActiveRecord {
 	public static function iLike($column, $value) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем условие
-		self::$select->where(DB::getDB()->escape_identifier($column) . " ILIKE " . DB::getDB()->getStringQueryByValue($value));
+		self::$select[self::getTable()]->where(DB::getDB()->escape_identifier($column) . " ILIKE " . DB::getDB()->getStringQueryByValue($value));
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -410,12 +427,10 @@ abstract class ActiveRecord {
 	public static function column($column) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем колонки выборки
-		self::$select->column($column);
+		self::$select[self::getTable()]->column($column);
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -429,12 +444,12 @@ abstract class ActiveRecord {
 	public static function order($order_by) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable());
+		if( isset(self::$select[self::getTable()]) == false ) {
+			self::$select[self::getTable()] = new Select(static::getTable());
 		}
 
 		//Добавляем колонки выборки
-		self::$select->order($order_by);
+		self::$select[self::getTable()]->order($order_by);
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -449,12 +464,10 @@ abstract class ActiveRecord {
 	public static function limit($limit, $offset = 0) {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем колонки выборки
-		self::$select->limit($limit, $offset);
+		self::$select[self::getTable()]->limit($limit, $offset);
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -542,11 +555,9 @@ abstract class ActiveRecord {
 	public static function toSql() {
 
 		//Инициализируем
-		if( self::$select === null ) {
-			self::$select = new Select(static::getTable(), null, null, static::$default_order);
-		}
-		$select = self::$select;
-		self::$select = null;
+		self::init_select();
+		$select = self::$select[self::getTable()];
+		unset(self::$select[self::getTable()]);
 
 		//Возвращем
 		return $select;
