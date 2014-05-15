@@ -128,7 +128,7 @@ abstract class ActiveRecord {
 	 * @return string
 	 */
 	public function __get($name) {
-		if( isset($this->_row->$name) ) {
+		if( property_exists($this->_row, $name) ) {
 			return $this->_row->$name;
 		} else {
 			return false;
