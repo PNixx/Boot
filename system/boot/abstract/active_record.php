@@ -615,6 +615,14 @@ abstract class ActiveRecord {
 	// ---------------- Row methods --------------------->
 
 	/**
+	 * Новая строка?
+	 * @return bool
+	 */
+	public function isNew() {
+		return $this->_new_record;
+	}
+
+	/**
 	 * Обновление данных строки
 	 * @param $data
 	 * @return bool|int
