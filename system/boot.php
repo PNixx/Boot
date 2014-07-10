@@ -229,6 +229,9 @@ class Boot {
 
 		//Загружаем библиотеки
 		$this->load_library();
+
+		//Debug
+		$this->debug(PHP_EOL . PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
 	}
 
 	/**

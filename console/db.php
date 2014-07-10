@@ -94,11 +94,10 @@ switch( $type ) {
 			exit("Unknown class: " . $class . PHP_EOL);
 		}
 		/**
-		 * @var $model Model
+		 * @var $class ActiveRecord
 		 */
-		$model = new $class();
 		if( isset($argv[3]) && (int)$argv[3] > 0 ) {
-			$row = $model->find_array($argv[3]);
+			$row = $class::find($argv[3])->toArray();
 			if( $row ) {
 				foreach($row as $column => $value) {
 					if (mb_strlen($value, 'utf-8') > 100 ) {
@@ -108,7 +107,7 @@ switch( $type ) {
 			}
 			print_r($row);
 		} else {
-			$rows = $model->where()->read_all();
+			$rows = $class::read_all();
 			foreach($rows as $i => $row) {
 				foreach($row as $column => $value) {
 					if (mb_strlen($value, 'utf-8') > 100 ) {
@@ -133,12 +132,10 @@ switch( $type ) {
 			exit("You must write destroyed ID" . PHP_EOL);
 		}
 		/**
-		 * @var $model Model
+		 * @var $class ActiveRecord
 		 */
-		$model = new $class();
-
 		//Ищем запись
-		$row = $model->find($argv[3]);
+		$row = $class::find($argv[3]);
 		if( $row ) {
 			$row->destroy();
 		} else {

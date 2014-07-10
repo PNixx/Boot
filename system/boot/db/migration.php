@@ -311,7 +311,7 @@ class Boot_Migration extends ActiveRecord {
 				}
 			}
 			if( preg_match("/^(\d+)/", $file, $match) ) {
-				self::find($match[1])->destroy();
+				self::find((string)$match[1])->destroy();
 				echo "Rollback `{$match[1]}` success.\r\n";
 			}
 		}

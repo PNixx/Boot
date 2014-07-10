@@ -326,6 +326,10 @@ class Boot_Controller {
 	 * @return void
 	 */
 	public function _redirect($url) {
+
+		//Debug
+		Boot::getInstance()->debug("  \x1b[33mRedirect to: " . $url . "\x1b[0m");
+
 		Boot_Flash::getInstance()->set("referer", "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
 		header("Location: " . $url);
 		exit;

@@ -17,14 +17,10 @@ class Boot_Exception extends Exception {
 		//Устанавливаем заголовок
 		header('HTTP/1.0 ' . $e->getCode());
 
-		//Если ошибка была не в БД
-		if( get_class($e) != "DB_Exception" ) {
+		//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
+		self::sendLibraryException($e);
 
-			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
-			self::sendLibraryException($e);
-
-			require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
-		}
+		require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
 		exit;
 	}
 

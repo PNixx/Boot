@@ -599,7 +599,7 @@ abstract class ActiveRecord {
 			$row = self::$_cached_by_find[static::getTable()][$id];
 		} else {
 			//Получаем строку из БД
-			$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . pg_escape_literal($id))->row();
+			$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($id))->row();
 			self::$_cached_by_find[static::getTable()][$id] = $row;
 
 			//Если ничего не нашли

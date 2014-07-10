@@ -68,7 +68,11 @@ class Boot_Auth_Lib extends Boot_Abstract_Library {
 			}
 
 			//Получаем юзера
-			$this->_me = Model_User::find($id);
+			try {
+				$this->_me = Model_User::find($id);
+			} catch( Exception $e ) {
+				$this->_me = false;
+			}
 
 			//Проверяем корректность
 			if( $this->_me == false || $skey != Boot_Skey::get() || $sig != md5($id . $skey . $this->_me->skey) ) {

@@ -121,9 +121,15 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		if( isset($params["include_blank"]) == false ) {
 			$params["include_blank"] = true;
 		}
+		$print = "";
+
+		//Печатаем лейбл
+		if( (isset($params["label"]) && $params["label"] !== false || isset($params["label"]) == false ) ) {
+			$print .= $this->label($name, $params);
+		}
 
 		//Строим селектор
-		$print = "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}[$name]\"" . $this->implode($params) . ">";
+		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}[$name]\"" . $this->implode($params) . ">";
 
 		//Добавляем пустое поле
 		if( $params["include_blank"] ) {
