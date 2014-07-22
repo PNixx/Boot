@@ -30,7 +30,7 @@ class Boot_Flash {
 	 * Создаём и возвращаем ключ
 	 */
 	public function __construct() {
-		if( isset($_COOKIE['flash']) ) {
+		if( isset($_COOKIE['flash']) && $_COOKIE['flash'] != 'deleted' ) {
 			$this->_flash = unserialize($_COOKIE['flash']);
 			setcookie('flash', null, time() - 1, "/", Boot::getInstance()->config->host);
 		}
