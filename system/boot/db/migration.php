@@ -117,7 +117,7 @@ class Boot_Migration extends ActiveRecord {
 					break;
 
 				case "sql":
-					self::model()->query($data);
+					self::model()->query($data)->all();
 					break;
 
 				default:
@@ -370,7 +370,7 @@ class Boot_Migration extends ActiveRecord {
 					break;
 
 				case "sql":
-					self::model()->query($data);
+					self::model()->query($data)->all();
 					break;
 
 				default:

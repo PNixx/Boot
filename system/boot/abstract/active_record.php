@@ -728,6 +728,13 @@ abstract class ActiveRecord {
 	public function toArray() {
 		return (array)$this->_row;
 	}
+
+	/**
+	 * Преобразование в строку для вывода
+	 */
+	public function __toString() {
+		return print_r($this->toArray(), true);
+	}
 }
 
 /**

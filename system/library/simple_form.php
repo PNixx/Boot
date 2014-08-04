@@ -1,10 +1,11 @@
 <?php
 /**
  * User: nixx
- * Date: 26.02.14
- * Time: 15:38
+ * Date: 22.07.14
+ * Time: 13:51
  */
-class Boot_Form_Lib extends Boot_Abstract_Library {
+
+class Boot_Simple_Form_Lib extends \Boot_Abstract_Library {
 
 	/**
 	 * Отключаем инициализицию
@@ -13,7 +14,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	public static $is_init = false;
 
 	/**
-	 * @var Model_Row
+	 * @var ActiveRecord
 	 */
 	protected $_row = null;
 
@@ -23,17 +24,30 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	protected $_name;
 
 	/**
+	 * Форма закрыта?
+	 * @var bool
+	 */
+	private $is_end = false;
+
+	/**
 	 * Конструктор и инициализатор фукнции
-	 * @param string $name имя массива хранилища
-	 * @param ActiveRecord|Form_Row $row
+	 * @param ActiveRecord $row
 	 * @param array $params
 	 */
-	public function __construct($name, $row, $params = array()) {
+	public function __construct(ActiveRecord $row, $params = array()) {
 		$this->_row = &$row;
-		$this->_name = $name;
+		$this->_name = strtolower(preg_replace("/^Model_/i", "", get_class($row)));
+
+		//Получаем урл
+		if( !isset($params['action']) ) {
+			$params['action'] = "";
+		}
+
+		//Если новая строка
+		$params['action'] .= $row->isNew() ? '/create' : '/update';
 
 		//Сразу рисуем форму
-		print "<form id=\"{$name}\"" . $this->implode($params) . (isset($params['method']) && strtolower($params['method']) == 'post' ? ' enctype="multipart/form-data"' : '') . ">";
+		print "<form id=\"{$this->_name}\"" . $this->implode($params) . (isset($params['method']) && strtolower($params['method']) == 'post' ? ' enctype="multipart/form-data"' : '') . ">";
 
 		//Если запись сохранена и имеет id
 		if( $row->id ) {
@@ -42,9 +56,19 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	}
 
 	/**
+	 * Проверяет, закрыта ли была форма
+	 */
+	public function __destruct() {
+		if( !$this->is_end ) {
+			throw new Boot_Exception('Form tag is not close');
+		}
+	}
+
+	/**
 	 * Закрытие формы
 	 */
 	public function end() {
+		$this->is_end = true;
 		print "</form>";
 	}
 
@@ -194,18 +218,5 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 			$string .= " " . $key . "=\"" . $value . "\"";
 		}
 		return $string;
-	}
-}
-
-//Form default model
-class Form_Row {
-
-	/**
-	 * Получаем данные
-	 * @param $name
-	 * @return string
-	 */
-	public function __get($name) {
-		return false;
 	}
 }

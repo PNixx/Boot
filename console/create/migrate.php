@@ -145,6 +145,7 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 				//Действия
 				$rename = array();
 				$add = array();
+				$remove = [];
 
 				for($i = 2; $i < count($argv); $i++) {
 					//Если было указано изменение имени колонки
