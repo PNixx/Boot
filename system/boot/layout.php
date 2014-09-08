@@ -60,6 +60,7 @@ class Boot_Layout {
 
 	/**
 	 * Стартуем
+	 * @param $content
 	 * @return void
 	 */
 	public function run(&$content) {
@@ -100,5 +101,23 @@ class Boot_Layout {
 	 */
 	public function css($names) {
 		return Boot_View::getInstance()->css($names);
+	}
+
+	/**
+	 * Генерация JS
+	 * @param $name
+	 * @return string
+	 */
+	public function javascript_include_tag($name) {
+		return Boot_View::getInstance()->javascript_include_tag($name);
+	}
+
+	/**
+	 * Генерация CSS
+	 * @param $name
+	 * @return string
+	 */
+	public function stylesheet_link_tag($name) {
+		return Boot_View::getInstance()->stylesheet_link_tag($name);
 	}
 }

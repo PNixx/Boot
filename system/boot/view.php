@@ -191,4 +191,36 @@ class Boot_View {
 		}
 		return $html;
 	}
+
+	/**
+	 * Генерация JS
+	 * @param $name
+	 * @return string
+	 */
+	public function javascript_include_tag($name) {
+		$js = new Boot_Assets("js", false);
+
+		//Если в режиме разработчика
+		if( APPLICATION_ENV == 'development' ) {
+			$js->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
+			return $js->__toString();
+		}
+		return $js->readfile(APPLICATION_PATH . "/js/" . $name);
+	}
+
+	/**
+	 * Генерация CSS
+	 * @param $name
+	 * @return string
+	 */
+	public function stylesheet_link_tag($name) {
+		$css = new Boot_Assets("css", false);
+
+		//Если в режиме разработчика
+		if( APPLICATION_ENV == 'development' ) {
+			$css->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
+			return $css->__toString();
+		}
+		return $css->readfile(APPLICATION_PATH . "/css/" . $name);
+	}
 }

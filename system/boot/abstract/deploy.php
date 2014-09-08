@@ -127,6 +127,9 @@ abstract class Boot_Deploy_Abstract {
 			$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && " . $this->exec_after;
 		}
 
+		//Делаем компиляцию асетов
+		$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && php console/assets.php";
+
 		//Выполняем код
 		$this->ssh_exec(implode(" && ", $exec));
 

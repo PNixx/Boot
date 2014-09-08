@@ -64,6 +64,20 @@ class Boot_Controller {
 			$this->_redirect($match[1]);
 		}
 
+		//Если страница пытается загрузкить из асетов файл
+		if( APPLICATION_ENV == 'development' && preg_match("/^\/assets\/(css|js)\/.*?\.(css|js)$/", $path_info, $matches) ) {
+			switch( $matches[1] ) {
+				case "css":
+					header("Content-Type: text/css");
+					break;
+				case "js":
+					header("Content-Type: application/javascript");
+					break;
+			}
+			echo file_get_contents(APPLICATION_PATH . $path_info);
+			exit;
+		}
+
 		//Получаем строку запроса
 		if( $_SERVER['QUERY_STRING'] ) {
 			$req = $_SERVER['QUERY_STRING'];
@@ -91,7 +105,7 @@ class Boot_Controller {
 			$query = $match[1];
 		}
 
-		//Созраняем параметры запроса
+		//Сохраняем параметры запроса
 		$this->_param = Boot_Routes::getInstance()->getParam(substr($query, 1, strlen($query)));
 	}
 

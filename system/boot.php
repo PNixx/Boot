@@ -109,6 +109,7 @@ class Boot {
 		require_once 'boot/routes.php';
 		require_once 'boot/flash.php';
 		require_once 'boot/mail.php';
+		require_once 'boot/assets.php';
 
 		//Инклудим абстрактные классы
 		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {

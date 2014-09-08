@@ -46,6 +46,9 @@ INI;
 $directories = array(
 	"/log",
 	"/application",
+	"/application/assets",
+	"/application/assets/css",
+	"/application/assets/js",
 	"/application/lang",
 	"/application/config",
 	"/application/controllers",
@@ -55,9 +58,26 @@ $directories = array(
 	"/application/layouts",
 	"/db",
 	"/public",
+	"/public/js",
+	"/public/css",
 	"/library",
 	"/deploy"
 );
+
+/**
+ * Создание файла, если его не существует
+ * @param $file
+ * @param $append
+ */
+function create_file($file, $append) {
+	if( file_exists(APPLICATION_ROOT . $file) == false ) {
+		if( file_put_contents(APPLICATION_ROOT . $file, $append) ) {
+			echo "File create: {$file}\r\n";
+		}
+	} else {
+		echo "File is exists: {$file}\r\n";
+	}
+}
 
 //Создаём необходимые директории
 foreach($directories as $dir) {
@@ -68,24 +88,28 @@ foreach($directories as $dir) {
 }
 
 //Создаём файл конфига
-$config_file = "/application/config/application.ini";
-if( file_exists(APPLICATION_ROOT . $config_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $config_file, $config) ) {
-		echo "Config create: {$config_file}\r\n";
-	}
-} else {
-	echo "Config file is exists: {$config_file}\r\n";
-}
+create_file("/application/config/application.ini", $config);
 
 //Создаем файл библиотек
-$library_file = "/application/config/library.conf";
-if( file_exists(APPLICATION_ROOT . $library_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $library_file, "translate" . PHP_EOL . "auth" . PHP_EOL) ) {
-		echo "Config library create: {$library_file}\r\n";
-	}
-} else {
-	echo "Config library is exists: {$library_file}\r\n";
-}
+create_file("/application/config/library.conf", "translate" . PHP_EOL . "auth" . PHP_EOL);
+
+//Cоздаем файлы для асетов
+$assets = <<<PHP
+/**
+ * Assets
+ * example: require_tree, require_directory, require
+ *= require_tree .
+ */
+PHP;
+//Создаём файл application.css
+create_file("/application/assets/application.css", $assets);
+$assets = <<<PHP
+// Assets
+// example: require_tree, require
+//= require_tree .
+PHP;
+//Создаём файл application.css
+create_file("/application/assets/application.js", $assets);
 
 //Создание роутера
 $routes = <<<PHP
@@ -102,14 +126,7 @@ $routes = <<<PHP
 PHP;
 
 //Создаём файл роутера
-$routes_file = "/application/config/routes.php";
-if( file_exists(APPLICATION_ROOT . $routes_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $routes_file, $routes) ) {
-		echo "Routes create: {$routes_file}\r\n";
-	}
-} else {
-	echo "Routes file is exists: {$routes_file}\r\n";
-}
+create_file("/application/config/routes.php", $routes);
 
 //Создаём файл перевода
 $lang_file = APPLICATION_PATH . "/lang/ru.po";
@@ -131,21 +148,10 @@ class homeController extends Boot_Abstract_Controller {
 	}
 }
 CONTROLLER;
-$home_file = "/application/controllers/home.php";
-if( file_exists(APPLICATION_ROOT . $home_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $home_file, $home) ) {
-		echo "Controller home create: {$home_file}\r\n";
-	}
-}
+create_file("/application/controllers/home.php", $home);
 
 //Создаём стандартную вьюху
-$view = "<h1>Hello world!</h1>";
-$view_file = "/application/views/home/index.phtml";
-if( file_exists(APPLICATION_ROOT . $view_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $view_file, $view) ) {
-		echo "View home create: {$view_file}\r\n";
-	}
-}
+create_file("/application/views/home/index.phtml", "<h1>Hello world!</h1>");
 
 //Создаём стандартную layout
 $layout = <<<HTML
@@ -167,12 +173,7 @@ $layout = <<<HTML
 </body>
 </html>
 HTML;
-$layout_file = "/application/layouts/home.phtml";
-if( file_exists(APPLICATION_ROOT . $layout_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $layout_file, $layout) ) {
-		echo "Layout home create: {$layout_file}\r\n";
-	}
-}
+create_file("/application/layouts/home.phtml", $layout);
 
 $index = <<<PHP
 <?php
@@ -185,9 +186,9 @@ define('LIBRARY_PATH', realpath(dirname(__FILE__) . '/../library'));
 
 //Устанавливаем загрузку библиотек
 set_include_path(implode(PATH_SEPARATOR, array(
-																							realpath(realpath(dirname(__FILE__)) . '/../system'),
-																							get_include_path(),
-																				 )));
+	realpath(realpath(dirname(__FILE__)) . '/../system'),
+	get_include_path(),
+)));
 
 date_default_timezone_set("Europe/Moscow");
 
@@ -200,12 +201,7 @@ ini_set("display_errors", 1);
 //Запускаем
 Boot::getInstance()->run();
 PHP;
-$index_file = "/public/index.php";
-if( file_exists(APPLICATION_ROOT . $index_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $index_file, $index) ) {
-		echo "Create: {$index_file}\r\n";
-	}
-}
+create_file("/public/index.php", $index);
 
 $htaccess = <<<PHP
 SetEnv APPLICATION_ENV development
@@ -216,9 +212,4 @@ RewriteCond %{REQUEST_URI} !-f
 RewriteCond %{REQUEST_URI} !-d
 RewriteRule ^(.*)$ ./index.php/$1 [L,QSA]
 PHP;
-$htaccess_file = "/public/.htaccess";
-if( file_exists(APPLICATION_ROOT . $htaccess_file) == false ) {
-	if( file_put_contents(APPLICATION_ROOT . $htaccess_file, $htaccess) ) {
-		echo "Create: {$htaccess_file}\r\n";
-	}
-}
+create_file("/public/.htaccess", $htaccess);
