@@ -129,7 +129,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 
 		//Строим селектор
-		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}[$name]\"" . $this->implode($params) . ">";
+		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($params) . ">";
 
 		//Добавляем пустое поле
 		if( $params["include_blank"] ) {
