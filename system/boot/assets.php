@@ -62,6 +62,7 @@ class Boot_Assets {
 					echo "Make file: " . $file . PHP_EOL;
 				}
 				file_put_contents($file, $this->data);
+				file_put_contents(APPLICATION_ROOT . "/public/" . $this->ext . "/" . pathinfo($path, PATHINFO_BASENAME), $this->data);
 			}
 		}
 	}
