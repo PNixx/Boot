@@ -19,6 +19,11 @@ class Boot_Assets {
 	private $compile;
 
 	/**
+	 * @var bool
+	 */
+	private $debug;
+
+	/**
 	 * Хранилище данных
 	 * @var string
 	 */
@@ -28,12 +33,14 @@ class Boot_Assets {
 	 * Создание ассетов
 	 * @param $ext
 	 * @param bool $compile
+	 * @param bool $debug
 	 */
-	public function __construct($ext, $compile = false) {
+	public function __construct($ext, $compile = false, $debug = false) {
 
 		//Запоминаем расширение
 		$this->ext = $ext;
 		$this->compile = $compile;
+		$this->debug = $debug;
 	}
 
 	/**
@@ -50,7 +57,11 @@ class Boot_Assets {
 
 			//Если компилируем ассеты
 			if( $this->compile ) {
-				file_put_contents(APPLICATION_ROOT . "/public/" . $this->ext . "/" . pathinfo($path, PATHINFO_BASENAME), $this->data);
+				$file = APPLICATION_ROOT . "/public/" . $this->ext . "/" . pathinfo($path, PATHINFO_FILENAME) . "-" . md5($this->data) . "." . $this->ext;
+				if( $this->debug ) {
+					echo "Make file: " . $file . PHP_EOL;
+				}
+				file_put_contents($file, $this->data);
 			}
 		}
 	}
@@ -147,6 +158,36 @@ class Boot_Assets {
 					default:
 						throw new Exception("Wrong file extension");
 				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Чтение данных файла для продакшен сервера
+	 * @param $path
+	 * @throws Exception
+	 * @return string
+	 */
+	public function readfile_production($path) {
+		if( strtolower(pathinfo($path, PATHINFO_EXTENSION)) == $this->ext ) {
+
+			//Ищем скомпилированный файл
+			$file = glob(APPLICATION_ROOT . "/public/" . $this->ext . "/" . pathinfo($path, PATHINFO_FILENAME) . "-*." . $this->ext)[0];
+
+			//Для разных типов
+			switch( $this->ext ) {
+
+				case "css":
+					return "<link href='/css/" . pathinfo($file, PATHINFO_BASENAME) . "' rel='stylesheet' type='text/css'>" . PHP_EOL;
+					break;
+
+				case "js":
+					return "<script src='/js/" . pathinfo($file, PATHINFO_BASENAME) . "' type=\"text/javascript\"></script>" . PHP_EOL;
+					break;
+
+				default:
+					throw new Exception("Wrong file extension");
 			}
 		}
 		return null;

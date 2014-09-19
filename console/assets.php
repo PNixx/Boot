@@ -16,7 +16,7 @@ ini_set("display_errors", 1);
 require_once APPLICATION_ROOT . '/system/boot/assets.php';
 
 //Выполняем поиск
-$css = new Boot_Assets("css", true);
+$css = new Boot_Assets("css", true, true);
 $css->read_all_assets();
-$js = new Boot_Assets("js", true);
+$js = new Boot_Assets("js", true, true);
 $js->read_all_assets();

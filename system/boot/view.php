@@ -205,7 +205,7 @@ class Boot_View {
 			$js->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
 			return $js->__toString();
 		}
-		return $js->readfile(APPLICATION_PATH . "/js/" . $name);
+		return $js->readfile_production($name);
 	}
 
 	/**
@@ -221,6 +221,6 @@ class Boot_View {
 			$css->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
 			return $css->__toString();
 		}
-		return $css->readfile(APPLICATION_PATH . "/css/" . $name);
+		return $css->readfile_production($name);
 	}
 }

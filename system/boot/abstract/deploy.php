@@ -112,7 +112,7 @@ abstract class Boot_Deploy_Abstract {
 			$exec[] = "rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/" . $shared;
 
 			//Если указана не конечная директория
-			if( dirname($shared) != "." ) {
+			if( dirname($shared) != "." && !file_exists("{$this->deploy_to}/releases/{$this->timestamp}/" . dirname($shared) . "/") ) {
 				$exec[] = "mkdir -p -- {$this->deploy_to}/releases/{$this->timestamp}/" . dirname($shared) . "/";
 			}
 
