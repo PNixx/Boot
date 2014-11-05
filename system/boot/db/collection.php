@@ -141,4 +141,12 @@ class Model_Collection implements Iterator, ArrayAccess  {
 	public function offsetUnset($offset) {
 		unset($this->_rows[$offset]);
 	}
+
+	/**
+	 * Добавляет в начало массива
+	 * @param ActiveRecord $record
+	 */
+	public function prepend(ActiveRecord $record) {
+		array_unshift($this->_rows, $record->toStdClass());
+	}
 }

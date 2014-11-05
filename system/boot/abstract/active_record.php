@@ -368,6 +368,7 @@ abstract class ActiveRecord {
 	/**
 	 * Условие выборки
 	 * @param string|array $where
+	 * @throws Exception
 	 * @return static
 	 */
 	public static function where($where) {
@@ -376,7 +377,11 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		self::$select[self::getTable()]->where($where);
+		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
+			self::$select[self::getTable()]->where($where);
+		} else {
+			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
+		}
 
 		//Возвращаем ту же функцию
 		return new static();
@@ -727,6 +732,14 @@ abstract class ActiveRecord {
 	 */
 	public function toArray() {
 		return (array)$this->_row;
+	}
+
+	/**
+	 * Извлечение объекта
+	 * @return array|object
+	 */
+	public function toStdClass() {
+		return $this->_row;
 	}
 
 	/**

@@ -45,6 +45,69 @@ class Boot_Exception extends Exception {
 		}
 		return false;
 	}
+
+	/**
+	 * Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
+	 * @param Exception $e
+	 */
+	public static function sendLibraryException(Exception $e) {
+		foreach( Boot::getInstance()->library->getLibraries() as $library) {
+			if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {
+				$library->onException($e);
+			}
+		}
+	}
+
+	/**
+	* Функция выполняется, фатальной ошибке
+	*/
+	public static function shutdown($str) {
+
+		//Получаем последнюю ошибку
+		$l = error_get_last();
+
+		//Если получили ошибку
+		if( $l ) {
+
+			//Строим класс эксепшена
+			$e = new Exception(self::get_error_string($l["type"]) . ": " . $l["message"] . PHP_EOL . $l["file"] . ":" . $l["line"] . var_export(debug_backtrace(), true), 500);
+
+			//Отправляем данные об ошибке в библиотеки
+			self::sendLibraryException($e);
+
+			//Устанавливаем код ошибки
+			header("HTTP/1.0 500");
+
+			//Выводим текст ошибки
+			return "Oops" . PHP_EOL . $e->getMessage() . PHP_EOL . $e->getTraceAsString() . var_export(debug_backtrace(), true);
+		} else {
+			return $str;
+		}
+	}
+
+	/**
+	 * Получение строки ошибки по коду
+	 * @param $type
+	 * @return string
+	 */
+	private static function get_error_string($type) {
+		switch( $type ) {
+			case E_ERROR:
+				return 'Fatal Error';
+
+			case E_USER_WARNING:
+			case E_WARNING:
+				return 'Warning';
+
+			case E_USER_NOTICE:
+			case E_NOTICE:
+			case @E_STRICT:
+				return 'Notice';
+
+			default:
+				return 'Unknown Error';
+		}
+	}
 }
 
 class Ajax_Exception extends Exception {
