@@ -15,6 +15,19 @@ ini_set("display_errors", 1);
 //Подключаем файл асетов
 require_once APPLICATION_ROOT . '/system/boot/assets.php';
 
+$directories = array(
+	"/public",
+	"/public/assets",
+);
+
+//Создаём необходимые директории
+foreach($directories as $dir) {
+	if( is_dir(APPLICATION_ROOT . $dir) == false ) {
+		mkdir(APPLICATION_ROOT . $dir, 0777);
+		echo "Create directory: " . $dir . "\r\n";
+	}
+}
+
 //Выполняем поиск
 $css = new Boot_Assets("css", true, true);
 $css->read_all_assets();

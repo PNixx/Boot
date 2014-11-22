@@ -120,6 +120,7 @@ class Boot {
 		foreach(glob(SYSTEM_PATH . '/boot/interface/' . '*.php') as $path) {
 			require_once $path;
 		}
+		require_once 'library/log.php';
 
 		//Устанавливаем отлавливатели ошибок
 		set_error_handler('Boot_Exception::err_handler');

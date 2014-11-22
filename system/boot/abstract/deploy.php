@@ -8,12 +8,6 @@
 abstract class Boot_Deploy_Abstract {
 
 	/**
-	 * Имя приложения для деплоя
-	 * @var string
-	 */
-	protected $application;
-
-	/**
 	 * Репозиторий
 	 * @var string
 	 */
@@ -105,6 +99,9 @@ abstract class Boot_Deploy_Abstract {
 //			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/cron/*.sh"
 		];
 
+		//Добавляем в массив ссылку на асеты
+		array_push($this->shared_children, "public/assets");
+
 		//Создаем комманды, для прокидывания ссылок
 		foreach( $this->shared_children as $shared ) {
 
@@ -112,7 +109,7 @@ abstract class Boot_Deploy_Abstract {
 			$exec[] = "rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/" . $shared;
 
 			//Если указана не конечная директория
-			if( dirname($shared) != "." && !file_exists("{$this->deploy_to}/releases/{$this->timestamp}/" . dirname($shared) . "/") ) {
+			if( dirname($shared) != "." /*&& !file_exists("{$this->deploy_to}/releases/{$this->timestamp}/" . dirname($shared) . "/")*/ ) {
 				$exec[] = "mkdir -p -- {$this->deploy_to}/releases/{$this->timestamp}/" . dirname($shared) . "/";
 			}
 
@@ -150,6 +147,7 @@ abstract class Boot_Deploy_Abstract {
 			$exec = [
 				"mkdir -p -- {$this->deploy_to}/releases/",
 				"mkdir -p -- {$this->deploy_to}/shared/",
+				"mkdir -p -- {$this->deploy_to}/shared/public/assets",
 			];
 
 			//Создаем комманды, для прокидывания ссылок
@@ -168,9 +166,6 @@ abstract class Boot_Deploy_Abstract {
 	 * Проверка переменных
 	 */
 	private function check_variables() {
-		if( $this->application == null ) {
-			$this->error("Application name is null");
-		}
 		if( $this->repository == null ) {
 			$this->error("Repository name is null");
 		}

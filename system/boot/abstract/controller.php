@@ -13,6 +13,11 @@ abstract class Boot_Abstract_Controller {
 	public $me;
 
 	/**
+	 * @var Boot_Translate_Lib
+	 */
+	public $translate;
+
+	/**
 	 * Переменная для передачи по вьюху
 	 * @var Boot_View
 	 */
