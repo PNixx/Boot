@@ -125,7 +125,7 @@ class Boot_Assets {
 
 						//Если нужно проходить по дереву
 						if( $recursive ) {
-							$this->readdir($path, $this->data);
+							$this->readdir($path, true);
 						}
 					} else {
 						$this->data .= $this->readfile($path) . ($this->compile ? PHP_EOL : "");

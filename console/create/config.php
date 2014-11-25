@@ -58,8 +58,6 @@ $directories = array(
 	"/application/layouts",
 	"/db",
 	"/public",
-	"/public/js",
-	"/public/css",
 	"/library",
 	"/deploy"
 );
@@ -91,7 +89,7 @@ foreach($directories as $dir) {
 create_file("/application/config/application.ini", $config);
 
 //Создаем файл библиотек
-create_file("/application/config/library.conf", "translate" . PHP_EOL . "auth" . PHP_EOL);
+create_file("/application/config/library.conf", "translate" . PHP_EOL);
 
 //Cоздаем файлы для асетов
 $assets = <<<PHP
@@ -159,6 +157,9 @@ $layout = <<<HTML
 <head>
 	<title>Hello world!</title>
 	<meta name="viewport" content="width=device-width; initial-scale=1.0">
+
+	<?= \$this->stylesheet_link_tag("application.css") ?>
+	<?= \$this->javascript_include_tag("application.js") ?>
 </head>
 <body>
 <div class="container">
