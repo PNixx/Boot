@@ -22,10 +22,14 @@ abstract class Boot_Console {
 		$time = $this->microtime_float();
 
 		//Выполняем команду
-		passthru("ssh " . $this->server . " \"" . $command . "\"");
+		$result = system("ssh " . $this->server . " \"" . $command . "\"");
 
 		//Выводим строку выполнения
 		$this->message("command finished in " . $this->get_time($time) . "ms");
+
+		if( !$result ) {
+			$this->error(" * Error execute ssh command");
+		}
 	}
 
 	/**
