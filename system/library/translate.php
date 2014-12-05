@@ -55,14 +55,24 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
     }
     $this->_dir = $dir;
 
-    //Проверяем существование файла по умолчанию
-    if( file_exists($dir . $lang . ".po") == false ) {
-      $lang = "ru";
-    }
-    $this->_default = $lang;
+		//Парсим JSON файлы локализации
+		// todo для уже перешедших на новую версию локализации
+		if( file_exists($dir . $lang . ".json") ) {
 
-    //Парсим язык по умолчанию
-    $this->parse($lang);
+			//Парсим файл
+			$this->parseJSON($lang);
+			$this->_default = $lang;
+		} else {
+
+			//Проверяем существование файла по умолчанию
+			if( file_exists($dir . $lang . ".po") == false ) {
+				$lang = "ru";
+			}
+			$this->_default = $lang;
+
+			//Парсим язык по умолчанию
+			$this->parse($lang);
+		}
   }
 
   /**
@@ -99,23 +109,54 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
     return $this->_parse[$lang];
   }
 
-  /**
-   * Перевод
-   * @param      $text
-   * @param null $lang
-   */
-  public function _($text, $lang = null) {
+	/**
+	 * @param $lang
+	 * @return array
+	 * @throws Exception
+	 */
+	public function parseJSON($lang) {
+
+		//Если раньше до этого не парсили
+		if( !isset($this->_parse[$lang]) ) {
+
+			//Проверяем существование файла
+			if( file_exists($this->_dir . $lang . ".json") == false ) {
+				throw new Exception("Файл перевода языка не найден: {$lang}.json");
+			}
+
+			//Читаем файл
+			$this->_parse[$lang] = json_decode(file_get_contents($this->_dir . $lang . ".json"), true);
+		}
+		return $this->_parse[$lang];
+	}
+
+	/**
+	 * Перевод
+	 * @param string $text
+	 * @param null|int $args
+	 * @param bool $plural
+	 * @throws Exception
+	 * @return string
+	 */
+  public function _($text, $args = null, $plural = false) {
 
     //Определяем язык
-    $lang = $lang ? $lang : $this->_default;
+    $lang = !$plural && $args ? $args : $this->_default;
 
     if( in_array($lang, $this->getLangs()) == false ) {
       $lang = "ru";
     }
 
     //Получаем массив перевода
-    $po = $this->parse($lang);
+		if( file_exists($this->_dir . $lang . ".json") ) {
+			$po = $this->parseJSON($lang);
+		} else {
+			$po = $this->parse($lang);
+		}
 
+		if( $plural ) {
+			return $this->plural($text, $args);
+		}
     return isset($po[$text]) && $po[$text] ? $po[$text] : $text;
   }
 
@@ -137,12 +178,33 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
    * Получить список доступных языков
    */
   public function getLangs() {
-
     if( $this->_lang === null ) {
       foreach( glob($this->_dir . "*.po") as $file) {
         $this->_lang[] = preg_replace("/\.po$/", "", basename($file));
       }
+      foreach( glob($this->_dir . "*.json") as $file) {
+        $this->_lang[] = preg_replace("/\.json$/", "", basename($file));
+      }
     }
     return $this->_lang;
   }
+
+	/**
+	 * @param string $text
+	 * @param int    $number
+	 *
+	 * array('арбуз', 'арбуза', 'арбузов')
+	 *
+	 * @return int
+	 */
+	private function plural($text, $number) {
+		$i18n = $this->_($text);
+
+		//Определяем позицию слова для перевода
+		$i = ($number % 10 == 1 && $number % 100 != 11 ? 0 : $number % 10 >= 2 && $number % 10 <= 4 && ($number % 100 < 10 || $number % 100 >= 20) ? 1 : 2);
+		if( is_array($i18n) && count($i18n) > $i ) {
+			return str_replace("%count%", $number, $i18n[$i]);
+		}
+		return str_replace("%count%", $number, $text);
+	}
 }
