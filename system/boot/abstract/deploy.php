@@ -147,7 +147,7 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 			//Создаем директории
 			$exec = [
 				"mkdir -p -- {$this->deploy_to}/releases/",
-				"mkdir -p -- {$this->deploy_to}/shared/",
+				"mkdir -p -- {$this->deploy_to}/shared/cached-copy",
 				"mkdir -p -- {$this->deploy_to}/shared/public/assets",
 			];
 
