@@ -6,7 +6,8 @@ abstract class Boot_Console {
 	 * @param $message
 	 */
 	public function error($message) {
-		exit("\x1b[31m{$message}\x1b[0m\r\n");
+		echo "\x1b[31m{$message}\x1b[0m\r\n";
+		exit(127);
 	}
 
 	/**
@@ -22,12 +23,12 @@ abstract class Boot_Console {
 		$time = $this->microtime_float();
 
 		//Выполняем команду
-		$result = system("ssh " . $this->server . " \"" . $command . "\"");
+		passthru("ssh " . $this->server . " \"" . $command . "\"", $r);
 
 		//Выводим строку выполнения
 		$this->message("command finished in " . $this->get_time($time) . "ms");
 
-		if( !$result ) {
+		if( $r != 0 ) {
 			$this->error(" * Error execute ssh command");
 		}
 	}
