@@ -67,7 +67,7 @@ abstract class Boot_Console {
 	 * Получение времени
 	 * @return float
 	 */
-	private function microtime_float() {
+	public function microtime_float() {
 		list($usec, $sec) = explode(" ", microtime());
 		return ((float)$usec + (float)$sec);
 	}
@@ -77,7 +77,7 @@ abstract class Boot_Console {
 	 * @param $time
 	 * @return float
 	 */
-	private function get_time($time) {
+	public function get_time($time) {
 		return round(($this->microtime_float() - $time) * 1000);
 	}
 }

@@ -72,7 +72,9 @@ class Boot_Config {
 
 				//Чистим лишние пробелы
 				$key = trim($key);
-				$param = trim($param);
+				if( !is_array($param) ) {
+					$param = trim($param);
+				}
 
 				//Если строка
 				if( $param === "true" || $param === "false" ) {

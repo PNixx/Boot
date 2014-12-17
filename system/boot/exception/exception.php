@@ -29,9 +29,11 @@ class Boot_Exception extends Exception {
 	 * @param Exception $e
 	 */
 	public static function sendLibraryException(Exception $e) {
-		foreach( Boot::getInstance()->library->getLibraries() as $library) {
-			if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {
-				$library->onException($e);
+		if( Boot::getInstance()->library ) {
+			foreach( Boot::getInstance()->library->getLibraries() as $library ) {
+				if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {
+					$library->onException($e);
+				}
 			}
 		}
 	}
