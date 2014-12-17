@@ -109,7 +109,7 @@ class postgres {
 	 * @param $column
 	 * @param null $pkey
 	 * @param null $ukey
-	 * @return \Model
+	 * @return postgres
 	 */
 	public function create_table($table, $column, $pkey = null, $ukey = null) {
 		$sql = "";
@@ -130,7 +130,23 @@ class postgres {
 			}
 			$sql_ukey = ", CONSTRAINT " . pg_escape_identifier("ukey_{$table}_" . implode("_", $ukey)) . " UNIQUE  ({$sql_ukey})";
 		}
-		return $this->query("CREATE TABLE " . pg_escape_identifier($table) . " ({$sql}{$sql_pkey}{$sql_ukey});");
+		$this->query("CREATE TABLE " . pg_escape_identifier($table) . " ({$sql}{$sql_pkey}{$sql_ukey});");
+	}
+
+	/**
+	 * Create index
+	 *
+	 * @param string $table
+	 * @param array  $columns
+	 *
+	 * @return postgres
+	 */
+	public function create_index($table, $columns) {
+		$c = [];
+		foreach( $columns as $column ) {
+			$c[] = pg_escape_identifier($column);
+		}
+		return $this->query("CREATE INDEX " . pg_escape_identifier("idx_{$table}_" . implode("_", $columns)) . " ON " . pg_escape_identifier($table) . " USING btree(" . implode(',', $c) . ")");
 	}
 
 	/**

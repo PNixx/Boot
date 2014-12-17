@@ -107,7 +107,23 @@ class mysql {
 			}
 			$sql_ukey = ", UNIQUE INDEX {$this->separator}ukey_{$table}_" . implode("_", $ukey) . "{$this->separator} ({$sql_ukey})";
 		}
-		return $this->query("CREATE TABLE {$this->separator}{$table}{$this->separator} ({$sql}{$sql_pkey}{$sql_ukey});");
+		$this->query("CREATE TABLE {$this->separator}{$table}{$this->separator} ({$sql}{$sql_pkey}{$sql_ukey});");
+	}
+
+	/**
+	 * Create index
+	 *
+	 * @param string $table
+	 * @param array  $columns
+	 *
+	 * @return \Model
+	 */
+	public function create_index($table, $columns) {
+		$c = [];
+		foreach( $columns as $column ) {
+			$c[] = $this->separator . $column . $this->separator;
+		}
+		return $this->query("ALTER TABLE " . $this->separator . $table . $this->separator . " ADD INDEX " . $this->separator . "idx_{$table}_" . implode("_", $columns) . $this->separator . " (" . implode(',', $c) . ")");
 	}
 
 	/**

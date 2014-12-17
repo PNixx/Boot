@@ -515,7 +515,16 @@ abstract class ActiveRecord {
 	 * @return static
 	 */
 	static public function create_table($table, $column, $pkey = null, $ukey = null) {
-		return DB::getDB()->create_table($table, $column, $pkey, $ukey);
+		DB::getDB()->create_table($table, $column, $pkey, $ukey);
+		self::create_index($table, [$pkey]);
+	}
+
+	/**
+	 * @param       $table
+	 * @param array $columns
+	 */
+	static public function create_index($table, array $columns) {
+		DB::getDB()->create_index($table, $columns);
 	}
 
 	/**
