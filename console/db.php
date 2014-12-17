@@ -162,7 +162,7 @@ switch( $type ) {
 		/**
 		 * @var $model ActiveRecord
 		 */
-		$model = $class();
+		$model = $class;
 
 		if( $argv[3] != "*" ) {
 			$model::column(explode(",", $argv[3]));
