@@ -160,24 +160,21 @@ switch( $type ) {
 		}
 
 		/**
-		 * @var $model Model
+		 * @var $model ActiveRecord
 		 */
-		$model = new $class();
-
-		//Строим запрос
-		$select = $model->select();
+		$model = $class();
 
 		if( $argv[3] != "*" ) {
-			$select->column(explode(",", $argv[3]));
+			$model::column(explode(",", $argv[3]));
 		}
 
 		//Если есть условие
 		if( isset($argv[4]) ) {
-			$select->where($argv[4]);
+			$model::where($argv[4]);
 		}
 
 		//Выводим данные
-		print_r($model->query($select)->read_all());
+		print_r($model::read_all());
 		break;
 
 	default:
