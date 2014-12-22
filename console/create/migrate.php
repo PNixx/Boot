@@ -153,7 +153,7 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 						$rename[$m[1]] = $m[2];
 					}
 					//Если было указано изменение добавление колонки
-					if( preg_match("/^\+([^\+-]+):(.+?)$/", $argv[$i], $m) ) {
+					if( preg_match("/^\+([^\+-\s]+):(.+?)$/", $argv[$i], $m) ) {
 						$add[$m[1]] = $m[2];
 					}
 				}

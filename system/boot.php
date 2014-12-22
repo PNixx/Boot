@@ -82,6 +82,8 @@ class Boot {
 
 	/**
 	 * Псевдо вызов функций
+	 * @param $name
+	 * @param $params
 	 */
 	public function __call($name, $params) {
 

@@ -78,19 +78,27 @@ class Boot_Exception extends Exception {
 					$exit = true;
 					break;
 			}
-			if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
-				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
-			} else {
-				if( APPLICATION_ENV != "production" ) {
-					echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)</pre>";
-				} else {
-					Boot_Log_Lib::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
-					echo "<pre>" . $type . ": " . $errstr . "</pre>";
-				}
+
+			//Если на продакшене, отправляем в лог
+			if( APPLICATION_ENV == "production" ) {
+				Boot_Log_Lib::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
 			}
-			if( $exit ) {
-				throw new ErrorException($errstr);
-			}
+
+			//Останавливаем при ошибке
+			throw new ErrorException($errstr);
+//			if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
+//				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
+//			} else {
+//				if( APPLICATION_ENV != "production" ) {
+//					echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)</pre>";
+//				} else {
+//					Boot_Log_Lib::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
+//					echo "<pre>" . $type . ": " . $errstr . "</pre>";
+//				}
+//			}
+//			if( $exit ) {
+//				throw new ErrorException($errstr);
+//			}
 
 		}
 		return true;
