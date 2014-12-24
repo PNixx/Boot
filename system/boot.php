@@ -103,7 +103,7 @@ class Boot {
 		$this->root = realpath(dirname(__FILE__));
 		header("Content-type: text/html; charset=UTF-8");
 
-		//Загружаем класс ошибок
+		//Загружаем классы
 		require_once 'boot/exception/exception.php';
 		require_once 'boot/exception/db.php';
 		require_once 'boot/cookie.php';
@@ -112,6 +112,7 @@ class Boot {
 		require_once 'boot/flash.php';
 		require_once 'boot/mail.php';
 		require_once 'boot/assets.php';
+		require_once 'boot/params.php';
 
 		//Инклудим абстрактные классы
 		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {

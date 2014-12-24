@@ -36,7 +36,7 @@ abstract class Boot_Abstract_Controller {
 	/**
 	 * Получить параметр запроса
 	 * @param $name
-	 * @return null|string
+	 * @return null|string|Boot_Params
 	 */
 	public function getParam($name) {
 		return Boot_Controller::getInstance()->getParam($name);

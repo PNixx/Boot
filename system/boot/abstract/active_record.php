@@ -72,6 +72,8 @@ abstract class ActiveRecord {
 
 	/**
 	 * Конструктор класса
+	 * @param null $row
+	 * @param bool $new_record
 	 */
 	public function __construct($row = null, $new_record = false) {
 
@@ -208,7 +210,7 @@ abstract class ActiveRecord {
 
 	/**
 	 * Создание строки
-	 * @param $row
+	 * @param array|Boot_Params $row
 	 * @return static
 	 */
 	public static function create($row = array()) {
@@ -217,7 +219,7 @@ abstract class ActiveRecord {
 		$class = get_called_class();
 
 		//Создаем экземплятор
-		return new $class($row, true);
+		return new $class(is_array($row) ? $row : $row->getValues(), true);
 	}
 
 	/**
@@ -638,7 +640,7 @@ abstract class ActiveRecord {
 
 	/**
 	 * Обновление данных строки
-	 * @param $data
+	 * @param array|Boot_Params $data
 	 * @return bool|int
 	 * @throws DB_Exception
 	 */
@@ -653,10 +655,14 @@ abstract class ActiveRecord {
 		}
 
 		//Сохраняем обновляемые данные
-		$this->_row_update = $data;
+		if( is_array($data) ) {
+			$this->_row_update = $data;
+		} else {
+			$this->_row_update = $data->getValues();
+		}
 
 		//Пытаемся обновить
-		$result = DB::getDB()->update(static::getTable(), $data, self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
+		$result = DB::getDB()->update(static::getTable(), $this->_row_update, self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
 		if( $result ) {
 
 			//Изменяем данные строки

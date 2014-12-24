@@ -53,7 +53,7 @@ $keys = array();
 foreach( $files as $file ) {
   //"/_\(\"(.+)\"(?:,\s?(?:$\w+|\"\w+\"))?\)/"
   if( preg_match_all("/->_\(\"([^\r\n]+?)\",?/", file_get_contents($file), $po) && isset($po[1]) ) {
-		print_r($po);
+//		print_r($po);
     foreach( $po[1] as $i => $key ) {
       $key = str_replace("\\\$", "$", $key);
       if( isset($parse[$key]) == false ) {

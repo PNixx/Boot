@@ -112,7 +112,7 @@ class Boot_Controller {
 	/**
 	 * Получить параметр запроса
 	 * @param $name
-	 * @return null|string
+	 * @return null|string|Boot_Params
 	 */
 	public function getParam($name) {
 
@@ -123,6 +123,9 @@ class Boot_Controller {
 
 		//Если есть в post запросе
 		if( isset($_POST[$name]) ) {
+			if( is_array($_POST[$name]) ) {
+				return new Boot_Params($_POST[$name]);
+			}
 			return $_POST[$name];
 		}
 
