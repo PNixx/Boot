@@ -131,6 +131,11 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 		//Выполняем код
 		$this->ssh_exec(implode(" && ", $exec));
 
+		//Если установлен Composer
+		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
+			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer update");
+		}
+
 		//Создаем боевой симлинк
 		$this->ssh_exec("rm -f {$this->deploy_to}/current &&  ln -s {$this->deploy_to}/releases/{$this->timestamp} {$this->deploy_to}/current");
 	}

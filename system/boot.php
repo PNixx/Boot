@@ -78,6 +78,11 @@ class Boot {
 		 */
 		define('SYSTEM_PATH', realpath(dirname(__FILE__)));
 		date_default_timezone_set("Europe/Moscow");
+
+		//Composer
+		if( file_exists(APPLICATION_ROOT . '/vendor/autoload.php') ) {
+			require APPLICATION_ROOT . '/vendor/autoload.php';
+		}
 	}
 
 	/**
