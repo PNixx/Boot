@@ -133,7 +133,7 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 
 		//Если установлен Composer
 		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
-			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer update");
+			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer update --no-dev");
 		}
 
 		//Создаем боевой симлинк
