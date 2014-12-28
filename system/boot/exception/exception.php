@@ -178,6 +178,10 @@ class Controller_Exception extends Exception {
 	public function __construct($message = null, $code = 500, $error_code = null) {
 		header('HTTP/1.0 ' . $code);
 		if( Boot_Controller::getInstance()->isAjax() ) {
+
+			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
+			Boot_Exception::sendLibraryException($this);
+
 			echo json_encode(array(
 				'error' => $code,
 				'error_code' => $error_code,
@@ -185,7 +189,7 @@ class Controller_Exception extends Exception {
 				'trace' => APPLICATION_ENV == "production" ? "" : $this->getTraceAsString()
 			));
 		} else {
-			new Boot_Exception($message, $code);
+			throw new Boot_Exception($message, $code);
 		}
 		exit;
 	}
