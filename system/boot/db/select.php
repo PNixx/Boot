@@ -123,7 +123,10 @@ class Select {
 		if( is_array($where) ) {
 			$sql = "";
 			foreach($where as $k => $v) {
-				$sql .= ($sql == "" ? "" : " AND ") . (count($this->_table) == 1 ? $this->driver->escape_identifier($this->_table[0]) . "." : "") . $this->driver->escape_identifier($k) . " = " . $this->driver->getStringQueryByValue($v);
+				$sql .= ($sql == "" ? "" : " AND ")
+					. (count($this->_table) == 1 ? $this->driver->escape_identifier($this->_table[0]) . "." : "")
+					. $this->driver->escape_identifier($k)
+					. (is_array($v) && $v ? " IN (" . $this->driver->getStringQueryByValue($v) . ")" : " = " . $this->driver->getStringQueryByValue($v));
 			}
 
 			$where = $sql;

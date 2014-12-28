@@ -155,7 +155,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 		}
 
 		if( $plural ) {
-			return $this->plural($text, $args);
+			return $this->plural($text, $args, $lang);
 		}
     return isset($po[$text]) && $po[$text] ? $po[$text] : $text;
   }
@@ -167,9 +167,10 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
     return $this->_default;
   }
 
-  /**
-   * Устанавливает текущий язык
-   */
+	/**
+	 * Устанавливает текущий язык
+	 * @param $lang
+	 */
   public function setLocale($lang) {
     $this->_default = $lang;
   }
@@ -192,16 +193,21 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 	/**
 	 * @param string $text
 	 * @param int    $number
+	 * @param string $lang
 	 *
 	 * array('арбуз', 'арбуза', 'арбузов')
 	 *
 	 * @return int
 	 */
-	private function plural($text, $number) {
+	private function plural($text, $number, $lang) {
 		$i18n = $this->_($text);
 
 		//Определяем позицию слова для перевода
-		$i = ($number % 10 == 1 && $number % 100 != 11 ? 0 : $number % 10 >= 2 && $number % 10 <= 4 && ($number % 100 < 10 || $number % 100 >= 20) ? 1 : 2);
+		if( $lang == 'ru' ) {
+			$i = ($number % 10 == 1 && $number % 100 != 11 ? 0 : ($number % 10 >= 2 && $number % 10 <= 4 && ($number % 100 < 10 || $number % 100 >= 20) ? 1 : 2));
+		} else {
+			$i = $number == 1 ? 0 : 1;
+		}
 		if( is_array($i18n) && count($i18n) > $i ) {
 			return str_replace("%count%", $number, $i18n[$i]);
 		}

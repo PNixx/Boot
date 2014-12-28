@@ -176,7 +176,7 @@ class mysql {
 
 	/**
 	 * Чтение 1 записи, возврат объекта
-	 * @return dbrow
+	 * @return stdClass
 	 */
 	public function row() {
 		return mysql_fetch_object($this->result);
@@ -268,7 +268,7 @@ class mysql {
 
 	/**
 	 * Получить строку представления для запроса по типу данного value
-	 * @param $value
+	 * @param bool|array|null|int|string $value
 	 * @return string
 	 */
 	public function getStringQueryByValue($value) {
@@ -277,6 +277,12 @@ class mysql {
 		}
 		if( is_bool($value) ) {
 			return $value ? "TRUE" : "FALSE";
+		}
+		if( is_array($value) ) {
+			foreach($value as $k => $v) {
+				$value[$k] = $this->getStringQueryByValue($v);
+			}
+			return implode(',', $value);
 		}
 		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "'" . mysql_real_escape_string($value) . "'");
 	}
