@@ -93,7 +93,7 @@ class Boot {
 	public function __call($name, $params) {
 
 		//Если выполняем дебаг
-		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || isset($this->config->debug_production) && $this->config->debug_production ) ) {
+		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || $this->config->debug_production ) ) {
 			Boot_Debug_Lib::log($params[0]);
 		}
 	}
