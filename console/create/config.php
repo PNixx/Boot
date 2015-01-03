@@ -18,6 +18,13 @@ $config = <<<INI
 [production]
 host		= "localhost"
 
+;;db.adapter	= "postgres"
+;;db.host		= "localhost"
+;;db.port		= 5432
+;;db.user		= "root"
+;;db.password	= ""
+;;db.dbase	= "boot"
+
 db.adapter	= "mysql"
 db.host		= "localhost"
 db.port		= 3306
@@ -214,3 +221,56 @@ RewriteCond %{REQUEST_URI} !-d
 RewriteRule ^(.*)$ ./index.php/$1 [L,QSA]
 PHP;
 create_file("/public/.htaccess", $htaccess);
+
+$fastcgi = <<<CONF
+fastcgi_pass       127.0.0.1:9000 ;
+fastcgi_buffers    512 4k;
+fastcgi_index      index.php;
+
+fastcgi_param  DOCUMENT_ROOT      \$document_root;
+fastcgi_param  GATEWAY_INTERFACE  CGI/1.1;
+fastcgi_param  SCRIPT_FILENAME    \$document_root/index.php;
+
+fastcgi_param  HTTP_HOST          \$host;
+fastcgi_param  SERVER_NAME        \$host;
+fastcgi_param  REQUEST_URI        \$uri;
+fastcgi_param  QUERY_STRING       \$query_string;
+fastcgi_param  REQUEST_METHOD     \$request_method;
+fastcgi_param  CONTENT_TYPE       \$content_type;
+fastcgi_param  CONTENT_LENGTH     \$content_length;
+fastcgi_param  DOCUMENT_URI       \$document_uri;
+fastcgi_param  SERVER_PROTOCOL    \$server_protocol;
+
+fastcgi_param  SERVER_ADDR        \$server_addr;
+fastcgi_param  SERVER_PORT        \$server_port;
+fastcgi_param  SERVER_NAME        \$server_name;
+fastcgi_param  REQUEST_SCHEME     \$scheme;
+
+fastcgi_param  REMOTE_ADDR        \$proxy_add_x_forwarded_for;
+fastcgi_param  REMOTE_PORT        \$remote_port;
+
+fastcgi_buffer_size 32k;
+CONF;
+create_file("/application/config/fastcgi.conf", $fastcgi);
+
+$nginx = "server {
+	listen 80;
+	server_name localhost;
+	root " . APPLICATION_ROOT . "/public;
+
+	#Only for Development
+	location ~ /assets/.*$ {
+		include " . APPLICATION_PATH . "/config/fastcgi.conf;
+	}
+
+	location ~* \\.(jpg|jpeg|gif|png|ico|bmp|swf|woff|ttf|eot|js|css|svg|zip)$ {
+		root " . APPLICATION_ROOT . "/public;
+		access_log off;
+	}
+
+	location / {
+		include " . APPLICATION_PATH . "/config/fastcgi.conf;
+	}
+}
+";
+create_file("/application/config/nginx.conf", $nginx);

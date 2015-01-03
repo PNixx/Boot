@@ -51,28 +51,19 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 
 		//Проверяем директорию
     if( is_dir($dir) == false ) {
-      throw new Exception("База перевода не найдена");
+      throw new Boot_Exception("База перевода не найдена", 500);
     }
     $this->_dir = $dir;
 
-		//Парсим JSON файлы локализации
-		// todo для уже перешедших на новую версию локализации
-		if( file_exists($dir . $lang . ".json") ) {
-
-			//Парсим файл
-			$this->parseJSON($lang);
-			$this->_default = $lang;
-		} else {
-
-			//Проверяем существование файла по умолчанию
-			if( file_exists($dir . $lang . ".po") == false ) {
-				$lang = "ru";
-			}
-			$this->_default = $lang;
-
-			//Парсим язык по умолчанию
-			$this->parse($lang);
+		//Если файл перевода не найден
+		if( file_exists($dir . $lang . ".json") == false ) {
+			$lang = "ru";
+			Boot_Cookie::set('lang', $lang);
 		}
+
+		//Парсим файл
+		$this->parseJSON($lang);
+		$this->_default = $lang;
   }
 
   /**
@@ -80,6 +71,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
    * @param $lang
    * @return array|null
    * @throws Exception
+	 * @deprecated
    */
   public function parse($lang) {
 
@@ -88,7 +80,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 
       //Проверяем существование файла
       if( file_exists($this->_dir . $lang . ".po") == false ) {
-        throw new Exception("Файл перевода языка не найден: {$lang}.po");
+        throw new Boot_Exception("Файл перевода языка не найден: {$this->_dir}{$lang}.po", 500);
       }
 
       //Читаем файл
@@ -121,7 +113,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 
 			//Проверяем существование файла
 			if( file_exists($this->_dir . $lang . ".json") == false ) {
-				throw new Exception("Файл перевода языка не найден: {$lang}.json");
+				throw new Boot_Exception("Файл перевода языка не найден: {$lang}.json", 500);
 			}
 
 			//Читаем файл
