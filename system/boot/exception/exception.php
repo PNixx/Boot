@@ -180,7 +180,7 @@ class Controller_Exception extends Exception {
 		if( Boot_Controller::getInstance()->isAjax() ) {
 
 			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
-			Boot_Exception::sendLibraryException($this);
+			Boot_Exception::sendLibraryException(new Exception($message, $code));
 
 			echo json_encode(array(
 				'error' => $code,
