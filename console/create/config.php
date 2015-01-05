@@ -134,9 +134,9 @@ PHP;
 create_file("/application/config/routes.php", $routes);
 
 //Создаём файл перевода
-$lang_file = APPLICATION_PATH . "/lang/ru.po";
+$lang_file = APPLICATION_PATH . "/lang/ru.json";
 if( file_exists($lang_file) == false ) {
-	file_put_contents($lang_file, "");
+	file_put_contents($lang_file, "{}");
 }
 
 //Создаём стандартный контроллер

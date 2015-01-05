@@ -302,7 +302,7 @@ class postgres {
 			}
 			return implode(',', $value);
 		}
-		return is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $value) : "'" . (pg_escape_string($value) . "'");
+		return is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : $value) : ("'" . pg_escape_string($value) . "'");
 	}
 
 	/**

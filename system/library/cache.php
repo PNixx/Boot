@@ -7,6 +7,9 @@
 
 class Boot_Cache_Lib extends Boot_Abstract_Library {
 
+	//Префикс
+	private $prefix;
+
 	/**
 	 * @var Memcache
 	 */
@@ -28,6 +31,11 @@ class Boot_Cache_Lib extends Boot_Abstract_Library {
 			throw new Boot_Exception('Не указаны настройки Memcache', 500);
 		}
 
+		//Добавляем префикс
+		if( isset(Boot::getInstance()->config->memcache->prefix) ) {
+			$this->prefix = Boot::getInstance()->config->memcache->prefix . "::";
+		}
+
 		//Инициализируем класс кеша
 		$this->m = new Memcache();
 
@@ -45,7 +53,7 @@ class Boot_Cache_Lib extends Boot_Abstract_Library {
 	/**
 	 * Получение данных из кеша
 	 * @param $key
-	 * @return array|string
+	 * @return array|string|stdClass
 	 */
 	static public function get($key) {
 		return self::getInstance()->_get($key);
@@ -63,10 +71,10 @@ class Boot_Cache_Lib extends Boot_Abstract_Library {
 
 			try {
 				//Получаем данные
-				$result = $this->m->get($key);
+				$result = $this->m->get($this->prefix . $key);
 
 				//Debug
-				Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m GET " . $key . ($result === false ? " \x1b[31mfalse\x1b[0m" : " \x1b[32mtrue\x1b[0m"));
+				Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m GET " . $this->prefix . $key . ($result === false ? " \x1b[31mfalse\x1b[0m" : " \x1b[32mtrue\x1b[0m"));
 
 				return $result;
 			} catch( Exception $e ) {
@@ -101,10 +109,10 @@ class Boot_Cache_Lib extends Boot_Abstract_Library {
 
 			try {
 				//Отправляем данные
-				$result = $this->m->set($key, $value, MEMCACHE_COMPRESSED, $expire);
+				$result = $this->m->set($this->prefix . $key, $value, MEMCACHE_COMPRESSED, $expire);
 
 				//Debug
-				Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m SET " . $key);
+				Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m SET " . $this->prefix . $key);
 
 				return $result;
 			} catch( Exception $e ) {
@@ -132,10 +140,10 @@ class Boot_Cache_Lib extends Boot_Abstract_Library {
 
 		try {
 			//Очищаем данные
-			$this->m->delete($key);
+			$this->m->delete($this->prefix . $key);
 
 			//Debug
-			Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m DELETE " . $key);
+			Boot::getInstance()->debug("  \x1b[36mCache (" . Boot::check_time($time) . "ms)\x1b[0m DELETE " . $this->prefix . $key);
 		} catch(Exception $e) {
 			$this->error($e->getMessage());
 		}

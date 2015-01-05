@@ -121,18 +121,39 @@ class Select {
 	public function where($where) {
 
 		if( is_array($where) ) {
-			$sql = "";
+			$sql = [];
 			foreach($where as $k => $v) {
-				$sql .= ($sql == "" ? "" : " AND ")
-					. (count($this->_table) == 1 ? $this->driver->escape_identifier($this->_table[0]) . "." : "")
-					. $this->driver->escape_identifier($k)
-					. (is_array($v) && $v ? " IN (" . $this->driver->getStringQueryByValue($v) . ")" : " = " . $this->driver->getStringQueryByValue($v));
+				$s = "";
+
+				//Добавляем таблицу в строку
+				if( count($this->_table) == 1 ) {
+					$s = $this->driver->escape_identifier($this->_table[0]) . ".";
+				}
+
+				//Добавляем колонку
+				$s .= $this->driver->escape_identifier($k);
+
+				//Если значение массив
+				if( is_array($v) ) {
+					$s .= " IN (" . ($v ? $this->driver->getStringQueryByValue($v) : "NULL") . ")";
+				} elseif( is_null($v) ) {
+					$s .= " IS NULL";
+				} else {
+					$s .= " = " . $this->driver->getStringQueryByValue($v);
+				}
+
+				//Добавляем в массив
+				$sql[] = $s;
 			}
 
-			$where = $sql;
+			if( $sql ) {
+				$where = implode(' AND ', $sql);
+			}
 		}
 
-		$this->_where .= ($this->_where == null ? "" : " AND ") . "({$where})";
+		if( $where ) {
+			$this->_where .= ($this->_where == null ? "" : " AND ") . "({$where})";
+		}
 
 		return $this;
 	}

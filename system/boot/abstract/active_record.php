@@ -224,17 +224,40 @@ abstract class ActiveRecord {
 
 	/**
 	 * Вставка строки
-	 * @param $row
+	 * @param $data
 	 * @return int
 	 */
-	public static function insert($row = array()) {
+	public static function insert($data = array()) {
 
-		//Получаем имя вызываемого класса
-		$object = static::create($row);
+		//Создаем строку
+		$object = static::create($data);
 		$object->save();
 
 		//Создаем экземплятор
 		return $object->id;
+	}
+
+	/**
+	 * Вставка строки
+	 * @param $data
+	 * @return static
+	 */
+	public static function find_or_insert_by($data = array()) {
+
+		//Пробуем найти
+		$row = static::where($data)->row();
+
+		//Если нашли строку
+		if( $row ) {
+			return $row;
+		}
+
+		//Создаем строку
+		$object = static::create($data);
+		$object->save();
+
+		//Создаем экземплятор
+		return $object;
 	}
 
 	/**
