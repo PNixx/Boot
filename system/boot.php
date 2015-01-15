@@ -1,7 +1,7 @@
 <?
 /**
  * Class Boot
- * @method void debug(string $logger)
+ * @method void debug(string $logger, bool $error = false)
  */
 class Boot {
 
@@ -94,7 +94,7 @@ class Boot {
 
 		//Если выполняем дебаг
 		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || $this->config->debug_production ) ) {
-			Boot_Debug_Lib::log($params[0]);
+			Boot_Debug_Lib::log($params[0], isset($params[1]) ? $params[1] : false);
 		}
 	}
 
@@ -193,6 +193,14 @@ class Boot {
 			throw $e;
 		}
 
+		//Завершение работы скрипта
+		$this->end();
+	}
+
+	/**
+	 * Завершение работы скрипта
+	 */
+	public function end() {
 		//Выводим время работы
 		Boot::getInstance()->debug("  Completed (" . Boot::check_time($this->_time_start) . "ms)");
 	}
@@ -243,7 +251,10 @@ class Boot {
 		$this->load_library();
 
 		//Debug
-		$this->debug(PHP_EOL . PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
+		$this->debug(PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
+		if( isset($_SERVER['argv']) ) {
+			$this->debug("  File: " . $_SERVER['PWD'] . "/" . implode(" ", $_SERVER['argv']));
+		}
 	}
 
 	/**

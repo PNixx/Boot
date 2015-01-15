@@ -13,12 +13,13 @@ class Boot_Debug_Lib extends Boot_Abstract_Library implements Boot_Exception_Int
 	public static $is_init = true;
 
 	/**
-	 * @param $logger
+	 * @param      $logger
+	 * @param bool $error
 	 */
-	public static function log($logger) {
+	public static function log($logger, $error = false) {
 		//Добавляем в лог
 		if( is_writeable(Boot::getInstance()->config->log->dir) ) {
-			file_put_contents(Boot::getInstance()->config->log->dir . "debug.log", $logger . PHP_EOL, FILE_APPEND);
+			file_put_contents(Boot::getInstance()->config->log->dir . "debug.log", ($error ? "  \x1b[31m" : "") . $logger . ($error ? "\x1b[0m" : "") . PHP_EOL, FILE_APPEND);
 		} else {
 			echo "Permission denied to save debug.log" . PHP_EOL;
 			exit;
