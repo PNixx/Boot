@@ -64,8 +64,9 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 
 	/**
 	 * Деплой
+	 * @param string $env
 	 */
-	public function deploy() {
+	public function deploy($env = "production") {
 
 		//Проверяем настройки
 		$this->check_variables();
@@ -96,6 +97,7 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 			"rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/system && ln -s -- {$this->boot_path}/system {$this->deploy_to}/releases/{$this->timestamp}/system",
 			//Добавляем права группе
 			"chmod -R -- g+w {$this->deploy_to}/releases/{$this->timestamp}",
+			"echo '{$env}' > {$this->deploy_to}/releases/{$this->timestamp}/.env",
 //			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/*.sh",
 //			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/cron/*.sh"
 		];

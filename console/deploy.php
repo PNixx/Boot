@@ -40,7 +40,7 @@ if( isset($argv[2]) == false ) {
 switch( $argv[2] ) {
 
 	case "deploy":
-		$deploy->deploy();
+		$deploy->deploy(strtolower($application));
 		break;
 
 	case "deploy:migrate":

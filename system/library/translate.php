@@ -58,7 +58,9 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 		//Если файл перевода не найден
 		if( file_exists($dir . $lang . ".json") == false ) {
 			$lang = "ru";
-			Boot_Cookie::set('lang', $lang);
+			if( class_exists("Boot_Cookie") ) {
+				Boot_Cookie::set('lang', $lang);
+			}
 		}
 
 		//Парсим файл
@@ -112,12 +114,14 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 		if( !isset($this->_parse[$lang]) ) {
 
 			//Проверяем существование файла
-			if( file_exists($this->_dir . $lang . ".json") == false ) {
-				throw new Boot_Exception("Файл перевода языка не найден: {$lang}.json", 500);
-			}
+			if( file_exists($this->_dir . $lang . ".json") ) {
 
-			//Читаем файл
-			$this->_parse[$lang] = json_decode(file_get_contents($this->_dir . $lang . ".json"), true);
+				//Читаем файл
+				$this->_parse[$lang] = json_decode(file_get_contents($this->_dir . $lang . ".json"), true);
+			} else {
+				$this->_parse[$lang] = [];
+				Boot::getInstance()->debug("Файл перевода языка не найден: {$lang}.json", true);
+			}
 		}
 		return $this->_parse[$lang];
 	}
