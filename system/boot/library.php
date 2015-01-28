@@ -41,7 +41,7 @@ class Boot_Library {
 
 	/**
 	 * Получение списка библиотек
-	 * @return stdClass|Boot_Abstract_Library[]
+	 * @return stdClass|Boot_Abstract_Library[]|Boot_Exception_Interface[]
 	 */
 	public function getLibraries() {
 		return $this->_libraries;

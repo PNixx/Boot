@@ -210,14 +210,15 @@ class Boot {
 	 * @return void
 	 */
 	public function cron() {
+		define('APPLICATION_CLI', true);
 
 		$this->root = realpath(dirname(__FILE__));
 
 		header("Content-type: text/html; charset=UTF-8");
 
 		//Загружаем класс ошибок
-		require_once 'boot/exception/exception_console.php';
-		require_once 'boot/exception/db_console.php';
+		require_once 'boot/exception/exception.php';
+		require_once 'boot/exception/db.php';
 
 		//Инклудим абстрактные классы
 		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {

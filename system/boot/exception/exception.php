@@ -1,27 +1,41 @@
 <?php
 class Boot_Exception extends Exception {
 
+	/**
+	 * Конструктор
+	 * @param null $message
+	 * @param int  $code
+	 * @param null $error_code
+	 */
 	public function __construct($message = null, $code = 500, $error_code = null) {
 		$this->message = $message;
 		$this->code = $code;
 		self::ex($this);
 	}
 
+	/**
+	 * @param Exception $e
+	 */
 	public static function ex(Exception $e) {
-
-		//Устанавливаем код ошибки
-		if($e->getCode() == 0 ) {
-			$e->code = 500;
-		}
-
-		//Устанавливаем заголовок
-		header('HTTP/1.0 ' . $e->getCode());
-
 		//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
 		self::sendLibraryException($e);
 
-		require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
-		exit;
+		//Если работаем через консоль
+		if( defined('APPLICATION_CLI') && APPLICATION_CLI ) {
+			echo "Error message: " . $e->getMessage() . "\r\n";
+			echo $e->getTraceAsString() . PHP_EOL;
+		} else {
+
+			//Устанавливаем код ошибки
+			if( $e->getCode() == 0 ) {
+				$e->code = 500;
+			}
+
+			//Устанавливаем заголовок
+			header('HTTP/1.0 ' . $e->getCode());
+			require_once SYSTEM_PATH . '/boot/exception/exception.phtml';
+		}
+		exit(127);
 	}
 
 	/**
@@ -45,8 +59,8 @@ class Boot_Exception extends Exception {
 	 * @param $errfile
 	 * @param $errline
 	 * @param $errcontext
-	 * @throws ErrorException
 	 * @return bool
+	 * @throws ErrorException
 	 */
 	public static function err_handler($errno, $errstr, $errfile, $errline, $errcontext) {
 		$l = error_reporting();
@@ -65,9 +79,8 @@ class Boot_Exception extends Exception {
 					break;
 				case E_USER_NOTICE:
 				case E_NOTICE:
-				case @E_STRICT:
 					$type = 'Notice';
-					$exit = true;
+					$exit = APPLICATION_ENV == 'development' && true;
 					break;
 				case @E_RECOVERABLE_ERROR:
 					$type = 'Catchable';
@@ -85,21 +98,7 @@ class Boot_Exception extends Exception {
 			}
 
 			//Останавливаем при ошибке
-			throw new ErrorException($errstr);
-//			if( class_exists("Boot_Controller", false) && Boot_Controller::getInstance()->isAjax() ) {
-//				echo $type . ": " . $errstr . "({$errfile}:{$errline})\r\n";
-//			} else {
-//				if( APPLICATION_ENV != "production" ) {
-//					echo "<pre>" . $type . ": " . $errstr . "({$errfile}:<b>{$errline}</b>)</pre>";
-//				} else {
-//					Boot_Log_Lib::log("error.log", $type . ": " . $errstr . "({$errfile}:{$errline})");
-//					echo "<pre>" . $type . ": " . $errstr . "</pre>";
-//				}
-//			}
-//			if( $exit ) {
-//				throw new ErrorException($errstr);
-//			}
-
+			throw new ErrorException($errstr, 500);
 		}
 		return true;
 	}
@@ -157,22 +156,8 @@ class Boot_Exception extends Exception {
 }
 
 /**
- * Class Ajax_Exception
- * @deprecated
+ * Class Controller_Exception
  */
-class Ajax_Exception extends Exception {
-
-	public function __construct($message = null, $code = 500, $error_code = null) {
-		header('HTTP/1.0 ' . $code);
-		echo json_encode(array(
-			'error'      => $code,
-			'error_code' => $error_code,
-			'message'    => $message,
-			'trace'      => APPLICATION_ENV == "production" ? "" : $this->getTraceAsString()
-		));
-		exit;
-	}
-}
 class Controller_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
