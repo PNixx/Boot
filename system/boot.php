@@ -266,9 +266,7 @@ class Boot {
 	static public function autoload($name) {
 
 		//Имя файла
-		if( preg_match("/^Model_.+_Row$/", $name) ) {
-			$file = "row/" . strtolower(preg_replace("/^Model_(.+)_Row$/", "$1", $name)) . "_row.php";
-		} elseif( preg_match("/^Model_.+_Collection$/", $name) ) {
+		if( preg_match("/^Model_.+_Collection$/", $name) ) {
 			$file = "collection/" . strtolower(preg_replace("/^Model_(.+)_Collection$/", "$1", $name)) . "_collection.php";
 		} elseif( preg_match("/^Model_.+$/", $name) ) {
 			$file = strtolower(preg_replace("/^Model_/", "", $name)) . ".php";

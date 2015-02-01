@@ -32,6 +32,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		$this->_row = &$row;
 		$this->_name = $name;
 
+		//Если не указан экшен
+		if( empty($params['action']) && $row instanceof ActiveRecord && !empty($params['namespace']) ) {
+			$params['action'] = '/' . $params['namespace'] . '/' . strtolower(str_ireplace("Model_", "", get_class($row))) . '/' . ($row->isNew() ? 'create' : 'save');
+		}
+
 		//Сразу рисуем форму
 		print "<form id=\"{$name}\"" . $this->implode($params) . (isset($params['method']) && strtolower($params['method']) == 'post' ? ' enctype="multipart/form-data"' : '') . ">";
 
@@ -65,6 +70,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		//Печатаем лейбл
 		if( !in_array($params["as"], ["hidden", "checkbox"]) && (isset($params["label"]) && $params["label"] !== false || isset($params["label"]) == false ) ) {
 			$print .= $this->label($name, $params);
+		}
+
+		//Для required
+		if( isset($params['required']) && $params['required'] === false ) {
+			unset($params['required']);
 		}
 
 		//Собираем параметры для полей ввода

@@ -32,7 +32,7 @@ class Boot_Config {
 		if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
 			define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
 		} elseif( file_exists(APPLICATION_ROOT . "/.env") ) {
-			define('APPLICATION_ENV', file_get_contents(APPLICATION_ROOT . "/.env"));
+			define('APPLICATION_ENV', trim(file_get_contents(APPLICATION_ROOT . "/.env")));
 		} elseif( file_exists(APPLICATION_ROOT . "/public/.htaccess") ) {
 
 			//Читаем файл

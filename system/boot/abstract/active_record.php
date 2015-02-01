@@ -138,6 +138,16 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * Получаем данные
+	 * @param $name
+	 * @param $value
+	 * @return string
+	 */
+	public function __set($name, $value) {
+		$this->_row->$name = $value;
+	}
+
+	/**
 	 * Запрос функции
 	 * @param $name
 	 * @param $params
@@ -224,7 +234,7 @@ abstract class ActiveRecord {
 
 	/**
 	 * Вставка строки
-	 * @param $data
+	 * @param array|Boot_Params $data
 	 * @return int
 	 */
 	public static function insert($data = array()) {
