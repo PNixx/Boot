@@ -156,8 +156,14 @@ class Boot {
 		//Загружаем модель контроллера
 		$this->load_controller();
 
+		//Пути
+		$include_path = [
+			APPLICATION_PATH . '/models/',
+			APPLICATION_PATH . '/controllers/',
+		];
+
 		//Устанавливаем путь подключения моделей
-		set_include_path(APPLICATION_PATH . '/models/');
+		set_include_path(implode(PATH_SEPARATOR, $include_path));
 
 		spl_autoload_register(array(
 			"Boot",
@@ -265,15 +271,28 @@ class Boot {
 	 */
 	static public function autoload($name) {
 
-		//Имя файла
+		//Загрузка моделей
 		if( preg_match("/^Model_.+_Collection$/", $name) ) {
 			$file = "collection/" . strtolower(preg_replace("/^Model_(.+)_Collection$/", "$1", $name)) . "_collection.php";
 		} elseif( preg_match("/^Model_.+$/", $name) ) {
 			$file = strtolower(preg_replace("/^Model_/", "", $name)) . ".php";
 		}
 
-		if( isset($file) && file_exists(get_include_path() . $file) ) {
-			require_once $file;
+		//Загрузка контроллеров модулем
+		if( preg_match("/^(.+)_(.+)Controller$/", $name, $match) ) {
+			$file = strtolower($match[1]) . "/" . strtolower($match[2]) . ".php";
+		} elseif( preg_match("/^(.+)Controller$/", $name, $match) ) {
+			$file = strtolower($match[1]) . ".php";
+		}
+
+		if( isset($file) ) {
+			$paths = explode(PATH_SEPARATOR, get_include_path());
+			foreach( $paths as $p ) {
+				if( file_exists($p . $file) ) {
+					require_once $file;
+					break;
+				}
+			}
 		}
 		return false;
 	}

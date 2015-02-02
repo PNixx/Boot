@@ -188,23 +188,18 @@ class Boot_Controller {
 	 */
 	private function includeController() {
 
-		if( isset($this->_param->module) ) {
-			$file = APPLICATION_PATH . "/controllers/" . $this->_param->module . "/" . $this->_param->controller . ".php";
-		} else {
-			$file = APPLICATION_PATH . "/controllers/" . $this->_param->controller . ".php";
+		//Проверяем существование класса с его автоподгрузкой
+		if( class_exists($this->getClassName()) == false ) {
+			throw new Exception($this->getClassName() . " not exists");
 		}
+	}
 
-		//Проверяем существование файла
-		if( is_file($file) == false ) {
-			throw new Exception("File {$file} not found", 404);
-		}
-
-		//Загружаем файл
-		require_once $file;
-
-		if( class_exists((isset($this->_param->module) ? $this->_param->module . "_" : "") . $this->_param->controller . "Controller", false) == false ) {
-			throw new Exception($this->_param->controller . "Controller not exists");
-		}
+	/**
+	 * Получение имени класса контроллера
+	 * @return string
+	 */
+	private function getClassName() {
+		return (isset($this->_param->module) ? ucfirst($this->_param->module) . "_" : "") . ucfirst($this->_param->controller) . self::PREFIX;
 	}
 
 	/**
@@ -220,7 +215,7 @@ class Boot_Controller {
 		//Загружаем контроллер
 		$this->includeController();
 
-		$Cname = (isset($this->_param->module) ? ucfirst($this->_param->module) . "_" : "") . ucfirst($this->_param->controller) . self::PREFIX;
+		$Cname = $this->getClassName();
 		$Aname = $this->_param->action . "Action";
 
 		//Debug

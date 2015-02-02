@@ -21,7 +21,7 @@ abstract class Boot_Abstract_Library {
 
 	/**
 	 * Инициализация библиотеки во вьюхе и контроллере
-	 * @param Boot_View|Boot_Layout|Boot_Controller $class
+	 * @param Boot_View|Boot_Layout|Boot_Abstract_Controller $class
 	 * @return void
 	 */
 	public function init(&$class) {
