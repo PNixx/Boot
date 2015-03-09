@@ -140,6 +140,9 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 
 		//Создаем боевой симлинк
 		$this->ssh_exec("rm -f {$this->deploy_to}/current &&  ln -s {$this->deploy_to}/releases/{$this->timestamp} {$this->deploy_to}/current");
+
+		//Удаляем страые релизы
+		$this->ssh_exec("ls -1dt {$this->deploy_to}/releases/* | tail -n +4 | xargs rm -rf");
 	}
 
 	/**

@@ -29,23 +29,25 @@ class Boot_Config {
 		//Объявляем конфиг классом
 		$this->_config = new stdClass();
 
-		if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
-			define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
-		} elseif( file_exists(APPLICATION_ROOT . "/.env") ) {
-			define('APPLICATION_ENV', trim(file_get_contents(APPLICATION_ROOT . "/.env")));
-		} elseif( file_exists(APPLICATION_ROOT . "/public/.htaccess") ) {
+		if( defined('APPLICATION_ENV') == false ) {
+			if( getenv('APPLICATION_ENV') && getenv('APPLICATION_ENV') != 'production' ) {
+				define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
+			} elseif( file_exists(APPLICATION_ROOT . "/.env") ) {
+				define('APPLICATION_ENV', trim(file_get_contents(APPLICATION_ROOT . "/.env")));
+			} elseif( file_exists(APPLICATION_ROOT . "/public/.htaccess") ) {
 
-			//Читаем файл
-			$htaccess = file_get_contents(APPLICATION_ROOT . "/public/.htaccess");
-			if( $htaccess ) {
-				$htaccess = explode("\n", $htaccess);
-			}
+				//Читаем файл
+				$htaccess = file_get_contents(APPLICATION_ROOT . "/public/.htaccess");
+				if( $htaccess ) {
+					$htaccess = explode("\n", $htaccess);
+				}
 
-			//Проходим по списску ищем строку с APPLICATION_ENV
-			if( is_array($htaccess) ) {
-				foreach($htaccess as $row) {
-					if( preg_match("/^SetEnv APPLICATION_ENV\s+(.*?)$/", $row, $match) ) {
-						define('APPLICATION_ENV', trim($match[1]));
+				//Проходим по списску ищем строку с APPLICATION_ENV
+				if( is_array($htaccess) ) {
+					foreach( $htaccess as $row ) {
+						if( preg_match("/^SetEnv APPLICATION_ENV\s+(.*?)$/", $row, $match) ) {
+							define('APPLICATION_ENV', trim($match[1]));
+						}
 					}
 				}
 			}
