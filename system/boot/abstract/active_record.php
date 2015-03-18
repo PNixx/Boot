@@ -563,6 +563,14 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * @param       $table
+	 * @param array $columns
+	 */
+	static public function drop_index($table, array $columns) {
+		DB::getDB()->drop_index($table, $columns);
+	}
+
+	/**
 	 * Изменение имени колонки
 	 * @param $column
 	 * @param $new_name

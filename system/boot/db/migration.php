@@ -80,7 +80,7 @@ class Boot_Migration extends ActiveRecord {
 				}
 			}
 		} catch( Exception $e ) {
-			echo "!!! Migration error, start rollback\r\n";
+			echo "!!! Migration error, start rollback\r\n" . $e->getMessage() . PHP_EOL;
 			try {
 				self::rollback_migration($file);
 			} catch( Exception $ee ) {
@@ -114,6 +114,11 @@ class Boot_Migration extends ActiveRecord {
 						self::drop_table($table);
 						echo "DROP TABLE `{$table}`;\r\n";
 					}
+					break;
+
+				//Создание индекса
+				case "create_index":
+					self::create_indexes($data);
 					break;
 
 				case "sql":
@@ -241,6 +246,32 @@ class Boot_Migration extends ActiveRecord {
 	}
 
 	/**
+	 * Создание индексов
+	 * @param array $data
+	 */
+	static private function create_indexes(array $data) {
+		foreach($data as $table => $row) {
+			foreach( $row as $columns ) {
+				self::create_index($table, $columns);
+				echo $table . ": create index idx_{$table}_" . implode("_", $columns) . PHP_EOL;
+			}
+		}
+	}
+
+	/**
+	 * Удаление индексов
+	 * @param array $data
+	 */
+	static private function drop_indexes(array $data) {
+		foreach( $data as $table => $row ) {
+			foreach( $row as $columns ) {
+				self::drop_index($table, $columns);
+				echo $table . ": drop index idx_{$table}_" . implode("_", $columns) . PHP_EOL;
+			}
+		}
+	}
+
+	/**
 	 * @param array $data
 	 */
 	static private function rollback_alter_table(array $data) {
@@ -338,6 +369,10 @@ class Boot_Migration extends ActiveRecord {
 
 				case "alter_table":
 					self::rollback_alter_table($data);
+					break;
+
+				case "create_index":
+					self::drop_indexes($data);
 					break;
 
 				case "sql":

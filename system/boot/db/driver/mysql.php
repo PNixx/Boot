@@ -127,6 +127,16 @@ class mysql {
 	}
 
 	/**
+	 * Drop index
+	 * @param $table
+	 * @param $columns
+	 * @return mysql
+	 */
+	public function drop_index($table, $columns) {
+		return $this->query("ALTER TABLE " . $this->separator . $table . $this->separator . " DROP INDEX " . $this->separator . "idx_{$table}_" . implode("_", $columns) . $this->separator);
+	}
+
+	/**
 	 * Изменение имени колонки
 	 * @param $table
 	 * @param $column

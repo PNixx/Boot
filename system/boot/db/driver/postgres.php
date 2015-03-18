@@ -150,6 +150,16 @@ class postgres {
 	}
 
 	/**
+	 * Drop index
+	 * @param $table
+	 * @param $columns
+	 * @return postgres
+	 */
+	public function drop_index($table, $columns) {
+		return $this->query("DROP INDEX " . pg_escape_identifier("idx_{$table}_" . implode("_", $columns)));
+	}
+
+	/**
 	 * Изменение имени колонки
 	 * @param $table
 	 * @param $column

@@ -31,7 +31,7 @@ if( isset($argv[1]) && trim($argv[1]) ) {
 	exit;
 }
 
-if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $match) ) {
+if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/i", $name, $match) ) {
 	switch( $match[1] ) {
 
 		//Создание таблицы
@@ -40,11 +40,11 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 			//Создаваемая таблица
 			$table = $match[2];
 			if( $table == null ) {
-				exit("You must write table name, example: create_table_user");
+				exit("You must write table name, example: create_table_user" . PHP_EOL);
 			}
 
 			if( file_exists(APPLICATION_PATH . "/models/{$table}.php") ) {
-				exit("Model_{$table} is exist");
+				exit("Model_{$table} is exist" . PHP_EOL);
 			}
 
 			//Строим параметры
@@ -170,6 +170,25 @@ if( preg_match("/^(create_table|alter_table|drop_table|sql)_?(.*)$/i", $name, $m
 
 			break;
 
+		//Создание индекса таблицы
+		case "create_index":
+
+			//Проверяем таблицу
+			$table = $match[2];
+			if( $table == null ) {
+				exit("You must write table name, example: create_index_user" . PHP_EOL);
+			}
+
+			//Строим параметры
+			$schema = [];
+			for( $i = 2; $i < count($argv); $i++ ) {
+				$schema[] = explode(',', $argv[$i]);
+			}
+
+			//Указываем тип
+			$migrate_type = Boot_Migration::TYPE_CHANGE;
+
+			break;
 		//Выполнение sql кода
 		case "sql":
 
