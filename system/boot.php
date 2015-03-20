@@ -119,6 +119,11 @@ class Boot {
 		require_once 'boot/assets.php';
 		require_once 'boot/params.php';
 
+		//Инклудим треды
+		foreach(glob(SYSTEM_PATH . '/boot/trait/' . '*.php') as $path) {
+			require_once $path;
+		}
+
 		//Инклудим абстрактные классы
 		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {
 			require_once $path;
@@ -220,6 +225,11 @@ class Boot {
 		require_once 'boot/exception/exception.php';
 		require_once 'boot/exception/db.php';
 
+		//Инклудим треды
+		foreach(glob(SYSTEM_PATH . '/boot/trait/' . '*.php') as $path) {
+			require_once $path;
+		}
+
 		//Инклудим абстрактные классы
 		foreach(glob(SYSTEM_PATH . '/boot/abstract/' . '*.php') as $path) {
 			require_once $path;
@@ -278,6 +288,11 @@ class Boot {
 			$file = 'controllers/' . strtolower($match[1]) . "/" . strtolower($match[2]) . ".php";
 		} elseif( preg_match("/^(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . ".php";
+		}
+
+		//Загрузка загрузчиков файлов
+		if( preg_match("/(.+)Uploader$/", $name, $match) ) {
+			$file = 'uploader/' . strtolower($match[1]) . ".php";
 		}
 
 		if( isset($file) ) {

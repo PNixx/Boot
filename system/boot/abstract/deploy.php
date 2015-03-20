@@ -4,9 +4,8 @@
  * Date: 04.03.14
  * Time: 17:41
  */
-require_once APPLICATION_ROOT . "/system/boot/abstract/console.php";
-
-abstract class Boot_Deploy_Abstract extends Boot_Console {
+abstract class Boot_Deploy_Abstract {
+	use Boot_Console;
 
 	/**
 	 * Репозиторий
@@ -25,12 +24,6 @@ abstract class Boot_Deploy_Abstract extends Boot_Console {
 	 * @var string
 	 */
 	protected $deploy_to;
-
-	/**
-	 * Сервер деплоя
-	 * @var string
-	 */
-	protected $server;
 
 	/**
 	 * Прокидывание ссылок на папки

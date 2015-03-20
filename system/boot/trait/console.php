@@ -1,5 +1,15 @@
-<?
-abstract class Boot_Console {
+<?php
+/**
+ * Date: 18.03.15
+ * Time: 14:56
+ * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
+ */
+trait Boot_Console {
+
+	/**
+	 * @var string
+	 */
+	protected $server;
 
 	/**
 	 * Вывод ошибки
@@ -15,6 +25,11 @@ abstract class Boot_Console {
 	 * @param $command
 	 */
 	public function ssh_exec($command) {
+
+		//Проверяем указан ли сервер
+		if( empty($this->server) ) {
+			$this->error('Unknown ssh server');
+		}
 
 		//Выводим сообщение
 		echo " * \x1b[33mexecuting: \"{$command}\"\x1b[0m\r\n";

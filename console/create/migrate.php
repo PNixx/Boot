@@ -251,3 +251,5 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 //		echo "create row model: " . APPLICATION_PATH . "/models/row/" . $table . "_row.php\r\n";
 //	}
 }
+
+Boot::getInstance()->end();

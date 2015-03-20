@@ -25,7 +25,7 @@ require_once APPLICATION_ROOT . '/system/boot/db/migration.php';
 if( isset($argv[1]) && trim($argv[1]) ) {
 	$type = $argv[1];
 } else {
-	echo "You have to write the type";
+	echo "You have to write the type" . PHP_EOL;
 	exit;
 }
 
@@ -180,3 +180,5 @@ switch( $type ) {
 	default:
 		break;
 }
+
+Boot::getInstance()->end();

@@ -63,6 +63,7 @@ $directories = array(
 	"/application/views/home",
 	"/application/models",
 	"/application/layouts",
+	"/application/uploader",
 	"/db",
 	"/public",
 	"/library",
@@ -274,3 +275,10 @@ $nginx = "server {
 }
 ";
 create_file("/application/config/nginx.conf", $nginx);
+
+//Composer
+create_file("/composer.json", '{
+    "require": {
+        "intervention/image": "~2.1"
+    }
+}');

@@ -35,6 +35,15 @@ abstract class ActiveRecord {
 	protected static $default_order = null;
 
 	/**
+	 * Подключение класса загрузки
+	 * [
+	 *  column => class name
+	 * ]
+	 * @var array
+	 */
+	protected static $mount_uploader = [];
+
+	/**
 	 * Хранилище для кеширования объектов belongs_to
 	 * @var array
 	 */
@@ -80,6 +89,11 @@ abstract class ActiveRecord {
 		//Сохраняем данные
 		$this->_row = (object)$row;
 		$this->_new_record = $new_record;
+
+		//Инициализируем загрузчики
+		foreach( static::$mount_uploader as $column => $class ) {
+			$this->$column = new $class($this, $column, $this->$column);
+		}
 	}
 
 	/**
@@ -301,6 +315,31 @@ abstract class ActiveRecord {
 
 		//Возвращаем результат
 		return $result;
+	}
+
+	/**
+	 * Проходит по списку колонок и выполняет необходимые действия
+	 */
+	private function getUpdateColumns() {
+
+		//Получаем наборы изменений
+		if( $this->_new_record ) {
+			$columns = &$this->_row;
+		} else {
+			$columns = &$this->_row_update;
+		}
+
+		//Проходим по колонкам
+		foreach( $columns as $key => $column ) {
+
+			//Проверяем загрузчик
+			if( $column instanceof Boot_Uploader_Abstract ) {
+				$column->uploadFile();
+				$columns->$key = $column->__toString();
+			}
+		}
+
+		return (array)$columns;
 	}
 
 	/**
@@ -695,41 +734,72 @@ abstract class ActiveRecord {
 			return true;
 		}
 
-		//Сохраняем обновляемые данные
-		if( is_array($data) ) {
-			$this->_row_update = $data;
+		//Получаем данные
+		if( $data instanceof Boot_Params ) {
+			$values = $data->getValues();
 		} else {
-			$this->_row_update = $data->getValues();
+			$values = &$data;
+		}
+
+		//Обнуляем список
+		$this->_row_update = [];
+
+		/**
+		 * Инициализируем загрузчики
+		 * @var Boot_Uploader_Abstract $class
+		 */
+		foreach( static::$mount_uploader as $column => $class ) {
+			if( $class::fetchUploadFile(static::getTable(), $column) ) {
+
+				//Загружаем новые файлыё
+				$this->$column->remove();
+				$this->$column->uploadFile();
+				$this->_row_update[$column] = $this->$column->__toString();
+			}
+		}
+
+		//Проходим по списку
+		foreach( $values as $key => $value ) {
+			if( $this->_row->$key != $value ) {
+				$this->_row_update[$key] = $value;
+			}
 		}
 
 		//Пытаемся обновить
-		$result = DB::getDB()->update(static::getTable(), $this->_row_update, self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
-		if( $result ) {
-
-			//Изменяем данные строки
-			$this->merge_after_update();
-			return $result;
-		}
-		return false;
+		return $this->save();
 	}
 
 	/**
 	 * @return bool
-	 * @throws DB_Exception
+	 * @throws Exception
 	 */
 	public function save() {
 
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
-			return $this->update($this->_row_update);
-		}
 
-		//Добавляем строку
-		$id = DB::getDB()->insert(static::getTable(), (array)$this->_row, static::$pkey);
-		if( $id > 0 ) {
-			$this->_row->id = $id;
-			$this->_new_record = false;
-			return true;
+			//Пытаемся обновить
+			if( $this->_row_update ) {
+				$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
+				if( $result ) {
+
+					//Изменяем данные строки
+					$this->merge_after_update();
+
+					return $result;
+				}
+			} else {
+				return true;
+			}
+		} else {
+
+			//Добавляем строку
+			$id = DB::getDB()->insert(static::getTable(), $this->getUpdateColumns(), static::$pkey);
+			if( $id > 0 ) {
+				$this->_row->id = $id;
+				$this->_new_record = false;
+				return true;
+			}
 		}
 		return false;
 	}
@@ -772,6 +842,15 @@ abstract class ActiveRecord {
 
 			//Удаляем саму строку
 			DB::getDB()->delete(static::getTable(), static::$pkey, $this->{static::$pkey});
+
+			//Проходим по колонкам
+			foreach( $this->_row as $key => $column ) {
+
+				//Проверяем загрузчик
+				if( $column instanceof Boot_Uploader_Abstract ) {
+					$column->remove();
+				}
+			}
 
 			//Комитим изменения
 			self::commit();
