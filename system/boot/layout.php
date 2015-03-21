@@ -65,7 +65,40 @@ class Boot_Layout {
 	 */
 	public function run(&$content) {
 
-		require_once($this->file);
+		//Путь к файлу
+		$__path = $this->file;
+
+		//Счетчик времени
+		$time = Boot::mktime();
+
+		//Оборачиваем все в функцию
+		$view = function ($params, $content) use ($__path) {
+
+			//Извлекаем переменные
+			if( !empty($params) ) {
+				extract((array)$params);
+			}
+
+			//Запускаем отладчик
+			ob_start();
+
+			//Подключаем файл
+			require $__path;
+
+			//Выполняем сценарий
+			$html = ob_get_contents();
+			ob_end_clean();
+
+			//Возвращаем данные
+			return $html;
+		};
+
+		//Выполняем функцию
+		$html = $view((array)Boot_Controller::getInstance()->view, $content);
+
+		//Debug
+		Boot::getInstance()->debug("  Rendered " . str_replace(APPLICATION_PATH . "/", "", $__path) . " (" . Boot::check_time($time) . "ms)");
+		echo $html;
 	}
 
 	/**

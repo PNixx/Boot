@@ -66,6 +66,13 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 						$ukey = explode(",", $m[1]);
 					} else {
 						list($column, $type) = explode(":", $argv[$i]);
+
+						//Подменяем тип столбца для модели
+						switch( $type ) {
+							case "string":
+								$type = "varchar(255)";
+								break;
+						}
 						$schema[$column] = $type;
 					}
 				}

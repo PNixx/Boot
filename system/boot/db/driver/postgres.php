@@ -156,7 +156,7 @@ class postgres {
 	 * @return postgres
 	 */
 	public function drop_index($table, $columns) {
-		return $this->query("DROP INDEX " . pg_escape_identifier("idx_{$table}_" . implode("_", $columns)));
+		return $this->query("DROP INDEX IF EXISTS " . pg_escape_identifier("idx_{$table}_" . implode("_", $columns)));
 	}
 
 	/**

@@ -13,6 +13,7 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 //Подключаем абстрактный класс
+require_once APPLICATION_ROOT . "/system/boot/trait/console.php";
 require_once APPLICATION_ROOT . "/system/boot/abstract/deploy.php";
 
 //Получаем, какой инстанс мы деплоим
