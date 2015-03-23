@@ -760,7 +760,7 @@ abstract class ActiveRecord {
 
 		//Проходим по списку
 		foreach( $values as $key => $value ) {
-			if( $value instanceof DB_Expr || $this->_row->$key != $value ) {
+			if( $value instanceof DB_Expr || empty($this->_row->$key) || $this->_row->$key != $value ) {
 				$this->_row_update[$key] = $value;
 			}
 		}
