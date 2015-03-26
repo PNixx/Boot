@@ -49,7 +49,9 @@ class Boot_{$application}_Deploy extends Boot_Deploy_Abstract {
 	 * Прокидывание ссылок на папки
 	 * @var array
 	 */
-	protected \$shared_children = [];
+	protected \$shared_children = [
+		"log",
+	];
 
 	/**
 	 * Путь до фреймворка

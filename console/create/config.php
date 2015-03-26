@@ -225,7 +225,9 @@ create_file("/public/.htaccess", $htaccess);
 
 $fastcgi = <<<CONF
 fastcgi_pass       127.0.0.1:9000 ;
-fastcgi_buffers    512 4k;
+fastcgi_buffer_size 128k;
+fastcgi_buffers    4 256k;
+fastcgi_busy_buffers_size 256k;
 fastcgi_index      index.php;
 
 fastcgi_param  DOCUMENT_ROOT      \$document_root;
@@ -249,8 +251,6 @@ fastcgi_param  REQUEST_SCHEME     \$scheme;
 
 fastcgi_param  REMOTE_ADDR        \$proxy_add_x_forwarded_for;
 fastcgi_param  REMOTE_PORT        \$remote_port;
-
-fastcgi_buffer_size 32k;
 CONF;
 create_file("/application/config/fastcgi.conf", $fastcgi);
 
