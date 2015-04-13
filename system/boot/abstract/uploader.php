@@ -138,6 +138,14 @@ abstract class Boot_Uploader_Abstract {
 	}
 
 	/**
+	 * Запись существует?
+	 * @return bool
+	 */
+	public function present() {
+		return (bool) $this->_value;
+	}
+
+	/**
 	 * Загружает файл
 	 */
 	public function uploadFile() {
@@ -177,18 +185,22 @@ abstract class Boot_Uploader_Abstract {
 	 */
 	public function remove() {
 
-		//Удаляем разные версии
-		foreach( glob(pathinfo($this->path(), PATHINFO_DIRNAME) . '/' . pathinfo($this->path(), PATHINFO_FILENAME) . '_*.' . pathinfo($this->path(), PATHINFO_EXTENSION)) as $file ) {
-			unlink($file);
-		}
+		//Если файл существует
+		if( $this->present() ) {
 
-		//Удаляем оригинальный файл
-		if( file_exists($this->path()) ) {
-			unlink($this->path());
-		}
+			//Удаляем разные версии
+			foreach( glob(pathinfo($this->path(), PATHINFO_DIRNAME) . '/' . pathinfo($this->path(), PATHINFO_FILENAME) . '_*.' . pathinfo($this->path(), PATHINFO_EXTENSION)) as $file ) {
+				unlink($file);
+			}
 
-		//Очищаем старый файл
-		$this->_value = null;
+			//Удаляем оригинальный файл
+			if( file_exists($this->path()) ) {
+				unlink($this->path());
+			}
+
+			//Очищаем старый файл
+			$this->_value = null;
+		}
 	}
 
 	/**

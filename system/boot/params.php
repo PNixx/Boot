@@ -130,7 +130,7 @@ class Boot_Params implements Iterator, ArrayAccess {
 	 * @return mixed Can return all value types.
 	 */
 	public function offsetGet($offset) {
-		return isset($this->_params[$offset]) ? $this->_params[$offset] : null;
+		return in_array($offset, $this->_permit) && isset($this->_params[$offset]) ? $this->_params[$offset] : null;
 	}
 
 	/**

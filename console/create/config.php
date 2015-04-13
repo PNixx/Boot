@@ -264,7 +264,7 @@ $nginx = "server {
 		include " . APPLICATION_PATH . "/config/fastcgi.conf;
 	}
 
-	location ~* \\.(jpg|jpeg|gif|png|ico|bmp|swf|woff|ttf|eot|js|css|svg|zip)$ {
+	location ~* \\.(jpg|jpeg|gif|png|ico|bmp|swf|woff|ttf|eot|js|css|svg|zip|txt|xml)$ {
 		root " . APPLICATION_ROOT . "/public;
 		access_log off;
 	}

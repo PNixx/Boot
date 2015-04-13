@@ -160,8 +160,8 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 						$rename[$m[1]] = $m[2];
 					}
 					//Если было указано изменение добавление колонки
-					if( preg_match("/^\+([^\+-\s]+):(.+?)$/", $argv[$i], $m) ) {
-						$add[$m[1]] = $m[2];
+					if( preg_match("/^\+([^\+\-\s]+):(.+?)$/", $argv[$i], $m) ) {
+						$add[$m[1]] = $m[2] == "string" ? "varchar(255)" : $m[2];
 					}
 				}
 				if( $rename ) {

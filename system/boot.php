@@ -284,7 +284,7 @@ class Boot {
 		}
 
 		//Загрузка контроллеров модулем
-		if( preg_match("/^(.+)_(.+)Controller$/", $name, $match) ) {
+		if( preg_match("/^(.+?)_(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . "/" . strtolower($match[2]) . ".php";
 		} elseif( preg_match("/^(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . ".php";
