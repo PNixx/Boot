@@ -125,7 +125,10 @@ abstract class Boot_Uploader_Abstract {
 	 * @return string|null
 	 */
 	public function path($version = null) {
-		return APPLICATION_ROOT . '/public/' . $this->storeDir() . '/' . $this->filename($version);
+		if( $this->present() ) {
+			return APPLICATION_ROOT . '/public/' . $this->storeDir() . '/' . $this->filename($version);
+		}
+		return null;
 	}
 
 	/**
@@ -313,13 +316,15 @@ abstract class Boot_Uploader_Abstract {
 	 */
 	public function recreate_versions() {
 
-		//Удаляем файлы
-		foreach( glob(pathinfo($this->path(), PATHINFO_DIRNAME) . '/' . pathinfo($this->path(), PATHINFO_FILENAME) . '_*.' . pathinfo($this->path(), PATHINFO_EXTENSION)) as $file ) {
-			unlink($file);
-		}
+		if( $this->present() ) {
+			//Удаляем файлы
+			foreach( glob(pathinfo($this->path(), PATHINFO_DIRNAME) . '/' . pathinfo($this->path(), PATHINFO_FILENAME) . '_*.' . pathinfo($this->path(), PATHINFO_EXTENSION)) as $file ) {
+				unlink($file);
+			}
 
-		//Создаем версии
-		$this->create_versions($this->path());
+			//Создаем версии
+			$this->create_versions($this->path());
+		}
 	}
 
 	private function create_versions($original_file) {
