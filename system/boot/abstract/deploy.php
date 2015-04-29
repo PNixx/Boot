@@ -91,8 +91,6 @@ abstract class Boot_Deploy_Abstract {
 			//Добавляем права группе
 			"chmod -R -- g+w {$this->deploy_to}/releases/{$this->timestamp}",
 			"echo '{$env}' > {$this->deploy_to}/releases/{$this->timestamp}/.env",
-//			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/*.sh",
-//			"chmod -R -- +x {$this->deploy_to}/releases/{$this->timestamp}/cron/*.sh"
 		];
 
 		//Добавляем в массив ссылку на асеты
@@ -128,7 +126,7 @@ abstract class Boot_Deploy_Abstract {
 
 		//Если установлен Composer
 		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
-			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer update --no-dev");
+			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader");
 		}
 
 		//Создаем боевой симлинк

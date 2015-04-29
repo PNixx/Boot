@@ -44,6 +44,18 @@ abstract class ActiveRecord {
 	protected static $mount_uploader = [];
 
 	/**
+	 * Функция выполнения до сохранения записи
+	 * @var null|string
+	 */
+	protected static $before_save = null;
+
+	/**
+	 * Функция выполнения после успешного сохранения записи
+	 * @var null|string
+	 */
+	protected static $after_save = null;
+
+	/**
 	 * Хранилище для кеширования объектов belongs_to
 	 * @var array
 	 */
@@ -144,7 +156,9 @@ abstract class ActiveRecord {
 	 * @return string
 	 */
 	public function __get($name) {
-		if( property_exists($this->_row, $name) ) {
+		if( array_key_exists($name, $this->_row_update) ) {
+			return $this->_row_update[$name];
+		} elseif( property_exists($this->_row, $name) ) {
 			return $this->_row->$name;
 		} else {
 			return false;
@@ -158,7 +172,7 @@ abstract class ActiveRecord {
 	 * @return string
 	 */
 	public function __set($name, $value) {
-		$this->_row->$name = $value;
+		$this->_row_update[$name] = $value;
 	}
 
 	/**
@@ -775,30 +789,91 @@ abstract class ActiveRecord {
 	 */
 	public function save() {
 
+		//Определяем функцию
+		$after_save = function() {
+
+			//Если указана функция
+			if( static::$after_save ) {
+				$this->{static::$after_save}();
+			}
+		};
+
+		//Перед сохранением
+		$before_save = function() {
+
+			//Если указана функция
+			if( static::$before_save ) {
+				$this->{static::$before_save}();
+			}
+		};
+
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
 
 			//Пытаемся обновить
 			if( $this->_row_update ) {
-				$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
-				if( $result ) {
 
-					//Изменяем данные строки
-					$this->merge_after_update();
+				//Запускаем транзакцию
+				$this->begin_transaction();
+				try {
 
-					return $result;
+					//Выполняем функции колбека
+					$before_save();
+
+					//Обновляем
+					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
+					if( $result ) {
+
+						//Изменяем данные строки
+						$this->merge_after_update();
+
+						//Выполняем функции колбека
+						$after_save();
+
+						//Завершаем транзакцию
+						$this->commit();
+
+						//Возвращаем результат
+						return $result;
+					} else {
+						$this->rollback();
+					}
+				} catch(Exception $e) {
+					$this->rollback();
+					throw $e;
 				}
 			} else {
 				return true;
 			}
 		} else {
 
-			//Добавляем строку
-			$id = DB::getDB()->insert(static::getTable(), $this->getUpdateColumns(), static::$pkey);
-			if( $id > 0 ) {
-				$this->_row->id = $id;
-				$this->_new_record = false;
-				return true;
+			//Запускаем транзакцию
+			$this->begin_transaction();
+			try {
+
+				//Выполняем функции колбека
+				$before_save();
+
+				//Добавляем строку
+				$id = DB::getDB()->insert(static::getTable(), $this->getUpdateColumns(), static::$pkey);
+				if( $id > 0 ) {
+					$this->_row->id = $id;
+					$this->_new_record = false;
+
+					//Выполняем функции колбека
+					$after_save();
+
+					//Завершаем транзакцию
+					$this->commit();
+
+					//Возвращаем результат
+					return true;
+				} else {
+					$this->rollback();
+				}
+			} catch(Exception $e) {
+				$this->rollback();
+				throw $e;
 			}
 		}
 		return false;

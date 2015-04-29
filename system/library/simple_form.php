@@ -3,8 +3,8 @@
  * User: nixx
  * Date: 22.07.14
  * Time: 13:51
+ * @deprecated
  */
-
 class Boot_Simple_Form_Lib extends \Boot_Abstract_Library {
 
 	/**
