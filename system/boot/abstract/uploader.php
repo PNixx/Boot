@@ -125,10 +125,7 @@ abstract class Boot_Uploader_Abstract {
 	 * @return string|null
 	 */
 	public function path($version = null) {
-		if( $this->present() ) {
-			return APPLICATION_ROOT . '/public/' . $this->storeDir() . '/' . $this->filename($version);
-		}
-		return null;
+		return APPLICATION_ROOT . '/public/' . $this->storeDir() . '/' . $this->filename($version);
 	}
 
 	/**

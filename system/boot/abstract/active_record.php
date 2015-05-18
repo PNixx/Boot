@@ -104,7 +104,7 @@ abstract class ActiveRecord {
 
 		//Инициализируем загрузчики
 		foreach( static::$mount_uploader as $column => $class ) {
-			$this->$column = new $class($this, $column, $this->$column);
+			$this->_row->$column = new $class($this, $column, $this->$column);
 		}
 	}
 
