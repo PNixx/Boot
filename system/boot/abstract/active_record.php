@@ -476,6 +476,29 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * AND NOT IN
+	 * @param string $column
+	 * @param array  $array
+	 * @return static
+	 * @throws Exception
+	 */
+	public static function notIn($column, array $array) {
+
+		//Инициализируем
+		self::init_select();
+
+		//Добавляем условие
+		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
+			self::$select[self::getTable()]->notIn($column, $array);
+		} else {
+			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
+		}
+
+		//Возвращаем ту же функцию
+		return new static();
+	}
+
+	/**
 	 * @param string $table
 	 * @param string|array|null $on
 	 * @return static
@@ -506,7 +529,7 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		self::$select[self::getTable()]->where(DB::getDB()->escape_identifier($column) . " ILIKE " . DB::getDB()->getStringQueryByValue($value));
+		self::$select[self::getTable()]->where("LOWER(" . DB::getDB()->escape_identifier($column) . ") ILIKE " . DB::getDB()->getStringQueryByValue(strtolower($value)));
 
 		//Возвращаем ту же функцию
 		return new static();

@@ -19,6 +19,12 @@ class postgres {
 	private $_connect = null;
 
 	/**
+	 * Вложенность транзакций
+	 * @var int
+	 */
+	private $_transaction = 0;
+
+	/**
 	 * Результат запроса
 	 * @var $result object
 	 */
@@ -67,16 +73,30 @@ class postgres {
 		return '"' . $name . '"';
 	}
 
+	/**
+	 * Запускает транзакцию
+	 * @return bool
+	 */
 	public function begin_transaction() {
-		$this->query("BEGIN");
+		if( $this->_transaction == 0 ) {
+			$this->query("BEGIN");
+		}
+		$this->_transaction++;
 	}
 
 	public function commit() {
-		$this->query("COMMIT");
+		$this->_transaction--;
+		if( $this->_transaction == 0 ) {
+			$this->query("COMMIT");
+		}
 	}
 
+	/**
+	 * Отмена транзакции
+	 */
 	public function rollback() {
 		$this->query("ROLLBACK");
+		$this->_transaction = 0;
 	}
 
 	/**

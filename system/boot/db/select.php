@@ -159,6 +159,30 @@ class Select {
 	}
 
 	/**
+	 * AND NOT IN
+	 * @param string $column
+	 * @param array  $array
+	 * @return Select
+	 */
+	public function notIn($column, array $array) {
+		$s = "";
+
+		//Добавляем таблицу в строку
+		if( count($this->_table) == 1 ) {
+			$s = $this->driver->escape_identifier($this->_table[0]) . ".";
+		}
+
+		//Добавляем колонку
+		$s .= $this->driver->escape_identifier($column);
+		$s .= " NOT IN (" . ($array ? $this->driver->getStringQueryByValue($array) : "NULL") . ")";
+
+		//Добавляем условие
+		$this->_where .= ($this->_where == null ? "" : " AND ") . "({$s})";
+
+		return $this;
+	}
+
+	/**
 	 * Добавление join к запросу
 	 * @param string $table
 	 * @param string|array|null $on
