@@ -6,6 +6,7 @@
  * @version 1.0
  */
 abstract class Boot_Abstract_Controller {
+	use Boot_TraitController;
 
 	/**
 	 * @var Model_User|Model_row
@@ -34,59 +35,6 @@ abstract class Boot_Abstract_Controller {
 	}
 
 	/**
-	 * Получить параметр запроса
-	 * @param $name
-	 * @return null|string|Boot_Params
-	 */
-	public function getParam($name) {
-		return Boot_Controller::getInstance()->getParam($name);
-	}
-
-	/**
-	 * Получение декодированного параметра запроса
-	 * @param $name
-	 * @return string
-	 */
-	public function getParamDecode($name) {
-		return trim(urldecode($this->getParam($name)));
-	}
-
-	/**
-	 * Получить параметр запроса
-	 * @param $name
-	 * @return boolean
-	 */
-	public function hasParam($name) {
-		return Boot_Controller::getInstance()->hasParam($name);
-	}
-
-	/**
-	 * Записать сообщение
-	 * @param $name
-	 * @param $value
-	 */
-	public function setFlash($name, $value) {
-		Boot_Flash::getInstance()->set($name, $value);
-	}
-
-	/**
-	 * Получить flash сообщение
-	 * @param $name
-	 * @return bool|string
-	 */
-	public function getFlash($name) {
-		return Boot_Flash::get($name);
-	}
-
-	/**
-	 * Переключение вьюхи
-	 * @param $name
-	 */
-	public function render($name) {
-		Boot_Controller::getInstance()->_render = $name;
-	}
-
-	/**
 	 * Был аяксовый запрос или нет
 	 * @return bool
 	 */
@@ -96,15 +44,6 @@ abstract class Boot_Abstract_Controller {
 		} else {
 			return false;
 		}
-	}
-
-	/**
-	 * Редирект
-	 * @param $url
-	 * @return void
-	 */
-	public function _redirect($url) {
-		Boot_Controller::getInstance()->_redirect($url);
 	}
 
 	/**
@@ -127,38 +66,11 @@ abstract class Boot_Abstract_Controller {
 	}
 
 	/**
-	 * Получить имя контроллера
-	 * @static
-	 * @return
-	 */
-	public function getController() {
-		return Boot_Controller::getController();
-	}
-
-	/**
-	 * Получить имя экшена
-	 * @static
-	 * @return
-	 */
-	public function getAction() {
-		return Boot_Controller::getAction();
-	}
-
-	/**
 	 * @static
 	 * @return null
 	 */
 	public function getViewName() {
 		return Boot_Controller::getViewName();
-	}
-
-	/**
-	 * Получить имя модуля
-	 * @static
-	 * @return string|bool
-	 */
-	public function getModule() {
-		return Boot_Controller::getModule();
 	}
 
 	/**

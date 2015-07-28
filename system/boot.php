@@ -120,6 +120,7 @@ class Boot {
 		require_once 'boot/params.php';
 
 		//Инклудим треды
+		require_once SYSTEM_PATH . '/boot/trait/controller.php';
 		foreach(glob(SYSTEM_PATH . '/boot/trait/' . '*.php') as $path) {
 			require_once $path;
 		}
@@ -226,6 +227,7 @@ class Boot {
 		require_once 'boot/exception/db.php';
 
 		//Инклудим треды
+		require_once SYSTEM_PATH . '/boot/trait/controller.php';
 		foreach(glob(SYSTEM_PATH . '/boot/trait/' . '*.php') as $path) {
 			require_once $path;
 		}

@@ -340,11 +340,15 @@ abstract class ActiveRecord {
 		if( $this->_new_record ) {
 			$columns = &$this->_row;
 		} else {
-			$columns = &$this->_row_update;
+			$columns = (object)$this->_row_update;
 		}
 
 		//Проходим по колонкам
 		foreach( $columns as $key => $column ) {
+
+			if( !isset($column) ) {
+				$columns->$key = null;
+			}
 
 			//Проверяем загрузчик
 			if( $column instanceof Boot_Uploader_Abstract ) {
@@ -354,6 +358,15 @@ abstract class ActiveRecord {
 		}
 
 		return (array)$columns;
+	}
+
+	/**
+	 * Обновляет данные в таблице
+	 * @param array       $set
+	 * @param null|string $where
+	 */
+	public static function update_all(array $set, $where = null) {
+		DB::getDB()->update(self::getTable(), $set, $where);
 	}
 
 	/**
