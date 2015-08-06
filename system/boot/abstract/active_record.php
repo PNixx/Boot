@@ -604,7 +604,7 @@ abstract class ActiveRecord {
 
 	/**
 	 * Сортировка
-	 * @param $where
+	 * @param array|string $where
 	 * @return int
 	 */
 	public static function count($where = null) {
