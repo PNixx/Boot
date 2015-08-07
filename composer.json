@@ -1,0 +1,22 @@
+{
+	"name": "pnixx/boot",
+	"version": "2.1.0",
+	"description": "PHP little framework",
+	"keywords": ["php", "framework"],
+	"homepage": "https://github.com/PNixx/Boot",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Sergey Odintsov",
+			"homepage": "http://pnixx.ru",
+			"email": "nixx.dj@gmail.com",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=5.5.0",
+		"ext-curl": "*",
+		"ext-json": "*",
+		"intervention/image": "~2.1"
+	}
+}
