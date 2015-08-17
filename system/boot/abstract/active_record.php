@@ -746,12 +746,14 @@ abstract class ActiveRecord {
 		} else {
 			//Получаем строку из БД
 			$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($id))->row();
-			self::$_cached_by_find[static::getTable()][$id] = $row;
 
 			//Если ничего не нашли
 			if( $row == false ) {
 				throw new DB_Exception("Record not found", 404);
 			}
+
+			//Сохраняем в кеш
+			self::$_cached_by_find[static::getTable()][$id] = $row;
 		}
 
 		//Создаем экземплятор

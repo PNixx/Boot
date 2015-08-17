@@ -1,4 +1,4 @@
 <?
-class DB_Exception extends Boot_Exception {
+class DB_Exception extends Exception {
 
 }
