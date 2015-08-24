@@ -18,10 +18,5 @@
 		"ext-curl": "*",
 		"ext-json": "*",
 		"intervention/image": "~2.1"
-	},
-	"scripts": {
-		"post-package-install": [
-			"php vendor/pnixx/boot/console/create/symlink.php"
-		]
 	}
 }
