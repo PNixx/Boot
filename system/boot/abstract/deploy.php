@@ -32,12 +32,6 @@ abstract class Boot_Deploy_Abstract {
 	protected $shared_children = [];
 
 	/**
-	 * Путь до фреймворка
-	 * @var string
-	 */
-	protected $boot_path;
-
-	/**
 	 * Разрешить настройку каталога?
 	 * @var bool
 	 */
@@ -85,9 +79,6 @@ abstract class Boot_Deploy_Abstract {
 		$exec = [
 			//Копируем директорию в ревизию
 			"cp -RPp {$this->deploy_to}/shared/cached-copy {$this->deploy_to}/releases/{$this->timestamp}",
-			//Создаем ссылки на директории фреймворка
-			"rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/console && ln -s -- {$this->boot_path}/console {$this->deploy_to}/releases/{$this->timestamp}/console",
-			"rm -rf -- {$this->deploy_to}/releases/{$this->timestamp}/system && ln -s -- {$this->boot_path}/system {$this->deploy_to}/releases/{$this->timestamp}/system",
 			//Добавляем права группе
 			"chmod -R -- g+w {$this->deploy_to}/releases/{$this->timestamp}",
 			"echo '{$env}' > {$this->deploy_to}/releases/{$this->timestamp}/.env",
@@ -118,9 +109,6 @@ abstract class Boot_Deploy_Abstract {
 			$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && " . $this->exec_after;
 		}
 
-		//Делаем компиляцию асетов
-		$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && php console/assets.php";
-
 		//Выполняем код
 		$this->ssh_exec(implode(" && ", $exec));
 
@@ -128,6 +116,17 @@ abstract class Boot_Deploy_Abstract {
 		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
 			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader");
 		}
+
+		//Симлинки фреймворка
+		$exec = [
+			"ln -s -- {$this->deploy_to}/shared/vendor/pnixx/boot/console {$this->deploy_to}/releases/{$this->timestamp}/console",
+			"ln -s -- {$this->deploy_to}/shared/vendor/pnixx/boot/system {$this->deploy_to}/releases/{$this->timestamp}/system",
+			//Делаем компиляцию асетов
+			"cd {$this->deploy_to}/releases/{$this->timestamp} && php console/assets.php",
+		];
+
+		//Выполняем код
+		$this->ssh_exec(implode(" && ", $exec));
 
 		//Создаем боевой симлинк
 		$this->ssh_exec("rm -f {$this->deploy_to}/current &&  ln -s {$this->deploy_to}/releases/{$this->timestamp} {$this->deploy_to}/current");
@@ -176,9 +175,6 @@ abstract class Boot_Deploy_Abstract {
 		}
 		if( $this->deploy_to == null ) {
 			$this->error("Deploy to path is null");
-		}
-		if( $this->boot_path == null ) {
-			$this->error("Boot to path is null");
 		}
 	}
 

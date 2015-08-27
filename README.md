@@ -3,7 +3,7 @@ Boot framework v2.1
 
 Технологии
 ----------
-* [PHP](http://php.net) - язык программирования PHP 5.4
+* [PHP](http://php.net) - язык программирования PHP 5.5
 * [Composer](https://getcomposer.org) - package manager
 
 
