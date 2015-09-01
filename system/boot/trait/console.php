@@ -51,6 +51,7 @@ trait Boot_Console {
 	/**
 	 * Выполнение команды локально
 	 * @param $command
+	 * @return string
 	 */
 	public function exec($command) {
 
@@ -61,7 +62,10 @@ trait Boot_Console {
 		$time = $this->microtime_float();
 
 		//Выполняем команду
-		echo $return = `$command`;
+		$return = system($command, $r);
+		if( !$return ) {
+			$this->error($r);
+		}
 
 		//Выводим строку выполнения
 		$this->message("command finished in " . $this->get_time($time) . "ms");

@@ -69,9 +69,9 @@ abstract class ActiveRecord {
 
 	/**
 	 * Хранилище данных
-	 * @var array
+	 * @var stdClass
 	 */
-	private $_row = array();
+	private $_row;
 
 	/**
 	 * Хранилище обновляемых данных
@@ -146,6 +146,21 @@ abstract class ActiveRecord {
 			$this->_row->$key = $value;
 		}
 		$this->_row_update = array();
+	}
+
+	/**
+	 * Выполняется до сохранения
+	 */
+	protected function before_save() {
+
+	}
+
+	/**
+	 * Выполняется после успешного сохранения
+	 * @param stdClass $old Старые данные до обновления
+	 */
+	protected function after_save($old) {
+
 	}
 
 	// ------------------- Public ------------------>
@@ -828,22 +843,29 @@ abstract class ActiveRecord {
 	public function save() {
 
 		//Определяем функцию
+		//todo убрать в релизе 2.2.0
 		$after_save = function() {
 
 			//Если указана функция
 			if( static::$after_save ) {
+				Boot::getInstance()->debug("Variable static::\$after_save was deprecated! Use abstract function after_save()", true);
 				$this->{static::$after_save}();
 			}
 		};
 
 		//Перед сохранением
+		//todo убрать в релизе 2.2.0
 		$before_save = function() {
 
 			//Если указана функция
 			if( static::$before_save ) {
+				Boot::getInstance()->debug("Variable static::\$before_save was deprecated! Use abstract function before_save()", true);
 				$this->{static::$before_save}();
 			}
 		};
+
+		//Сохраняем старые значения
+		$old = clone $this->_row;
 
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
@@ -857,6 +879,7 @@ abstract class ActiveRecord {
 
 					//Выполняем функции колбека
 					$before_save();
+					$this->before_save();
 
 					//Обновляем
 					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
@@ -867,6 +890,7 @@ abstract class ActiveRecord {
 
 						//Выполняем функции колбека
 						$after_save();
+						$this->after_save($old);
 
 						//Завершаем транзакцию
 						$this->commit();
@@ -891,6 +915,7 @@ abstract class ActiveRecord {
 
 				//Выполняем функции колбека
 				$before_save();
+				$this->before_save();
 
 				//Добавляем строку
 				$id = DB::getDB()->insert(static::getTable(), $this->getUpdateColumns(), static::$pkey);
@@ -900,6 +925,7 @@ abstract class ActiveRecord {
 
 					//Выполняем функции колбека
 					$after_save();
+					$this->after_save($old);
 
 					//Завершаем транзакцию
 					$this->commit();

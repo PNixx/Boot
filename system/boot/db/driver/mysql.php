@@ -18,6 +18,12 @@ class mysql {
 	public $int_separator = "";
 
 	/**
+	 * Ссылка на подключение
+	 * @var mysqli
+	 */
+	private $_connect = null;
+
+	/**
 	 * Результат запроса
 	 * @var null
 	 */
@@ -32,22 +38,22 @@ class mysql {
 		$this->_dbase = $dbase;
 	}
 
-	static private function error($query = null) {
-		throw new Exception(mysql_error() . ($query ? ", query: " . $query : "") . "\n", 500);
+	private function error($query = null) {
+		throw new Exception(mysqli_error($this->_connect) . ($query ? ", query: " . $query : "") . "\n", 500);
 	}
 
 	/**
 	 * Подключаемся к БД
-	 * @return void
+	 * @return mysqli|null
+	 * @throws Exception
 	 */
 	public function connect() {
 
 		if( Boot::getInstance()->_connect === null ) {
-			$connect = mysql_connect($this->_host . ":" . $this->_port, $this->_user, $this->_pass) or self::error();
-			mysql_select_db($this->_dbase, $connect) or self::error();
-			mysql_query("SET NAMES utf8", $connect) or self::error();
+			$this->_connect = mysqli_connect($this->_host, $this->_user, $this->_pass, $this->_dbase, $this->_port) or $this->error();
+			mysqli_query($this->_connect, "SET NAMES utf8") or $this->error();
 
-			return $connect;
+			return $this->_connect;
 		} else {
 			return Boot::getInstance()->_connect;
 		}
@@ -75,7 +81,7 @@ class mysql {
 	 * @return mysql
 	 */
 	public function query($query) {
-		$this->result = mysql_query($query) or self::error($query);
+		$this->result = mysqli_query($this->_connect, $query) or $this->error($query);
 		return $this;
 	}
 
@@ -189,7 +195,7 @@ class mysql {
 	 * @return stdClass
 	 */
 	public function row() {
-		return mysql_fetch_object($this->result);
+		return mysqli_fetch_object($this->result);
 	}
 
 	/**
@@ -197,7 +203,7 @@ class mysql {
 	 * @return array
 	 */
 	public function read() {
-		return @mysql_fetch_assoc($this->result);
+		return mysqli_fetch_assoc($this->result);
 	}
 
 	/**
@@ -206,7 +212,7 @@ class mysql {
 	 */
 	public function read_cols() {
 		$r = array();
-		while( $line = @mysql_fetch_array($this->result, MYSQL_NUM) ) {
+		while( $line = mysqli_fetch_array($this->result, MYSQLI_NUM) ) {
 			$r[] = $line[0];
 		}
 		return $r;
@@ -225,7 +231,7 @@ class mysql {
 	 * @return integer
 	 */
 	public function affected_rows() {
-		return @mysql_affected_rows();
+		return mysqli_affected_rows($this->_connect);
 	}
 
 	/**
@@ -294,7 +300,7 @@ class mysql {
 			}
 			return implode(',', $value);
 		}
-		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "'" . mysql_real_escape_string($value) . "'");
+		return (is_int($value) || is_null($value) ? (is_null($value) ? 'NULL' : addslashes($value)) : "'" . mysqli_real_escape_string($this->_connect, $value) . "'");
 	}
 
 	/**
@@ -325,8 +331,8 @@ class mysql {
 			return false;
 		}
 
-		$this->query("INSERT INTO `$table` (" . $q['values'] . ")VALUES(" . $q['insert'] . ");");
-		return mysql_insert_id();
+		$this->query("INSERT INTO " . $this->escape_identifier($table) . " (" . $q['values'] . ")VALUES(" . $q['insert'] . ");");
+		return mysqli_insert_id($this->_connect);
 	}
 
 	/**
