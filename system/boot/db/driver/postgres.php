@@ -26,7 +26,7 @@ class postgres {
 
 	/**
 	 * Результат запроса
-	 * @var $result object
+	 * @var $result resource
 	 */
 	private $result = null;
 
@@ -397,6 +397,12 @@ class postgres {
 
 	}
 
+	/**
+	 * @param       $table
+	 * @param array $data
+	 * @param null  $pkey
+	 * @return bool
+	 */
 	public function insert($table, array $data, $pkey = null) {
 
 		$q = $this->getInsertStringByArray($data);

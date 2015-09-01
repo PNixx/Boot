@@ -29,6 +29,19 @@ class mysql {
 	 */
 	private $result = null;
 
+	/**
+	 * Вложенность транзакций
+	 * @var int
+	 */
+	private $_transaction = 0;
+
+	/**
+	 * @param $host
+	 * @param $port
+	 * @param $user
+	 * @param $pass
+	 * @param $dbase
+	 */
 	public function __construct($host, $port, $user, $pass, $dbase) {
 
 		$this->_host = $host;
@@ -49,30 +62,48 @@ class mysql {
 	 */
 	public function connect() {
 
-		if( Boot::getInstance()->_connect === null ) {
-			$this->_connect = mysqli_connect($this->_host, $this->_user, $this->_pass, $this->_dbase, $this->_port) or $this->error();
-			mysqli_query($this->_connect, "SET NAMES utf8") or $this->error();
+		//Запоминаем время начала
+		$time = Boot::mktime();
 
-			return $this->_connect;
-		} else {
-			return Boot::getInstance()->_connect;
-		}
+		//Коннектимся к БД
+		$this->_connect = mysqli_connect($this->_host, $this->_user, $this->_pass, $this->_dbase, $this->_port) or $this->error();
+		mysqli_query($this->_connect, "SET NAMES utf8") or $this->error();
+
+		//Debug
+		Boot::getInstance()->debug("  \x1b[35mMySQL (" . Boot::check_time($time) . "ms)\x1b[0m {$this->_host}:{$this->_port}");
+
+		//Возвращаем коннект
+		return $this->_connect;
 	}
 
 	public function escape_identifier($name) {
 		return "{$this->separator}{$name}{$this->separator}";
 	}
 
+	/**
+	 * Запускает транзакцию
+	 * @return bool
+	 */
 	public function begin_transaction() {
-		$this->query("BEGIN");
+		if( $this->_transaction == 0 ) {
+			$this->query("BEGIN");
+		}
+		$this->_transaction++;
 	}
 
 	public function commit() {
-		$this->query("COMMIT");
+		$this->_transaction--;
+		if( $this->_transaction == 0 ) {
+			$this->query("COMMIT");
+		}
 	}
 
+	/**
+	 * Отмена транзакции
+	 */
 	public function rollback() {
 		$this->query("ROLLBACK");
+		$this->_transaction = 0;
 	}
 
 	/**
@@ -81,7 +112,17 @@ class mysql {
 	 * @return mysql
 	 */
 	public function query($query) {
+
+		//Запоминаем время начала
+		$time = Boot::mktime();
+
+		//Делаем запрос
 		$this->result = mysqli_query($this->_connect, $query) or $this->error($query);
+
+		//Debug
+		Boot::getInstance()->debug("  \x1b[36mSQL (" . Boot::check_time($time) . "ms)\x1b[0m " . $query);
+
+		//Return
 		return $this;
 	}
 
@@ -262,9 +303,10 @@ class mysql {
 	/**
 	 * Преобразовывает массив, в строку для INPUT, возвращает ключи и параметры в массиве
 	 * @param array $data
+	 * @param null  $pkey
 	 * @return array ('insert','values')
 	 */
-	public function getInsertStringByArray(array $data) {
+	public function getInsertStringByArray(array $data, $pkey = null) {
 		//Если ни каких данных не передали, выходим
 		if( count($data) == 0 ) {
 			return false;
@@ -276,7 +318,7 @@ class mysql {
 			//Ключи VALUES
 			$i .= ($i != '' ? ',' : '') . '`' . $key . '`';
 			//Ключи INSERT
-			$q .= ($q != '' ? ', ' : '') . (is_int($v) || is_null($v) ? (is_null($v) ? 'NULL' : addslashes($v)) : "'" . addslashes($v) . "'");
+			$q .= ($q != '' ? ', ' : '') . ($pkey && $key == $pkey ? "LAST_INSERT_ID(" . $this->getStringQueryByValue($v) . ")" : $this->getStringQueryByValue($v));
 		}
 		return array('insert' => $q, 'values' => $i);
 
@@ -323,9 +365,15 @@ class mysql {
 
 	}
 
-	public function insert($table, array $data) {
+	/**
+	 * @param       $table
+	 * @param array $data
+	 * @param null  $pkey
+	 * @return bool|int|string
+	 */
+	public function insert($table, array $data, $pkey = null) {
 
-		$q = $this->getInsertStringByArray($data);
+		$q = $this->getInsertStringByArray($data, $pkey);
 		//Если данных в массиве не было, выходим
 		if( $q === false ) {
 			return false;

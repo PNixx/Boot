@@ -39,6 +39,8 @@ class Boot_Migration extends ActiveRecord {
 
 	/**
 	 * Получение последней миграции
+	 * @param int $limit
+	 * @return array
 	 */
 	static public function getLatestMigration($limit = 1) {
 		return self::column("id")->order("id DESC")->limit($limit)->read_cols();
@@ -75,7 +77,7 @@ class Boot_Migration extends ActiveRecord {
 					}
 				}
 				if( preg_match("/^(\d+)/", $file, $match) ) {
-					self::insert(array("id" => $match[1]));
+					self::insert(["id" => $match[1]]);
 					echo "Migration `{$match[1]}` success.\r\n";
 				}
 			}
