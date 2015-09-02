@@ -33,8 +33,8 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		$this->_name = $name;
 
 		//Если не указан экшен
-		if( empty($params['action']) && $row instanceof ActiveRecord && !empty($params['namespace']) ) {
-			$params['action'] = '/' . $params['namespace'] . '/' . strtolower(str_ireplace("Model_", "", get_class($row))) . '/' . ($row->isNew() ? 'create' : 'save');
+		if( empty($params['action']) && $row instanceof ActiveRecord ) {
+			$params['action'] = (!empty($params['namespace']) ? '/' . $params['namespace'] : '') . '/' . strtolower(str_ireplace("Model_", "", get_class($row))) . '/' . ($row->isNew() ? 'create' : 'save');
 		}
 
 		//Сразу рисуем форму
@@ -88,6 +88,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 			}
 		}
 
+		//Если не указано значение
+		if( !isset($params['value']) ) {
+			$params['value'] = $this->_row->$name;
+		}
+
 		//Выводим строку ввода
 		switch( $params["as"] ) {
 
@@ -106,7 +111,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Дефолтный инпут
 			default:
-				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"{$this->_row->$name}\"" . $this->implode($p) . ">";
+				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"{$params['value']}\"" . $this->implode($p) . ">";
 		}
 
 		return $print;

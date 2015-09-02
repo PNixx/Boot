@@ -14,13 +14,13 @@ abstract class Boot_Uploader_Abstract {
 	/**
 	 * @var string
 	 */
-	private $_column;
+	protected $_column;
 
 	/**
 	 * Прежнее значение колонки
 	 * @var string
 	 */
-	private $_value;
+	protected $_value;
 
 	/**
 	 * Версии файлов
@@ -87,7 +87,7 @@ abstract class Boot_Uploader_Abstract {
 	 * Оригинальное имя загружаемого файла
 	 * @return null|string
 	 */
-	private function original_filename() {
+	protected function original_filename() {
 		if( static::fetchUploadFile($this->getTable(), $this->_column) ) {
 			return $_FILES[$this->getTable()]['name'][$this->_column];
 		}

@@ -187,7 +187,20 @@ abstract class ActiveRecord {
 	 * @return string
 	 */
 	public function __set($name, $value) {
-		$this->_row_update[$name] = $value;
+		if( $this->isNew() ) {
+			$this->_row->$name = $value;
+		} else {
+			$this->_row_update[$name] = $value;
+		}
+	}
+
+	/**
+	 * Проверяет, будет ли обновлен столбец
+	 * @param $key
+	 * @return bool
+	 */
+	public function isUpdate($key) {
+		return $this->isNew() || array_key_exists($key, $this->_row_update);
 	}
 
 	/**
@@ -882,7 +895,7 @@ abstract class ActiveRecord {
 					$this->before_save();
 
 					//Обновляем
-					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . pg_escape_literal($this->{static::$pkey}));
+					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($this->{static::$pkey}));
 					if( $result ) {
 
 						//Изменяем данные строки
