@@ -102,13 +102,6 @@ abstract class Boot_Deploy_Abstract {
 			$exec[] = "ln -s -- {$this->deploy_to}/shared/{$shared} {$this->deploy_to}/releases/{$this->timestamp}/{$shared}";
 		}
 
-		//Если нужно выполнить дополнительно
-		if( $this->exec_after != null ) {
-
-			//Переходим в директорию
-			$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && " . $this->exec_after;
-		}
-
 		//Выполняем код
 		$this->ssh_exec(implode(" && ", $exec));
 
@@ -124,6 +117,13 @@ abstract class Boot_Deploy_Abstract {
 			//Делаем компиляцию асетов
 			"cd {$this->deploy_to}/releases/{$this->timestamp} && php console/assets.php",
 		];
+
+		//Если нужно выполнить дополнительно
+		if( $this->exec_after != null ) {
+
+			//Переходим в директорию
+			$exec[] = "cd {$this->deploy_to}/releases/{$this->timestamp} && " . $this->exec_after;
+		}
 
 		//Выполняем код
 		$this->ssh_exec(implode(" && ", $exec));
