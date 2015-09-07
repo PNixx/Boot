@@ -6,7 +6,7 @@ class Boot_Controller {
 	/**
 	 * Параметры запроса
 	 * [module | controller | action]
-	 * @var null
+	 * @var null|stdClass
 	 */
 	private $_param = null;
 
@@ -226,6 +226,13 @@ class Boot_Controller {
 		if( class_exists($Cname) == false ) {
 			throw new Exception('Controller "' . $Cname . '" not exist', 404);
 		}
+
+		//Добавляем пути для подключения файлов вьюх
+		set_include_path(implode(PATH_SEPARATOR, [
+			APPLICATION_PATH . '/views/' . (isset($this->_param->module) ? strtolower($this->_param->module) . "/" : "") . strtolower($this->_param->controller),
+			APPLICATION_PATH . '/views',
+			get_include_path(),
+		]));
 
 		/**
 		 * Инициализируем

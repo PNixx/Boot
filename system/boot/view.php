@@ -74,16 +74,7 @@ class Boot_View {
 	 * @return string
 	 */
 	public function run() {
-
-		if( Boot_Controller::getModule() ) {
-			$file = Boot_Controller::getModule() . "/" . Boot_Controller::getController() . "/" . Boot_Controller::getViewName();
-		} else {
-			$file = Boot_Controller::getController() . "/" . Boot_Controller::getViewName();
-		}
-		$this->file_dir_name = APPLICATION_PATH . "/views/" . $file . ".phtml";
-
-		//Выполняем файл
-		return $this->_render($file, (array)Boot_Controller::getInstance()->view);
+		return $this->_render(Boot_Controller::getViewName(), (array)Boot_Controller::getInstance()->view);
 	}
 
 	/**
@@ -117,10 +108,19 @@ class Boot_View {
 	private function _render($file, $params = []) {
 
 		//Строим полный путь
-		$__path = APPLICATION_PATH . "/views/" . $file . ".phtml";
+		$__path = null;
 
 		//Проверяем наличие шаблона
-		if( file_exists($__path) == false ) {
+		$paths = explode(PATH_SEPARATOR, get_include_path());
+		foreach( $paths as $p ) {
+			if( file_exists(realpath($p) . '/' . $file . '.phtml') ) {
+				$__path = realpath($p) . '/' . $file . '.phtml';
+				break;
+			}
+		}
+
+		//Если не нашли шаблон
+		if( $__path == null ) {
 			throw new Boot_Exception('View "' . $file . '.phtml" not exist');
 		}
 

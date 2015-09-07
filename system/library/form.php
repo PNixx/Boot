@@ -90,7 +90,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Если не указано значение
 		if( !isset($params['value']) ) {
-			$params['value'] = $this->_row->$name;
+			if( !$this->_row->$name && isset($params['default']) ) {
+				$params['value'] = $params['default'];
+			} else {
+				$params['value'] = $this->_row->$name;
+			}
 		}
 
 		//Выводим строку ввода
@@ -98,13 +102,13 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Textarea
 			case "text":
-				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . ($htmlspecialchars ? htmlspecialchars($this->_row->$name) : $this->_row->$name) . "</textarea>";
+				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . ($htmlspecialchars ? htmlspecialchars($params['value']) : $params['value']) . "</textarea>";
 				break;
 
 			case "checkbox":
 				$print .= "<div class='checkbox'>" .
 					"<input name=\"{$this->_name}[$name]\" type=\"hidden\" value=\"0\">" .
-					"<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"checkbox\" value=\"1\"" . ($this->_row->$name ? " checked=\"checked\"" : "") . $this->implode($p) . ">" .
+					"<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"checkbox\" value=\"1\"" . ($params['value'] ? " checked=\"checked\"" : "") . $this->implode($p) . ">" .
 					$this->label($name, $params) .
 					"</div>";
 				break;

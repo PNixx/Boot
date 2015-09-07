@@ -163,7 +163,7 @@ class Boot {
 		$this->load_controller();
 
 		//Устанавливаем путь подключения моделей
-		set_include_path(APPLICATION_PATH . '/');
+		set_include_path(APPLICATION_PATH);
 
 		spl_autoload_register(array(
 			"Boot",
@@ -254,7 +254,7 @@ class Boot {
 		$this->load_model();
 
 		//Устанавливаем путь подключения моделей
-		set_include_path(APPLICATION_PATH . '/');
+		set_include_path(APPLICATION_PATH);
 
 		spl_autoload_register(array(
 			"Boot",
@@ -300,7 +300,7 @@ class Boot {
 		if( isset($file) ) {
 			$paths = explode(PATH_SEPARATOR, get_include_path());
 			foreach( $paths as $p ) {
-				if( file_exists($p . $file) ) {
+				if( file_exists(realpath($p) . '/' . $file) ) {
 					require_once $file;
 					break;
 				}
