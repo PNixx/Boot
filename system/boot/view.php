@@ -200,10 +200,12 @@ class Boot_View {
 
 	/**
 	 * Генерация JS
-	 * @param $name
+	 * @param      $name
+	 * @param bool $async
 	 * @return string
+	 * @throws Exception
 	 */
-	public function javascript_include_tag($name) {
+	public function javascript_include_tag($name, $async = false) {
 		$js = new Boot_Assets("js", false);
 
 		//Если в режиме разработчика
@@ -213,7 +215,7 @@ class Boot_View {
 			return $js->__toString();
 		}
 
-		return $js->readfile_production($name);
+		return $js->readfile_production($name, $async);
 	}
 
 	/**

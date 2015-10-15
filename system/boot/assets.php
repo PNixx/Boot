@@ -166,11 +166,12 @@ class Boot_Assets {
 
 	/**
 	 * Чтение данных файла для продакшен сервера
-	 * @param $path
-	 * @throws Exception
+	 * @param      $path
+	 * @param bool $async
 	 * @return string
+	 * @throws Exception
 	 */
-	public function readfile_production($path) {
+	public function readfile_production($path, $async = false) {
 		if( strtolower(pathinfo($path, PATHINFO_EXTENSION)) == $this->ext ) {
 
 			//Ищем скомпилированный файл
@@ -191,7 +192,7 @@ class Boot_Assets {
 					break;
 
 				case "js":
-					return "<script src='/assets/" . pathinfo($file, PATHINFO_BASENAME) . "' type=\"text/javascript\"></script>" . PHP_EOL;
+					return "<script src='/assets/" . pathinfo($file, PATHINFO_BASENAME) . "' type=\"text/javascript\"" . ($async ? 'async="async"' : "") . "></script>" . PHP_EOL;
 					break;
 
 				default:
