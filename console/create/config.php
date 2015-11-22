@@ -186,8 +186,6 @@ create_file("/application/layouts/home.phtml", $layout);
 
 $index = <<<PHP
 <?php
-session_start();
-
 //Путь до структуры
 define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application'));
 define('APPLICATION_ROOT', realpath(dirname(__FILE__) . '/..'));

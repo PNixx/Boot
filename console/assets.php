@@ -15,6 +15,7 @@ ini_set("display_errors", 1);
 //Подключаем файл асетов
 require_once APPLICATION_ROOT . '/system/boot/assets.php';
 require_once APPLICATION_ROOT . '/system/boot/trait/console.php';
+require_once APPLICATION_ROOT . '/vendor/autoload.php';
 
 class Boot_Console_Assets {
 	use Boot_Console;

@@ -142,14 +142,62 @@ class Boot_Assets {
 	 * @return string
 	 */
 	public function readfile($path) {
-		if( strtolower(pathinfo($path, PATHINFO_EXTENSION)) == $this->ext ) {
+
+		//Получаем расширение файла
+		$ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+		//Если расширение входим в массив
+		if( in_array($ext, [$this->ext, 'scss']) ) {
 			if( $this->compile ) {
+
+				//SASS
+				if( $ext == 'scss' ) {
+
+					//Компилируем SASS файл
+					$sass = new Sass();
+					$sass->setStyle(Sass::STYLE_COMPRESSED);
+					$sass->setIncludePath(APPLICATION_ROOT);
+					$sass->setComments(false);
+
+					$filename = pathinfo(APPLICATION_PATH . $path, PATHINFO_FILENAME);
+					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
+
+					//Добавляем префиксы
+					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css', $r);
+					if( $result ) {
+						throw new Boot_Exception($result);
+					} else {
+						$css = file_get_contents('/tmp/' . $filename . '.out.css');
+						unlink('/tmp/' . $filename . '.out.css');
+						unlink('/tmp/' . $filename . '.css');
+						return $css;
+					}
+
+					//Ruby SASS
+//					//Компилируем sass
+//					$filename = pathinfo(APPLICATION_PATH . $path, PATHINFO_FILENAME);
+//					$return = system('sass -t compressed --sourcemap=none ' . escapeshellarg($path) . ' ' . escapeshellarg('/tmp/' . $filename . '.css') . ' 2>&1');
+//					if( $return ) {
+//						throw new Boot_Exception('sass error: ' . $return);
+//					}
+//
+//					//Добавляем префиксы
+//					$return = system('postcss --use autoprefixer /tmp/' . $filename . '.css -o /tmp/' . $filename . '_out.css 2>&1');
+//					if( $return ) {
+//						throw new Boot_Exception('autoprefixer error: ' . $return);
+//					}
+//
+//					//Выводим данные
+//					return file_get_contents('/tmp/' . $filename . '_out.css');
+				}
+
+				//Выполняем для обычных css файлов
 				return $this->compress(file_get_contents($path));
 			} else {
 				switch( $this->ext ) {
 
 					case "css":
-						return "<link href='" . str_replace(APPLICATION_PATH, "", $path) . "' rel='stylesheet' type='text/css'>" . PHP_EOL;
+						return "<link href='" . str_replace(APPLICATION_PATH, "", preg_replace('/\.scss$/i', '.css', $path)) . "' rel='stylesheet' type='text/css'>" . PHP_EOL;
 						break;
 
 					case "js":

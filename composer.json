@@ -1,6 +1,6 @@
 {
 	"name": "pnixx/boot",
-	"version": "2.1.4",
+	"version": "2.2.0",
 	"description": "PHP little framework",
 	"keywords": ["php", "framework"],
 	"homepage": "https://github.com/PNixx/Boot",

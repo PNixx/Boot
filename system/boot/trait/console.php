@@ -63,7 +63,7 @@ trait Boot_Console {
 
 		//Выполняем команду
 		$return = system($command, $r);
-		if( !$return ) {
+		if( !$return && $r > 0 ) {
 			$this->error($r);
 		}
 

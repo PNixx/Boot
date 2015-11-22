@@ -1,10 +1,30 @@
-Boot framework v2.1
+Boot framework v2.2
 ==============
 
-Технологии
-----------
+##Технологии
 * [PHP](http://php.net) - язык программирования PHP 5.5
 * [Composer](https://getcomposer.org) - package manager
+
+##SASS
+Если вы планируете использовать в своем проекте SASS, то в системе должны быть установлены:
+	
+	apt-get install nodejs npm
+	
+Ваш сервер должен видеть область окружения вашего юзера, для этого в php-fpm пришлось прописать:
+
+	env[PATH] = $PATH
+	
+Автоматическая установка библиотеки SASS for PHP:
+
+	php console/install/sass.php
+	
+В вашу систему будет установлена библиотека sass.so, которую нужно прописать в php.ini:
+
+	extension=sass.so
+	
+Автопрефиксы SASS:
+
+	npm install --global postcss-cli autoprefixer
 
 
 ##Структура папок

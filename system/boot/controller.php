@@ -55,7 +55,7 @@ class Boot_Controller {
 
 	/**
 	 * Обработка запроса, разбитие на: module/controller/action
-	 * @return void
+	 * @throws Boot_Exception
 	 */
 	private function getQuery() {
 
@@ -73,8 +73,60 @@ class Boot_Controller {
 				case "js":
 					header("Content-Type: application/javascript");
 					break;
+				default:
+					throw new Boot_Exception('Unknown file extension');
 			}
-			echo file_get_contents(APPLICATION_PATH . $path_info);
+
+			//Если расширение css и файл найден
+			if( file_exists(APPLICATION_PATH . $path_info) || $matches[1] == 'js' ) {
+				echo file_get_contents(APPLICATION_PATH . $path_info);
+			} else {
+
+				//Если файл не найден, пробуем найти scss
+				$filename = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_FILENAME);
+				$scss = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_DIRNAME) . '/' . $filename . '.scss';
+
+				//Если файл существует
+				if( file_exists($scss) ) {
+
+					//Компилируем SASS файл
+					$sass = new Sass();
+					$sass->setStyle(Sass::STYLE_EXPANDED);
+					$sass->setIncludePath(APPLICATION_ROOT);
+					$sass->setComments(true);
+					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($scss));
+
+					//Добавляем префиксы
+					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css', $r);
+					if( $result ) {
+						throw new Boot_Exception($result);
+					} else {
+						echo file_get_contents('/tmp/' . $filename . '.out.css');
+						unlink('/tmp/' . $filename . '.out.css');
+						unlink('/tmp/' . $filename . '.css');
+					}
+//					$autoprefixer = new Autoprefixer(['ff > 2', '> 2%', 'ie 8']);
+//					echo $autoprefixer->compile($css);
+
+					//Ruby Sass
+//					//Компилируем sass
+//					$return = system('sass -l -t expanded --sourcemap=none ' . escapeshellarg($scss) . ' ' . escapeshellarg('/tmp/' . $filename . '.css') . ' 2>&1');
+//					if( $return ) {
+//						throw new Boot_Exception('sass error: ' . $return);
+//					}
+//
+//					//Добавляем префиксы
+//					$return = system('postcss --use autoprefixer /tmp/' . $filename . '.css -o /tmp/' . $filename . '_out.css 2>&1');
+//					if( $return ) {
+//						throw new Boot_Exception('autoprefixer error: ' . $return);
+//					}
+//
+//					//Выводим данные
+//					readfile('/tmp/' . $filename . '_out.css');
+				} else {
+					throw new Boot_Exception('File ' . $path_info . ' not found', 404);
+				}
+			}
 			exit;
 		}
 
