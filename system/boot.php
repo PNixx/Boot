@@ -306,6 +306,11 @@ class Boot {
 			$file = 'uploader/' . strtolower($match[1]) . ".php";
 		}
 
+		//Загрузка загрузчиков файлов
+		if( preg_match("/(.+)Mailer$/", $name, $match) ) {
+			$file = 'mailers/' . strtolower($match[1]) . ".php";
+		}
+
 		if( isset($file) ) {
 			$paths = explode(PATH_SEPARATOR, get_include_path());
 			foreach( $paths as $p ) {

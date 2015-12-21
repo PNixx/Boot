@@ -163,7 +163,7 @@ class Boot_Assets {
 					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
 
 					//Добавляем префиксы
-					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css', $r);
+					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css 2>&1', $r);
 					if( $result ) {
 						throw new Boot_Exception($result);
 					} else {

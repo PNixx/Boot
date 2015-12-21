@@ -1,4 +1,9 @@
 <?
+
+/**
+ * Class Boot_Mail_Lib
+ * @deprecated
+ */
 class Boot_Mail_Lib extends Boot_Abstract_Library implements Boot_Exception_Interface {
 
 	static public function send($mail, $title, $message) {

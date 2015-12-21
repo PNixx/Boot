@@ -72,6 +72,12 @@ class Boot_Routes {
 			}
 		}
 
+		//Если просмотр mailer
+		if( APPLICATION_ENV == 'development' && $param[0] == 'boot' && isset($param[1]) && $param[1] == 'mailer' ) {
+			Boot_Mail::preview($param);
+			exit;
+		}
+
 		foreach($this->_routes as $key => $route) {
 			if( strtolower($param[0]) == strtolower($key) ) {
 				if( $route === self::ROUTE_RESOURCE ) {

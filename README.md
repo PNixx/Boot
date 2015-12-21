@@ -34,6 +34,7 @@ Boot framework v2.2
 		/config - настройки проекта
 		/controllers - контроллеры
 		/layouts - шаблоны
+		/mailers - классы для отправки почты
 		/models - модели для работы с БД
 		/uploader - класс загрузчика изображений
 		/views - вьюхи

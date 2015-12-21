@@ -149,6 +149,21 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * Выполняется до создания записи
+	 */
+	protected function before_create() {
+
+	}
+
+	/**
+	 * Выполняется после успешного создания
+	 * @param stdClass $old Старые данные до обновления
+	 */
+	protected function after_create($old) {
+
+	}
+
+	/**
 	 * Выполняется до сохранения
 	 */
 	protected function before_save() {
@@ -856,7 +871,7 @@ abstract class ActiveRecord {
 	public function save() {
 
 		//Определяем функцию
-		//todo убрать в релизе 2.2.0
+		//todo убрать в релизе 2.3.0
 		$after_save = function() {
 
 			//Если указана функция
@@ -867,7 +882,7 @@ abstract class ActiveRecord {
 		};
 
 		//Перед сохранением
-		//todo убрать в релизе 2.2.0
+		//todo убрать в релизе 2.3.0
 		$before_save = function() {
 
 			//Если указана функция
@@ -928,6 +943,7 @@ abstract class ActiveRecord {
 
 				//Выполняем функции колбека
 				$before_save();
+				$this->before_create();
 				$this->before_save();
 
 				//Добавляем строку
@@ -938,6 +954,7 @@ abstract class ActiveRecord {
 
 					//Выполняем функции колбека
 					$after_save();
+					$this->after_create($old);
 					$this->after_save($old);
 
 					//Завершаем транзакцию
