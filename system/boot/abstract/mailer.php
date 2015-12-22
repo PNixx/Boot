@@ -86,7 +86,7 @@ abstract class Boot_Mailer_Abstract {
 		if( isset(debug_backtrace()[2]) && debug_backtrace()[2]['class'] == $caller['class'] . 'Preview' ) {
 			echo $view;
 		} else {
-			mail($to, $subject, $view, self::make_headers());
+			mail($to, self::encode_header($subject), $view, self::make_headers());
 		}
 	}
 
@@ -94,6 +94,7 @@ abstract class Boot_Mailer_Abstract {
 	 * Поиск заголовка
 	 * @param $headers
 	 * @param $name
+	 * @return string
 	 */
 	private static function header(&$headers, $name) {
 		$header = !empty($headers[$name]) ? $headers[$name] : static::$$name;
@@ -163,5 +164,14 @@ abstract class Boot_Mailer_Abstract {
 
 		//Возвращаем результат
 		return $html;
+	}
+
+	/**
+	 * Кодирует заголовок в base64
+	 * @param $text
+	 * @return string
+	 */
+	protected static function encode_header($text) {
+		return '=?UTF-8?B?' . base64_encode($text) . '?=';
 	}
 }
