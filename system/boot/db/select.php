@@ -120,15 +120,31 @@ class Select {
 	 */
 	public function where($where) {
 
+		//Создаем условие
+		$where = $this->make_where($this->_table[0], $where);
+
+		//Если получили результат
+		if( $where ) {
+			$this->_where .= ($this->_where == null ? "" : " AND ") . $where;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Возвращает SQL условие из параметров
+	 * @param string       $table
+	 * @param array|string $where
+	 * @return string|null
+	 */
+	private function make_where($table, $where) {
+
 		if( is_array($where) ) {
 			$sql = [];
 			foreach($where as $k => $v) {
-				$s = "";
 
 				//Добавляем таблицу в строку
-				if( count($this->_table) == 1 ) {
-					$s = $this->driver->escape_identifier($this->_table[0]) . ".";
-				}
+				$s = $this->driver->escape_identifier($table) . ".";
 
 				//Добавляем колонку
 				$s .= $this->driver->escape_identifier($k);
@@ -152,10 +168,9 @@ class Select {
 		}
 
 		if( $where ) {
-			$this->_where .= ($this->_where == null ? "" : " AND ") . "({$where})";
+			return "({$where})";
 		}
-
-		return $this;
+		return null;
 	}
 
 	/**
@@ -199,14 +214,7 @@ class Select {
 		if( $on === null ) {
 			$where = null;
 		} else {
-			if( is_array($on) ) {
-				$where = "";
-				foreach( $on as $key => $v ) {
-					$where .= " AND " . $this->driver->escape_identifier($table) . "." . $this->driver->escape_identifier($key) . " = " . $this->driver->getStringQueryByValue($v);
-				}
-			} else {
-				$where = " AND " . $on;
-			}
+			$where = " AND " . $this->make_where($table, $on);
 		}
 
 		//Добавляем
