@@ -32,7 +32,11 @@ trait Boot_ActiveAdmin {
 		$model = $this->getModel();
 
 		//Собираем данные
-		$rows = $model::page($page, $limit)->all();
+		if( class_exists('\PNixx\Pagination\Pagination') ) {
+			$rows = $model::page($page, $limit)->all();
+		} else {
+			$rows = $model::all();
+		}
 		$this->view->rows = $rows;
 
 		if( class_exists('\PNixx\Pagination\Pagination') ) {
