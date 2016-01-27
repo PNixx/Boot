@@ -392,12 +392,6 @@ abstract class ActiveRecord {
 			if( !isset($column) ) {
 				$columns->$key = null;
 			}
-
-			//Проверяем загрузчик
-			if( $column instanceof Boot_Uploader_Abstract ) {
-				$column->uploadFile();
-				$columns->$key = $column->__toString();
-			}
 		}
 
 		return (array)$columns;
@@ -839,20 +833,6 @@ abstract class ActiveRecord {
 		//Обнуляем список
 		$this->_row_update = [];
 
-		/**
-		 * Инициализируем загрузчики
-		 * @var Boot_Uploader_Abstract $class
-		 */
-		foreach( static::$mount_uploader as $column => $class ) {
-			if( $class::fetchUploadFile(static::getTable(), $column) ) {
-
-				//Загружаем новые файлыё
-				$this->$column->remove();
-				$this->$column->uploadFile();
-				$this->_row_update[$column] = $this->$column->__toString();
-			}
-		}
-
 		//Проходим по списку
 		foreach( $values as $key => $value ) {
 			if( $value instanceof DB_Expr || empty($this->_row->$key) || $this->_row->$key != $value ) {
@@ -892,8 +872,35 @@ abstract class ActiveRecord {
 			}
 		};
 
+		$rollback_upload = function() {
+			/**
+			 * Инициализируем загрузчики
+			 * @var Boot_Uploader_Abstract $class
+			 */
+			foreach( static::$mount_uploader as $column => $class ) {
+				if( $class::fetchUploadFile(static::getTable(), $column) ) {
+					$this->$column->remove();
+				}
+			}
+		};
+
 		//Сохраняем старые значения
 		$old = clone $this->_row;
+
+		/**
+		 * Инициализируем загрузчики
+		 * @var Boot_Uploader_Abstract $class
+		 */
+		foreach( static::$mount_uploader as $column => $class ) {
+			Boot::getInstance()->debug("column: " . $column . ', is: ' . var_export($class::fetchUploadFile(static::getTable(), $column), true));
+			if( $class::fetchUploadFile(static::getTable(), $column) ) {
+
+				//Загружаем новые файлы
+				$this->$column->remove();
+				$this->$column->uploadFile();
+				$this->_row_update[$column] = $this->$column->__toString();
+			}
+		}
 
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
@@ -927,9 +934,11 @@ abstract class ActiveRecord {
 						return $result;
 					} else {
 						$this->rollback();
+						$rollback_upload();
 					}
 				} catch(Exception $e) {
 					$this->rollback();
+					$rollback_upload();
 					throw $e;
 				}
 			} else {
@@ -964,9 +973,11 @@ abstract class ActiveRecord {
 					return true;
 				} else {
 					$this->rollback();
+					$rollback_upload();
 				}
 			} catch(Exception $e) {
 				$this->rollback();
+				$rollback_upload();
 				throw $e;
 			}
 		}

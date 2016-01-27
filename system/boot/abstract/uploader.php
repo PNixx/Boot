@@ -28,6 +28,7 @@ abstract class Boot_Uploader_Abstract {
 	 *  "version_name" => ["resize_to_fit", [100,100]]
 	 * ]
 	 * Accept processes: resize_to_fill, resize_to_fit, resize
+	 * "version_name" = "original" -> Изменяет оригинальное изображение при загрузке
 	 * @require "intervention/image": "~2.1"
 	 * @var array
 	 */
@@ -72,7 +73,7 @@ abstract class Boot_Uploader_Abstract {
 		if( $this->_value ) {
 			$filename = $this->_value;
 		} elseif( $this->original_filename() ) {
-			$this->_value = uniqid() . '-' . md5(uniqid('boot')) . '.' . pathinfo($this->original_filename(), PATHINFO_EXTENSION);
+			$this->generate_filename($this->original_filename());
 			$filename = $this->_value;
 		}
 
@@ -81,6 +82,14 @@ abstract class Boot_Uploader_Abstract {
 			$filename = pathinfo($filename, PATHINFO_FILENAME) . '_' . $version . '.' . pathinfo($filename, PATHINFO_EXTENSION);
 		}
 		return $filename;
+	}
+
+	/**
+	 * Генерирует уникальное имя файла
+	 * @param $file
+	 */
+	private function generate_filename($file) {
+		$this->_value = uniqid() . '-' . md5(uniqid('boot')) . '.' . pathinfo($file, PATHINFO_EXTENSION);
 	}
 
 	/**
@@ -166,6 +175,43 @@ abstract class Boot_Uploader_Abstract {
 	}
 
 	/**
+	 * Загружает системный файл
+	 * @param $path
+	 * @throws Boot_Exception
+	 */
+	public function set($path) {
+
+		//Проверяем существование файла
+		if( !file_exists($path) ) {
+			throw new Boot_Exception('Upload file not found: ' . $path);
+		}
+
+		//Дебаг
+		Boot::getInstance()->debug("  * Set local image: \x1b[33m" . $path . "\x1b[0m");
+
+		//Удаляем старый файл, если имеется
+		$this->remove();
+		$this->generate_filename($path);
+		$this->fetchDirectory();
+
+		//Если не указано, что нужно изменить оригинальный файл
+		if( empty($this->version['original']) ) {
+			//Копируем файл
+			if( !copy($path, $this->path()) ) {
+				throw new Boot_Exception('Error copy to file: ' . $this->path());
+			}
+		} else {
+			$this->create_version($path, null, $this->version['original']);
+		}
+
+		//Создаем версии файлов версии
+		$this->create_versions($this->path());
+
+		//Сохраняем имя колонки
+		$this->model->{$this->_column} = $this->filename();
+	}
+
+	/**
 	 * Путь к временному файлу загрузки
 	 * @return mixed
 	 */
@@ -177,7 +223,13 @@ abstract class Boot_Uploader_Abstract {
 	 * Перемещаем оригинальный файл
 	 */
 	protected function moveOriginalFile() {
-		move_uploaded_file($this->uploadTempFile(), $this->path());
+		if( empty($this->version['original']) ) {
+			move_uploaded_file($this->uploadTempFile(), $this->path());
+		} else {
+			move_uploaded_file($this->uploadTempFile(), $this->path('tmp'));
+			$this->create_version($this->path('tmp'), null, $this->version['original']);
+			unlink($this->path('tmp'));
+		}
 	}
 
 	/**
@@ -331,33 +383,46 @@ abstract class Boot_Uploader_Abstract {
 
 			//Проходим по версиям
 			foreach( $this->version as $name => $process ) {
-
-				//Дебаг
-				Boot::getInstance()->debug("  * Create image version: \x1b[33m" . $this->storeDir() . '/' . $this->filename($name) . "\x1b[0m");
-
-				//Выбираем действие
-				switch( $process[0]) {
-
-					//Fill
-					case "resize_to_fill":
-						$this->processFill($original_file, $name, $process[1]);
-						break;
-
-					//Fit
-					case "resize_to_fit":
-						$this->processFit($original_file, $name, $process[1]);
-						break;
-
-					//Resize
-					case "resize":
-						$this->processResize($original_file, $name, $process[1]);
-						break;
-
-					//Неизвестный процесс
-					default:
-						throw new Boot_Exception("Unknown uploader process name: " . $process[0]);
+				if( $name != 'original' ) {
+					$this->create_version($original_file, $name, $process);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Создание версии для файла
+	 * @param             $path
+	 * @param null|string $name
+	 * @param array       $process
+	 * @throws Boot_Exception
+	 */
+	private function create_version($path, $name, array $process) {
+
+		//Дебаг
+		Boot::getInstance()->debug("  * Create image version: \x1b[33m" . $this->storeDir() . '/' . $this->filename($name) . "\x1b[0m");
+
+		//Выбираем действие
+		switch( $process[0]) {
+
+			//Fill
+			case "resize_to_fill":
+				$this->processFill($path, $name, $process[1]);
+				break;
+
+			//Fit
+			case "resize_to_fit":
+				$this->processFit($path, $name, $process[1]);
+				break;
+
+			//Resize
+			case "resize":
+				$this->processResize($path, $name, $process[1]);
+				break;
+
+			//Неизвестный процесс
+			default:
+				throw new Boot_Exception("Unknown uploader process name: " . $process[0]);
 		}
 	}
 
