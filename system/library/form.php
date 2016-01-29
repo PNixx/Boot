@@ -13,7 +13,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	public static $is_init = false;
 
 	/**
-	 * @var Model_Row
+	 * @var ActiveRecord|Form_Row
 	 */
 	protected $_row = null;
 
@@ -119,6 +119,50 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 
 		return $print;
+	}
+
+	/**
+	 * Строит селетор со связью из модели
+	 * @param       $table
+	 * @param array $params
+	 *   column_name - указывает имя колонки, откуда брать название
+	 * @return string
+	 * @throws Boot_Exception
+	 */
+	public function association($table, $params = []) {
+
+		//Проверяем тип модели
+		if( !($this->_row instanceof ActiveRecord) ) {
+			throw new Boot_Exception('Model must be instance of ActiveRecord');
+		}
+
+		/**
+		 * Имя класса
+		 * @var ActiveRecord $class
+		 */
+		$class = get_class($this->_row);
+
+		//Ищем объявленную связь
+		if( !$class::isBelongs($table) ) {
+			throw new Boot_Exception('Model must be declared and is associated with the table ' . $table);
+		}
+		$db_links = $class::getBelongsTo($table);
+
+		/**
+		 * Модель выборки
+		 * @var ActiveRecord $model
+		 */
+		$model = "Model_" . ucfirst($table);
+		$column_name = empty($params['column_name']) ? 'name' : $params['column_name'];
+
+		//Получаем массив
+		$options = $model::column([$column_name, 'id'])->read_all();
+		$options = array_map(function($v) use($column_name) {
+			return [$v[$column_name], $v['id']];
+		}, $options);
+
+		//Выводим массив
+		return $this->select($db_links->foreign_key, $options, array_merge_recursive($params, ['include_blank' => false]));
 	}
 
 	/**

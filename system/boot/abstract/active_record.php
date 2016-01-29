@@ -233,7 +233,7 @@ abstract class ActiveRecord {
 			$key = strtolower(preg_replace("/(?!^)([A-Z])/", "_$1", $match[1]));
 
 			//Если есть в связях таблицы belongs_to
-			if( array_key_exists($key, static::$belongs_to) || in_array($key, static::$belongs_to) ) {
+			if( static::isBelongs($key) ) {
 
 				/**
 				 * Строим класс
@@ -242,7 +242,7 @@ abstract class ActiveRecord {
 				$class = "Model_" . ucfirst($key);
 
 				//Строим конструктор
-				$db_links = new DBLinks(static::getTable(), $key, array_key_exists($key, static::$belongs_to) ? static::$belongs_to[$key] : []);
+				$db_links = static::getBelongsTo($key);
 
 				//Если нет данных в кеше
 				if( isset($this->_cached[$key]) == false ) {
@@ -287,6 +287,24 @@ abstract class ActiveRecord {
 			}
 		}
 		throw new Exception("Функция {$name} не определена");
+	}
+
+	/**
+	 * Проверяет, существует ли связь с таблицей
+	 * @param $key
+	 * @return bool
+	 */
+	public static function isBelongs($key) {
+		return array_key_exists($key, static::$belongs_to) || in_array($key, static::$belongs_to);
+	}
+
+	/**
+	 * Получает объект связи
+	 * @param $key
+	 * @return DBLinks
+	 */
+	public static function getBelongsTo($key) {
+		return new DBLinks(static::getTable(), $key, array_key_exists($key, static::$belongs_to) ? static::$belongs_to[$key] : []);
 	}
 
 	/**
@@ -1097,5 +1115,12 @@ class DBLinks {
 		$this->class_name = $values["class_name"];
 		$this->foreign_key = $values["foreign_key"];
 		$this->dependent = isset($values["dependent"]) ? $values["dependent"] : null;
+	}
+
+	/**
+	 * @return ActiveRecord|string
+	 */
+	public function getModel() {
+		return $this->class_name;
 	}
 }
