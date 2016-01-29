@@ -23,6 +23,12 @@ abstract class Boot_Uploader_Abstract {
 	protected $_value;
 
 	/**
+	 * Качество сохраняемых изображений
+	 * @var int
+	 */
+	protected $quality = 80;
+
+	/**
 	 * Версии файлов
 	 * [
 	 *  "version_name" => ["resize_to_fit", [100,100]]
@@ -295,7 +301,7 @@ abstract class Boot_Uploader_Abstract {
 		$canvas->insert($photo, 'center');
 
 		//Сохраняем изображение
-		$canvas->save($this->path($name), 80);
+		$canvas->save($this->path($name), $this->quality);
 	}
 
 	/**
@@ -319,7 +325,7 @@ abstract class Boot_Uploader_Abstract {
 		$photo->resize($size[0], $size[1]);
 
 		//Сохраняем изображение
-		$photo->save($this->path($name), 80);
+		$photo->save($this->path($name), $this->quality);
 	}
 
 	/**
@@ -356,7 +362,7 @@ abstract class Boot_Uploader_Abstract {
 		}
 
 		//Сохраняем изображение
-		$photo->save($this->path($name), 80);
+		$photo->save($this->path($name), $this->quality);
 	}
 
 	/**
