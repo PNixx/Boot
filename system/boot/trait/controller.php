@@ -72,7 +72,7 @@ trait Boot_TraitController {
 	/**
 	 * Получить имя контроллера
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	public function getController() {
 		return Boot_Controller::getController();
@@ -81,7 +81,7 @@ trait Boot_TraitController {
 	/**
 	 * Получить имя экшена
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	public function getAction() {
 		return Boot_Controller::getAction();

@@ -3,6 +3,7 @@
  * User: Odintsov S.A.
  * Date: 16.08.11
  * Time: 23:07
+ * @deprecated
  */
 class Model_Row {
 

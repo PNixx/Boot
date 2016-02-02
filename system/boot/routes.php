@@ -3,21 +3,22 @@
  * User: Odintsov S.A.
  * Date: 30.08.12
  * Time: 14:52
+ * todo Переделать
  */
 
 class Boot_Routes {
 
 	/**
-	 * Путь казывает на все подключаемые ресурсы модуля
+	 * Список роутов
+	 * @var array
 	 */
-	const ROUTE_RESOURCE = 1;
+	private $_routes = [];
 
 	/**
-	 * Использует только controller/action
+	 * Текущий найденый роут
+	 * @var string
 	 */
-	const ROUTE_CONTROLLER = 2;
-
-	private $_routes = null;
+	private $_current;
 
 	/**
 	 * Инстанс
@@ -34,92 +35,140 @@ class Boot_Routes {
 
 		if( !(self::$_instance instanceof Boot_Routes) ) {
 			self::$_instance = new Boot_Routes();
+			require_once APPLICATION_PATH . '/config/routes.php';
 		}
 		return self::$_instance;
 	}
 
-	public function __construct() {
-		if( file_exists(APPLICATION_PATH . '/config/routes.php') ) {
-			require_once APPLICATION_PATH . '/config/routes.php';
-			if( isset($routes) ) {
-				$this->_routes = $routes;
-			} else {
-				throw new Boot_Exception("Не корректная структура файла config/routes.php");
-			}
-		} else {
+	private function __construct() {
+		if( !file_exists(APPLICATION_PATH . '/config/routes.php') ) {
 			throw new Boot_Exception("Файл config/routes.php не найден");
 		}
 	}
 
 	/**
-	 * Разбиваем строку на: module/controller/action
-	 * @static
+	 * Определяет текущи роут по полученному адресу
 	 * @param $query
-	 * @throws Exception
-	 * @return object
+	 * @throws Boot_Exception
 	 */
-	public function getParam($query) {
+	public function fetchQuery($query) {
 
-		//Разбиваем строку на: module/controller/action
-		$param = explode('/', $query);
-		$return = null;
+		if( empty($query) ) {
+			$this->_current = 'root';
+		} else {
 
-		if( $query == false || count($param) == 0 ) {
-			if( Boot::getInstance()->config->default->module ) {
-				return self::getResourceRoute();
-			} else {
-				return self::getControllerRoute();
-			}
-		}
+			//Проходим по списку роутов
+			foreach( array_keys($this->_routes) as $key ) {
+				if( $this->_routes[$key]['method'] == strtolower($_SERVER['REQUEST_METHOD']) && preg_match('/^' . preg_replace('/\\\:(\w[\w\d]*)/', '(?<$1>[^\/]+)', preg_quote($key, '/')) . '$/', $query, $match) ) {
+					$this->_current = $key;
 
-		//Если просмотр mailer
-		if( APPLICATION_ENV == 'development' && $param[0] == 'boot' && isset($param[1]) && $param[1] == 'mailer' ) {
-			Boot_Mail::preview($param);
-			exit;
-		}
-
-		foreach($this->_routes as $key => $route) {
-			if( strtolower($param[0]) == strtolower($key) ) {
-				if( $route === self::ROUTE_RESOURCE ) {
-					return self::getResourceRoute($param);
-				} elseif( $route === self::ROUTE_CONTROLLER ) {
-					return self::getControllerRoute($param);
-				} elseif( is_array($route) ) {
-
-					//Проходим для поиска модульности module/controller/action
-					foreach($route as $k => $r) {
-						if( $r === self::ROUTE_RESOURCE ) {
-							throw new Boot_Exception("Неправильное направление роутинга, модуль маршрута не может использоваться в модуле");
-						} elseif( $r === self::ROUTE_CONTROLLER || isset($param[2]) && $param[2] == $this->_routes[$key][$k] ) {
-							return self::getResourceRoute($param);
-						} elseif( isset($param[2]) == false && $this->_routes[$key][$k] == "index" ) {
-							return self::getControllerRoute($param);
+					//Добавляем параметры
+					foreach( $match as $k => $v ) {
+						if( !is_int($k) ) {
+							Boot_Controller::getInstance()->setParam($k, $v);
 						}
 					}
-				} else {
-					if( isset($param[1]) && $param[1] == $this->_routes[$key] ) {
-						return self::getControllerRoute($param);
-					}
+					break;
 				}
 			}
 		}
 
-		//Если по роутингу ничего на нашлось
-		throw new Boot_Exception("Страница не найдена", 404);
+		//Если ничего не найдено, кидаем ошибку
+		if( $this->_current == null ) {
+			throw new Boot_Exception("Страница не найдена", 404);
+		}
 	}
 
-	static private function getResourceRoute($param = null) {
-		return (object)array(
-			"module" => isset($param[0]) ? $param[0] : Boot::getInstance()->config->default->page,
-			"controller" => isset($param[1]) && $param[1] ? str_replace("-", "", $param[1]) : "index",
-			"action" => isset($param[2]) && $param[2] ? $param[2] : "index"
-		);
+	/**
+	 * Получение имени класса контроллера
+	 * @return string
+	 */
+	public function getController() {
+		return preg_replace('/#(\w[\w\d]*)$/', '', $this->_routes[$this->_current]['path']);
 	}
 
-	static private function getControllerRoute($param = null) {
-		return (object)array(
-			"controller" => isset($param[0]) ? $param[0] : Boot::getInstance()->config->default->page,
-			"action" => isset($param[1]) && $param[1] ? $param[1] : "index"
-		);
+	/**
+	 * Получение имени экшена
+	 * @return string
+	 */
+	public function getAction() {
+		return $this->_routes[$this->_current]['action'];
+	}
+
+	/**
+	 * @param string       $method
+	 * @param string|array $route
+	 * @param array        ...$args
+	 * @throws RouteException
+	 */
+	private function addRoute($method, $route, ...$args) {
+
+		//Стандартный экшен
+		$action = 'index';
+
+		//Если передали массив
+		if( is_array($route) ) {
+
+			//Если ничего не указано
+			if( count($route) == 0 ) {
+				throw new RouteException('Не указан роут');
+			}
+
+			//Пробуем найти экшен
+			if( preg_match('/#(\w[\w\d]*)$/', $route[array_keys($route)[0]], $match) ) {
+				$action = $match[1];
+			}
+
+		} else {
+			$path = null;
+
+			//Достаем экшен из пути
+			if( preg_match('/(\w[\w\d]*)$/', $route, $match) ) {
+				$action = $match[1];
+			} elseif( preg_match('/:(\w[\w\d]*)$/', $route, $match) ) {
+				$action = 'show';
+			}
+
+			//Строим автоматически
+			$route = [$route => preg_replace('/(\/:\w[\w\d]*|\/\w[\w\d]*$)/', '', $route) . '#' . $action];
+		}
+
+		//Добавляем роут
+		$request = array_keys($route)[0];
+		$this->_routes[$request] = [
+			'method' => $method,
+			'path'   => $route[$request],
+			'args'   => $args,
+			'action' => $action,
+		];
+	}
+
+	/**
+	 * @param       $route
+	 * @param array ...$args
+	 * @throws RouteException
+	 */
+	static public function get($route, ...$args) {
+		self::getInstance()->addRoute('get', $route, $args);
+	}
+
+	/**
+	 * @param       $route
+	 * @param array ...$args
+	 * @throws RouteException
+	 */
+	static public function post($route, ...$args) {
+		self::getInstance()->addRoute('post', $route, $args);
+	}
+
+	/**
+	 * @param string $route
+	 * @throws RouteException
+	 */
+	static public function root($route) {
+		if( !is_string($route) ) {
+			throw new RouteException('Root может быть только строковым');
+		}
+		self::getInstance()->addRoute('get', ['root' => $route]);
 	}
 }

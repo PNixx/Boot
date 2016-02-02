@@ -179,3 +179,5 @@ class Controller_Exception extends Exception {
 		exit;
 	}
 }
+
+class RouteException extends Exception {};

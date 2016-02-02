@@ -7,6 +7,7 @@ class Boot_Controller {
 	 * Параметры запроса
 	 * [module | controller | action]
 	 * @var null|stdClass
+	 * @deprecated
 	 */
 	private $_param = null;
 
@@ -65,6 +66,7 @@ class Boot_Controller {
 		}
 
 		//Если страница пытается загрузкить из асетов файл
+		//todo вынести в отдельный экшен
 		if( APPLICATION_ENV == 'development' && preg_match("/^\/assets\/(css|js)\/.*?\.(css|js)$/", $path_info, $matches) ) {
 			switch( $matches[1] ) {
 				case "css":
@@ -147,7 +149,7 @@ class Boot_Controller {
 					//Разбиваем
 					$key = explode('=', $r);
 
-					//Записыываем
+					//Записываем
 					$this->_request[$key[0]] = isset($key[1]) ? $key[1] : null;
 				}
 			}
@@ -158,7 +160,7 @@ class Boot_Controller {
 		}
 
 		//Сохраняем параметры запроса
-		$this->_param = Boot_Routes::getInstance()->getParam(substr($query, 1, strlen($query)));
+		Boot_Routes::getInstance()->fetchQuery(substr($query, 1, strlen($query)));
 	}
 
 	/**
@@ -169,8 +171,8 @@ class Boot_Controller {
 	public function getParam($name) {
 
 		//Если есть в get запросе
-		if( isset(Boot_Controller::getInstance()->_request[$name]) ) {
-			return Boot_Controller::getInstance()->_request[$name];
+		if( isset($this->_request[$name]) ) {
+			return $this->_request[$name];
 		}
 
 		//Если есть в post запросе
@@ -182,6 +184,15 @@ class Boot_Controller {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Добавляет параметр в общий массив
+	 * @param $key
+	 * @param $value
+	 */
+	public function setParam($key, $value) {
+		$this->_request[$key] = $value;
 	}
 
 	/**
@@ -241,8 +252,8 @@ class Boot_Controller {
 	private function includeController() {
 
 		//Проверяем существование класса с его автоподгрузкой
-		if( class_exists($this->getClassName()) == false ) {
-			throw new Exception($this->getClassName() . " not exists");
+		if( class_exists($this->getControllerName()) == false ) {
+			throw new Exception($this->getControllerName() . " not exists");
 		}
 	}
 
@@ -250,8 +261,16 @@ class Boot_Controller {
 	 * Получение имени класса контроллера
 	 * @return string
 	 */
-	private function getClassName() {
-		return (isset($this->_param->module) ? ucfirst($this->_param->module) . "_" : "") . ucfirst($this->_param->controller) . self::PREFIX;
+	private function getControllerName() {
+		return implode('_', array_map('ucfirst', explode('/', Boot_Routes::getInstance()->getController()))) . self::PREFIX;
+	}
+
+	/**
+	 * Получение имени экшена
+	 * @return string
+	 */
+	private function getActionName() {
+		return Boot_Routes::getInstance()->getAction() . "Action";
 	}
 
 	/**
@@ -267,11 +286,11 @@ class Boot_Controller {
 		//Загружаем контроллер
 		$this->includeController();
 
-		$Cname = $this->getClassName();
-		$Aname = $this->_param->action . "Action";
+		$Cname = $this->getControllerName();
+		$Aname = $this->getActionName();
 
 		//Debug
-		Boot::getInstance()->debug("Processing by " . (isset($this->_param->module) ? ucfirst($this->_param->module) . "::" : "") . ucfirst($this->_param->controller) . "#" . $this->_param->action);
+		Boot::getInstance()->debug("Processing by " . $Cname . "#" . self::getAction());
 		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams()));
 
 		//Если найден такой класс
@@ -281,7 +300,7 @@ class Boot_Controller {
 
 		//Добавляем пути для подключения файлов вьюх
 		set_include_path(implode(PATH_SEPARATOR, [
-			APPLICATION_PATH . '/views/' . (isset($this->_param->module) ? strtolower($this->_param->module) . "/" : "") . strtolower($this->_param->controller),
+			APPLICATION_PATH . '/views/' . strtolower(Boot_Routes::getInstance()->getController()),
 			APPLICATION_PATH . '/views',
 			get_include_path(),
 		]));
@@ -329,9 +348,12 @@ class Boot_Controller {
 	/**
 	 * Получить имя модуля
 	 * @static
-	 * @return string|bool
+	 * @return bool|string
+	 * @throws Boot_Exception
+	 * @deprecated
 	 */
 	static public function getModule() {
+		throw new Boot_Exception('Method getModule() was deprecated');
 		if( isset(self::getInstance()->_param->module) ) {
 			return self::getInstance()->_param->module;
 		}
@@ -341,19 +363,20 @@ class Boot_Controller {
 	/**
 	 * Получить имя контроллера
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	static public function getController() {
-		return self::getInstance()->_param->controller;
+		$path = explode('/', Boot_Routes::getInstance()->getController());
+		return end($path);
 	}
 
 	/**
 	 * Получить имя экшена
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	static public function getAction() {
-		return self::getInstance()->_param->action;
+		return Boot_Routes::getInstance()->getAction();
 	}
 
 	/**

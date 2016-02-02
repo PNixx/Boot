@@ -3,6 +3,7 @@
  * User: Odintsov S.A.
  * Date: 24.05.12
  * Time: 20:42
+ * @deprecated
  */
 
 class Boot_Auth_Lib extends Boot_Abstract_Library {
