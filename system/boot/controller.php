@@ -132,28 +132,11 @@ class Boot_Controller {
 
 		//Получаем строку запроса
 		if( $_SERVER['QUERY_STRING'] ) {
-			$req = $_SERVER['QUERY_STRING'];
-
-			//Разибиваем данные
-			$req = explode('&', $req);
-			if( $req ) {
-				foreach($req as $r) {
-
-					//Если не определена, идём дальше
-					if( !$r ) {
-						continue;
-					}
-
-					//Разбиваем
-					$key = explode('=', $r);
-
-					//Записыываем
-					$this->_request[$key[0]] = isset($key[1]) ? $key[1] : null;
-				}
-			}
+			parse_str($_SERVER['QUERY_STRING'], $this->_request);
 		}
+
 		$query = $path_info;
-		if( preg_match("/^(.*?)\?/", $path_info, $match) ) {
+		if( preg_match("/^(.*?)\\?/", $path_info, $match) ) {
 			$query = $match[1];
 		}
 
