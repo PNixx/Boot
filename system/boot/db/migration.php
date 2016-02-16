@@ -76,7 +76,7 @@ class Boot_Migration extends ActiveRecord {
 							exit("Unknown migration type\r\n");
 					}
 				}
-				if( preg_match("/^(\d+)/", $file, $match) ) {
+				if( preg_match("/^(\\d+)/", $file, $match) ) {
 					self::insert(["id" => $match[1]]);
 					echo "Migration `{$match[1]}` success.\r\n";
 				}

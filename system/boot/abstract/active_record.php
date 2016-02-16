@@ -46,12 +46,14 @@ abstract class ActiveRecord {
 	/**
 	 * Функция выполнения до сохранения записи
 	 * @var null|string
+	 * @deprecated
 	 */
 	protected static $before_save = null;
 
 	/**
 	 * Функция выполнения после успешного сохранения записи
 	 * @var null|string
+	 * @deprecated
 	 */
 	protected static $after_save = null;
 

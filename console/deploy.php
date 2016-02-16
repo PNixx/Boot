@@ -22,6 +22,12 @@ if( $application == null ) {
 	exit("Write application deploy" . PHP_EOL);
 }
 
+//Проверяем наличие файла
+if( !file_exists(APPLICATION_ROOT . "/deploy/" . $application . ".php") ) {
+	echo "\e[31mDeploy file " . $application . ".php not found\e[0m\r\n";
+	exit(127);
+}
+
 //Подключаем файл
 require_once APPLICATION_ROOT . "/deploy/" . $application . ".php";
 
