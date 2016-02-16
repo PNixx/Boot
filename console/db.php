@@ -44,7 +44,7 @@ switch( $type ) {
 		$files = array();
 		foreach(glob(APPLICATION_ROOT . "/db/*.php") as $file) {
 			$file = pathinfo($file, PATHINFO_BASENAME);
-			if( preg_match("/^(\d+)_/", $file, $match) && $match[1] > $latest_migration ) {
+			if( preg_match("/^(\\d+)_/", $file, $match) && $match[1] > $latest_migration ) {
 				$files[] = $file;
 			}
 		}

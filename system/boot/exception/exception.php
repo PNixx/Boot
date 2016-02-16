@@ -161,7 +161,7 @@ class Boot_Exception extends Exception {
 class Controller_Exception extends Exception {
 
 	public function __construct($message = null, $code = 500, $error_code = null) {
-		header('HTTP/1.0 ' . $code);
+		http_response_code($code);
 		if( Boot_Controller::getInstance()->isAjax() ) {
 
 			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки

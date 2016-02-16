@@ -183,7 +183,7 @@ class Boot {
 		$this->load_library();
 
 		//Debug
-		if( preg_match("/\.(css|js)$/", $_SERVER['REQUEST_URI']) == false ) {
+		if( preg_match("/\\.(css|js)$/", $_SERVER['REQUEST_URI']) == false ) {
 			$this->debug(PHP_EOL . PHP_EOL . $_SERVER['REQUEST_METHOD'] . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
 		}
 

@@ -28,7 +28,7 @@ if( isset($argv[1]) && trim($argv[1]) ) {
 	$name = $argv[1];
 } else {
 	echo "You have to write the name of the migration";
-	exit;
+	exit(127);
 }
 
 if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/i", $name, $match) ) {
@@ -40,11 +40,13 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 			//Создаваемая таблица
 			$table = $match[2];
 			if( $table == null ) {
-				exit("You must write table name, example: create_table_user" . PHP_EOL);
+				echo "You must write table name, example: create_table_user" . PHP_EOL;
+				exit(127);
 			}
 
 			if( file_exists(APPLICATION_PATH . "/models/{$table}.php") ) {
-				exit("Model_{$table} is exist" . PHP_EOL);
+				echo "Model_{$table} is exist" . PHP_EOL;
+				exit(127);
 			}
 
 			//Строим параметры
@@ -65,15 +67,26 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 					} elseif(preg_match("/^:UKEY=(.+?)$/", $argv[$i], $m)) {
 						$ukey = explode(",", $m[1]);
 					} else {
-						list($column, $type) = explode(":", $argv[$i]);
+						$column_args = explode(":", $argv[$i]);
 
 						//Подменяем тип столбца для модели
-						switch( $type ) {
+						switch( $column_args[1] ) {
 							case "string":
 								$type = "varchar(255)";
 								break;
 						}
-						$schema[$column] = $type;
+
+						//Если указано значение для NULL
+						if( !empty($column_args[2]) && $column_args[2] == "false" ) {
+							$type .= ' NOT NULL';
+						}
+
+						//Если указано дефолтное значение
+						if( !empty($column_args[3]) ) {
+							$type .= " DEFAULT '{$column_args[3]}'";
+						}
+
+						$schema[$column_args[0]] = $type;
 					}
 				}
 
@@ -119,7 +132,8 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 			//Удаляемая таблица
 			$table = $match[2];
 			if( $table == null ) {
-				exit("You must write table name, example: drop_table_user");
+				echo "You must write table name, example: drop_table_user";
+				exit(127);
 			}
 
 			//Указываем тип
@@ -138,10 +152,12 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 
 			//Проверяем данные
 			if( $table == null ) {
-				exit("You must write table name, example: create_table_user");
+				echo "You must write table name, example: create_table_user";
+				exit(127);
 			}
 			if( file_exists(APPLICATION_PATH . "/models/{$table}.php") == false ) {
-				exit("Model_{$table} is not exist");
+				echo "Model_{$table} is not exist";
+				exit(127);
 			}
 
 			//Строим параметры
@@ -229,7 +245,8 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 			break;
 
 		default:
-			exit("Incorrect type of the migration");
+			echo "Incorrect type of the migration";
+			exit(127);
 			break;
 	}
 
