@@ -49,7 +49,7 @@ class Boot_Controller {
 
 		if( !(self::$_instance instanceof Boot_Controller) ) {
 			self::$_instance = new Boot_Controller();
-			self::$_instance->initizlize();
+			self::$_instance->initialize();
 		}
 		return self::$_instance;
 	}
@@ -61,13 +61,13 @@ class Boot_Controller {
 	private function getQuery() {
 
 		$path_info = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : $_SERVER['REQUEST_URI'];
-		if( preg_match("/^(\/[^\/\.]+)\.+$/", $path_info, $match) && count($match) > 1 ) {
+		if( preg_match('/^(\/[^\/\.]+)\.+$/', $path_info, $match) && count($match) > 1 ) {
 			$this->_redirect($match[1]);
 		}
 
 		//Если страница пытается загрузкить из асетов файл
 		//todo вынести в отдельный экшен
-		if( APPLICATION_ENV == 'development' && preg_match("/^\/assets\/(css|js)\/.*?\.(css|js)$/", $path_info, $matches) ) {
+		if( APPLICATION_ENV == 'development' && preg_match('/^\/assets\/(css|js)\/.*?\.(css|js)$/', $path_info, $matches) ) {
 			switch( $matches[1] ) {
 				case "css":
 					header("Content-Type: text/css");
@@ -198,6 +198,20 @@ class Boot_Controller {
 	}
 
 	/**
+	 * Фильтрует параметры
+	 * @param array $params
+	 */
+	private function filterParams(array &$params) {
+		foreach( $params as $key => &$param ) {
+			if( is_array($param) ) {
+				$this->filterParams($param);
+			} elseif( stristr($key, 'password') ) {
+				$param = '[FILTERED]';
+			}
+		}
+	}
+
+	/**
 	 * Получение декодированного параметра запроса
 	 * @param $name
 	 * @return string
@@ -245,6 +259,13 @@ class Boot_Controller {
 	 * @return string
 	 */
 	private function getControllerName() {
+
+		//todo для поддержки новых версий
+		if( preg_match('/^Boot\\\([^\\\]+)\\\Controller\\\/', Boot_Routes::getInstance()->getController()) && class_exists(Boot_Routes::getInstance()->getController()) ) {
+			return Boot_Routes::getInstance()->getController();
+		}
+
+		//todo для поддержки старых версий
 		return implode('_', array_map('ucfirst', explode('/', Boot_Routes::getInstance()->getController()))) . self::PREFIX;
 	}
 
@@ -261,7 +282,7 @@ class Boot_Controller {
 	 * @throws Exception
 	 * @return void
 	 */
-	protected function initizlize() {
+	protected function initialize() {
 
 		//Получаем данные запроса
 		$this->getQuery();
@@ -274,19 +295,14 @@ class Boot_Controller {
 
 		//Debug
 		Boot::getInstance()->debug("Processing by " . $Cname . "#" . self::getAction());
-		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams()));
+		$params = $this->getParams();
+		$this->filterParams($params);
+		Boot::getInstance()->debug("  Parameters: " . json_encode($params));
 
 		//Если найден такой класс
 		if( class_exists($Cname) == false ) {
 			throw new Exception('Controller "' . $Cname . '" not exist', 404);
 		}
-
-		//Добавляем пути для подключения файлов вьюх
-		set_include_path(implode(PATH_SEPARATOR, [
-			APPLICATION_PATH . '/views/' . strtolower(Boot_Routes::getInstance()->getController()),
-			APPLICATION_PATH . '/views',
-			get_include_path(),
-		]));
 
 		/**
 		 * Инициализируем
@@ -299,10 +315,10 @@ class Boot_Controller {
 			$library->init($controller);
 		}
 
-		if( class_exists("Boot_Translate_Lib", false) && $this->hasParam("lang") ) {
+		if( $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");
 
-			Boot::getInstance()->library->translate->setLocale($lang);
+			Boot\Library\Translate::getInstance()->setLocale($lang);
 
 			//Сохраняем в куку
 			Boot_Cookie::set("lang", $lang);
@@ -325,7 +341,6 @@ class Boot_Controller {
 		if( array_key_exists('view', $controller) ) {
 			$this->view = &$controller->view;
 		}
-
 	}
 
 	/**
@@ -371,16 +386,6 @@ class Boot_Controller {
 	}
 
 	/**
-	 * Получить имя экшена
-	 * @static
-	 * @param $name
-	 * @return void
-	 */
-	static private function setAction($name) {
-		self::getInstance()->_param->action = $name;
-	}
-
-	/**
 	 * Выполнить экшен
 	 * @param $action
 	 * @param Boot_Abstract_Controller $controller
@@ -388,7 +393,7 @@ class Boot_Controller {
 	 * @return void
 	 */
 	public function _action($action, Boot_Abstract_Controller $controller) {
-		self::setAction($action);
+		Boot_Routes::getInstance()->setAction($action);
 		$name = $action . "Action";
 		if( method_exists($controller, $name) ) {
 			$controller->$name();

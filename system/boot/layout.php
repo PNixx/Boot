@@ -1,5 +1,6 @@
 <?php
 class Boot_Layout {
+	use \Boot\TagTrait, \Boot\UrlTrait, \Boot\LibraryTrait;
 
 	/**
 	 * @var null

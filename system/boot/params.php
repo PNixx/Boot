@@ -50,7 +50,8 @@ class Boot_Params implements Iterator, ArrayAccess {
 	public function getValues() {
 		$values = [];
 		if( array_diff(array_keys($this->_params), $this->_permit) ) {
-			Boot::getInstance()->debug('  Unpermitted params: ' . implode(', ', array_diff(array_keys($this->_params), $this->_permit)));
+			$params = array_diff(array_keys($this->_params), $this->_permit);
+			Boot::getInstance()->debug('  Unpermitted params: ' . implode(', ', $params));
 		}
 		foreach( $this->_params as $key => $param ) {
 			if( in_array($key, $this->_permit) ) {

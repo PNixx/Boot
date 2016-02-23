@@ -70,12 +70,13 @@ abstract class Boot_Mailer_Abstract {
 
 		//Достаем функцию вызова
 		$caller = debug_backtrace()[1];
-		if( !preg_match('/^(.*?)Mailer$/', $caller['class'], $match) ) {
+		$object = new \ReflectionClass($caller['class']);
+		if( !preg_match('/^(.*?)Mailer$/', $object->getShortName(), $match) ) {
 			throw new Boot_Exception('Parent execute not Mailer class');
 		}
 
 		//Рендерим письмо
-		$view = self::_render('views/mailer/' . strtolower($match[1]) . '/' . $caller['function']);
+		$view = self::_render('mailer/' . strtolower($match[1]) . '/' . $caller['function']);
 
 		//Инициализируем шаблон
 		if( static::$layout ) {
@@ -124,10 +125,19 @@ abstract class Boot_Mailer_Abstract {
 	private static function _render($path, $content = null) {
 
 		//Строим полный путь
-		$__path = APPLICATION_PATH . '/' . $path . '.phtml';
+		$__path = null;
 
 		//Проверяем наличие шаблона
-		if( !file_exists($__path) ) {
+		$paths = explode(PATH_SEPARATOR, get_include_path());
+		foreach( $paths as $p ) {
+			if( file_exists(realpath($p) . '/' . $path . '.phtml') ) {
+				$__path = realpath($p) . '/' . $path . '.phtml';
+				break;
+			}
+		}
+
+		//Проверяем наличие шаблона
+		if( $__path == null || !file_exists($__path) ) {
 			throw new Boot_Exception('Mailer view "' . $path . '.phtml" not exist');
 		}
 

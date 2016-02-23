@@ -4,126 +4,64 @@
  * Date: 13.01.12
  * Time: 17:57
  */
+namespace Boot\Library;
 
-class Boot_Translate_Lib extends Boot_Abstract_Library {
+class Translate {
 
-  /**
-   * Найденные языки
-   * @var array
-   */
-  private $_lang = null;
-
-  /**
-   * Директория с переводами
-   * @var null
-   */
-  private $_dir = null;
+	/**
+	 * Язык сайта
+	 * @var string
+	 */
+	private $_lang;
 
   /**
    * Языка перевода по умолчанию
-   * @var null
+   * @var string
    */
-  private $_default = null;
+  private $_default = 'ru';
 
   /**
    * Хранилище парсенных файлов
    * @var null
    */
-  private $_parse = array();
+  private $_parse = [];
+
+	/**
+	 * @var Translate
+	 */
+	private static $instance;
 
 	/**
 	 * Строим переводчик
-	 * @throws Exception
 	 */
-  public function __construct() {
+  private function __construct() {
 
 		//Строим путь до базы
-		$dir = APPLICATION_PATH . "/lang/";
+		$dir = APPLICATION_PATH . "/lang";
 
 		//Получаем из куков язык
-		if( class_exists("Boot_Cookie") && Boot_Cookie::get("lang") ) {
-			$lang = Boot_Cookie::get("lang");
+		if( \Boot_Cookie::get("lang") ) {
+			$this->_lang = \Boot_Cookie::get("lang");
 		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
-			$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+			$this->_lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
 		} else {
-			$lang = "ru";
+			$this->_lang = $this->_default;
 		}
 
 		//Проверяем директорию
-    if( is_dir($dir) == false ) {
-      throw new Boot_Exception("База перевода не найдена", 500);
+    if( is_dir($dir) ) {
+      $this->loadLang($dir);
     }
-    $this->_dir = $dir;
-
-		//Если файл перевода не найден
-		if( file_exists($dir . $lang . ".json") == false ) {
-			$lang = "ru";
-			if( class_exists("Boot_Cookie") ) {
-				Boot_Cookie::set('lang', $lang);
-			}
-		}
-
-		//Парсим файл
-		$this->parseJSON($lang);
-		$this->_default = $lang;
-  }
-
-  /**
-   * Парспинг файлов перевода
-   * @param $lang
-   * @return array|null
-   * @throws Exception
-	 * @deprecated
-   */
-  public function parse($lang) {
-
-    //Если раньше до этого не парсили
-    if( !isset($this->_parse[$lang]) ) {
-
-      //Проверяем существование файла
-      if( file_exists($this->_dir . $lang . ".po") == false ) {
-        throw new Boot_Exception("Файл перевода языка не найден: {$this->_dir}{$lang}.po", 500);
-      }
-
-      //Читаем файл
-      if( preg_match_all("/msgid \"([^\n\r]*)\"[\n\r]+msgstr \"([^\n\r]*)\"/", file_get_contents($this->_dir . $lang . ".po"), $po) ) {
-
-        $return = array();
-
-        foreach( $po[1] as $key => $line ) {
-          $return[$line] = $po[2][$key];
-        }
-        $this->_parse[$lang] = $return;
-
-      } else {
-        $this->_parse[$lang] = array();
-      }
-
-    }
-    return $this->_parse[$lang];
   }
 
 	/**
-	 * @param $lang
-	 * @return array
-	 * @throws Exception
+	 * @return Translate
 	 */
-	public function parseJSON($lang) {
-
-		//Если раньше до этого не парсили
-		if( !isset($this->_parse[$lang]) ) {
-
-			//Проверяем существование файла
-			if( file_exists($this->_dir . $lang . ".json") ) {
-
-				//Читаем файл
-				$this->_parse[$lang] = json_decode(file_get_contents($this->_dir . $lang . ".json"), true);
-			} else {
-				$this->_parse[$lang] = [];
-				Boot::getInstance()->debug("Файл перевода языка не найден: {$lang}.json", true);
-			}
+	static public function getInstance() {
+		if( self::$instance === null ) {
+			self::$instance = new Translate();
 		}
-		return $this->_parse[$lang];
+		return self::$instance;
 	}
 
 	/**
@@ -131,36 +69,28 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 	 * @param string $text
 	 * @param null|int $args
 	 * @param bool $plural
-	 * @throws Exception
 	 * @return string
 	 */
   public function _($text, $args = null, $plural = false) {
 
     //Определяем язык
-    $lang = !$plural && $args ? $args : $this->_default;
+    $lang = !$plural && $args ? $args : $this->_lang;
 
-    if( in_array($lang, $this->getLangs()) == false ) {
-      $lang = "ru";
+    if( in_array($lang, $this->getLanguages()) == false ) {
+      $lang = $this->_default;
     }
-
-    //Получаем массив перевода
-		if( file_exists($this->_dir . $lang . ".json") ) {
-			$po = $this->parseJSON($lang);
-		} else {
-			$po = $this->parse($lang);
-		}
 
 		if( $plural ) {
 			return $this->plural($text, $args, $lang);
 		}
-    return isset($po[$text]) && $po[$text] ? $po[$text] : $text;
+    return !empty($this->_parse[$lang][$text]) ? $this->_parse[$lang][$text] : ucfirst(str_replace(['.', '_'], ' ', $text));
   }
 
   /**
    * Возвращает текущий язык
    */
   public function getLocale() {
-    return $this->_default;
+    return $this->_lang;
   }
 
 	/**
@@ -168,23 +98,23 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 	 * @param $lang
 	 */
   public function setLocale($lang) {
-    $this->_default = $lang;
+    $this->_lang = $lang;
   }
 
   /**
    * Получить список доступных языков
+	 * @deprecated
    */
   public function getLangs() {
-    if( $this->_lang === null ) {
-      foreach( glob($this->_dir . "*.po") as $file) {
-        $this->_lang[] = preg_replace("/\.po$/", "", basename($file));
-      }
-      foreach( glob($this->_dir . "*.json") as $file) {
-        $this->_lang[] = preg_replace("/\.json$/", "", basename($file));
-      }
-    }
-    return $this->_lang;
+    return array_keys($this->_parse);
   }
+
+	/**
+	 * Получить список доступных языков
+	 */
+	public function getLanguages() {
+		return array_keys($this->_parse);
+	}
 
 	/**
 	 * @param string $text
@@ -208,5 +138,30 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 			return str_replace("%count%", $number, $i18n[$i]);
 		}
 		return str_replace("%count%", $number, $text);
+	}
+
+	/**
+	 * Загружаем директорию в базу
+	 * @param $directory
+	 */
+	public function loadLang($directory) {
+
+		//Инклудим данные файлов
+		foreach( glob(realpath($directory) . '/*.json') as $file ) {
+
+			//Получаем данные файла
+			$json = json_decode(file_get_contents($file), true);
+
+			//Язык файла
+			$lang = pathinfo($file, PATHINFO_FILENAME);
+
+			//Если языка такого нет, создаем массив
+			if( !isset($this->_parse[$lang]) ) {
+				$this->_parse[$lang] = [];
+			}
+
+			//Мигрируем
+			$this->_parse[$lang] = array_merge($json, $this->_parse[$lang]);
+		}
 	}
 }

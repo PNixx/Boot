@@ -55,9 +55,10 @@ trait Boot_TraitController {
 	 * Получение декодированного параметра запроса
 	 * @param $name
 	 * @return string
+	 * @deprecated
 	 */
 	public function getParamDecode($name) {
-		return trim(urldecode($this->getParam($name)));
+		return $this->getParam($name);
 	}
 
 	/**

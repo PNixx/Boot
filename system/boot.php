@@ -53,6 +53,12 @@ class Boot {
 	public $routes = null;
 
 	/**
+	 * Пути для подключения вьюх
+	 * @var array
+	 */
+	private $view_include_path = [];
+
+	/**
 	 * Получаем инстанс
 	 * @static
 	 * @return Boot
@@ -469,6 +475,10 @@ class Boot {
 	 */
 	public function load_library() {
 
+		//Подключаем библиотеки
+		//todo потом сделать циклоп
+		require_once APPLICATION_ROOT . '/system/library/translate.php';
+
 		//Подключаем клас библиотек
 		require_once "boot/library.php";
 
@@ -532,5 +542,13 @@ class Boot {
 
 	static public function check_time($mktime) {
 		return round((Boot::mktime() - $mktime) * 1000, 2);
+	}
+
+	/**
+	 * Регистрация пути для подключения вьюх
+	 * @param $path
+	 */
+	static public function register_include_path($path) {
+		self::getInstance()->view_include_path[] = $path;
 	}
 }

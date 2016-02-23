@@ -6,17 +6,12 @@
  * @version 1.0
  */
 abstract class Boot_Abstract_Controller {
-	use Boot_TraitController;
+	use Boot_TraitController, \Boot\LibraryTrait;
 
 	/**
 	 * @var Model_User|Model_row
 	 */
 	public $me;
-
-	/**
-	 * @var Boot_Translate_Lib
-	 */
-	public $translate;
 
 	/**
 	 * Переменная для передачи по вьюху
@@ -27,6 +22,13 @@ abstract class Boot_Abstract_Controller {
 	//Конструктор
 	public function __construct() {
 		$this->view = new stdClass();
+
+		//Добавляем пути для подключения вьюх
+		$object = new ReflectionObject($this);
+		$views = realpath(pathinfo($object->getFileName(), PATHINFO_DIRNAME) . '/../views');
+		Boot_View::register_include_path(APPLICATION_PATH . '/views');
+		Boot_View::register_include_path($views);
+		Boot_View::register_include_path($views . '/' . Boot_Routes::getInstance()->getControllerName());
 	}
 
 	//Инициализация

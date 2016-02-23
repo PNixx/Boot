@@ -1,12 +1,10 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
  * User: nixx
  * Date: 24.04.13
  * Time: 13:50
- * To change this template use File | Settings | File Templates.
+ * @deprecated
  */
-
 class Boot_Library {
 
 	/**
@@ -16,6 +14,7 @@ class Boot_Library {
 
 	/**
 	 * Constructor
+	 * @deprecated
 	 */
 	public function __construct() {
 		$this->_libraries = new stdClass();

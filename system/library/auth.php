@@ -5,7 +5,6 @@
  * Time: 20:42
  * @deprecated
  */
-
 class Boot_Auth_Lib extends Boot_Abstract_Library {
 
 	/**
@@ -108,6 +107,7 @@ class Boot_Auth_Lib extends Boot_Abstract_Library {
 	 * Http авторизация
 	 * @param $login
 	 * @param $passw
+	 * @deprecated
 	 */
 	static public function httpAuth($login, $passw) {
 		if( isset($_SERVER['PHP_AUTH_USER']) == false || isset($_SERVER['PHP_AUTH_PW']) == false || $_SERVER['PHP_AUTH_USER'] != $login || $_SERVER['PHP_AUTH_PW'] != $passw ) {

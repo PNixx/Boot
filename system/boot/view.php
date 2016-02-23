@@ -1,6 +1,7 @@
 <?php
 
 class Boot_View {
+	use \Boot\TagTrait, \Boot\UrlTrait, \Boot\LibraryTrait;
 
 	/**
 	 * Инстанс
@@ -26,12 +27,6 @@ class Boot_View {
 
 		return self::$_instance;
 	}
-
-	/**
-	 * Файл вьюхи
-	 * @var null|string
-	 */
-	private $file_dir_name = null;
 
 	/**
 	 * Конструктор
@@ -234,5 +229,15 @@ class Boot_View {
 		}
 
 		return $css->readfile_production($name);
+	}
+
+	/**
+	 * Регистрация пути для подключения вьюх
+	 * @param $path
+	 */
+	static public function register_include_path($path) {
+		if( !in_array($path, explode(PATH_SEPARATOR, get_include_path())) ) {
+			set_include_path($path . PATH_SEPARATOR . get_include_path());
+		}
 	}
 }

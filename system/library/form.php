@@ -5,6 +5,7 @@
  * Time: 15:38
  */
 class Boot_Form_Lib extends Boot_Abstract_Library {
+	use \Boot\TagTrait;
 
 	/**
 	 * Отключаем инициализицию
@@ -247,19 +248,6 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Возвращаем имя
 		return ucfirst($name);
-	}
-
-	/**
-	 * Собирает параметры
-	 * @param $params
-	 * @return string
-	 */
-	private function implode($params) {
-		$string = "";
-		foreach( $params as $key => $value ) {
-			$string .= " " . $key . "=\"" . $value . "\"";
-		}
-		return $string;
 	}
 }
 
