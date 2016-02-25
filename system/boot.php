@@ -188,6 +188,9 @@ class Boot {
 		//Загружаем библиотеки
 		$this->load_library();
 
+		//Инициализируем модули
+		$this->initialize();
+
 		//Debug
 		if( preg_match("/\\.(css|js)$/", $_SERVER['REQUEST_URI']) == false ) {
 			$this->debug(PHP_EOL . PHP_EOL . $_SERVER['REQUEST_METHOD'] . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
@@ -278,6 +281,9 @@ class Boot {
 
 		//Загружаем библиотеки
 		$this->load_library();
+
+		//Инициализируем модули
+		$this->initialize();
 
 		//Debug
 		$this->debug(PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
@@ -388,6 +394,15 @@ class Boot {
 	}
 
 	/**
+	 * Инициализация модулей
+	 */
+	private function initialize() {
+		if( file_exists(APPLICATION_PATH . '/config/initialize.php') ) {
+			require_once APPLICATION_PATH . '/config/initialize.php';
+		}
+	}
+
+	/**
 	 * Инициализируем контроллер
 	 * @return void
 	 */
@@ -476,7 +491,7 @@ class Boot {
 	public function load_library() {
 
 		//Подключаем библиотеки
-		//todo потом сделать циклоп
+		//todo потом сделать циклом
 		require_once APPLICATION_ROOT . '/system/library/translate.php';
 
 		//Подключаем клас библиотек

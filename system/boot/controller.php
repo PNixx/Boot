@@ -35,9 +35,30 @@ class Boot_Controller {
 	 */
 	public $view = null;
 
+	/**
+	 * Зарегистрированные функции
+	 * @var array
+	 */
+	private static $call_functions = [];
+
 	//Конструктор
 	public function __construct() {
 		$this->view = new stdClass();
+	}
+
+	/**
+	 * Пробует вызвать зарегистрированную функцию
+	 * @param $name
+	 * @param $arguments
+	 * @return mixed
+	 */
+	public function __call($name, $arguments) {
+		if( array_key_exists($name, self::$call_functions) ) {
+			$f = self::$call_functions[$name];
+			return $f::$name($arguments);
+		}
+
+		throw new BadMethodCallException('Call to undefined function ' . $name . '()');
 	}
 
 	/**
@@ -334,6 +355,9 @@ class Boot_Controller {
 			throw new Exception('Action "' . $Aname . '", controller "' . $Cname . '" not exist', 404);
 		}
 
+		//Запускаем обработку
+		$this->run_before_actions($controller->before_action, $Aname);
+
 		//Стартуем экшен
 		$controller->$Aname();
 
@@ -341,6 +365,38 @@ class Boot_Controller {
 		if( array_key_exists('view', $controller) ) {
 			$this->view = &$controller->view;
 		}
+	}
+
+	/**
+	 * Запускает обработку до выполнения экшена
+	 * @param $before_action
+	 * @param $action
+	 */
+	private function run_before_actions($before_action, $action) {
+		foreach( $before_action as $func => $filter ) {
+			if( !empty($filter['except']) ) {
+				$except = is_array($filter['except']) ? $filter['except'] : [$filter['except']];
+			} else {
+				$except = [];
+			}
+			if( !empty($filter['only']) ) {
+				$only = is_array($filter['only']) ? $filter['only'] : [$filter['only']];
+			} else {
+				$only = [];
+			}
+			$only = array_diff($only, $except);
+			if( (!$only || in_array($action, $only)) && (!$except || !in_array($action, $except)) ) {
+				$this->$func($action);
+			}
+		}
+	}
+
+	/**
+	 * @param string $name     имя функции для быстрого вызова
+	 * @param string $class    имя исполняемого класса
+	 */
+	static public function register_call($name, $class) {
+		self::$call_functions[$name] = $class;
 	}
 
 	/**

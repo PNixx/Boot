@@ -1,6 +1,7 @@
 <?php
 
 class Boot_View {
+
 	use \Boot\TagTrait, \Boot\UrlTrait, \Boot\LibraryTrait;
 
 	/**
@@ -8,11 +9,6 @@ class Boot_View {
 	 * @var Boot_View
 	 */
 	static private $_instance = null;
-
-	/**
-	 * @var Model_User
-	 */
-	public $me = null;
 
 	/**
 	 * Получаем инстанс

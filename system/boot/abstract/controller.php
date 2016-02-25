@@ -9,15 +9,22 @@ abstract class Boot_Abstract_Controller {
 	use Boot_TraitController, \Boot\LibraryTrait;
 
 	/**
-	 * @var Model_User|Model_row
-	 */
-	public $me;
-
-	/**
 	 * Переменная для передачи по вьюху
 	 * @var Boot_View
 	 */
 	public $view = null;
+
+	/**
+	 * Обработчик событий до выполнения экшена
+	 * @var array
+	 * [
+	 *   function => [
+	 *     only   => [actions],
+	 *     except => [actions]
+	 *   ]
+	 * ]
+	 */
+	public $before_action = [];
 
 	//Конструктор
 	public function __construct() {
