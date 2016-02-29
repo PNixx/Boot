@@ -16,7 +16,7 @@ trait LibraryTrait {
 	 * @param bool $plural
 	 * @return string
 	 */
-	public function t($text, $args = null, $plural = false) {
+	static public function t($text, $args = null, $plural = false) {
 		return Translate::getInstance()->_($text, $args, $plural);
 	}
 }

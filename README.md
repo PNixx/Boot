@@ -1,9 +1,11 @@
-Boot framework v2.2
+Boot framework v2.3
 ==============
 
 ##Технологии
-* [PHP](http://php.net) - язык программирования PHP 5.5
+* [PHP](http://php.net) - язык программирования PHP 5.6
 * [Composer](https://getcomposer.org) - package manager
+* [Bower](http://bower.io) - package manager
+* [SASS](https://github.com/sensational/sassphp)
 
 ##SASS
 Если вы планируете использовать в своем проекте SASS, то в системе должны быть установлены:
@@ -66,3 +68,7 @@ Boot framework v2.2
 	}
 	
 Для более точной ностройки необходимо отредактировать файл `application/config/nginx.conf`
+
+##Дополнительные модули
+
+* [Boot Auth](https://github.com/PNixx/Boot_Auth) - модуль авторизации

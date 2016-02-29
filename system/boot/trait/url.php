@@ -22,7 +22,7 @@ trait UrlTrait {
 	 * @param $arguments
 	 * @return mixed
 	 */
-	public function __call($name, $arguments) {
+	public function __call($name, ...$arguments) {
 
 		//Если запрашиваем путь
 		if( preg_match('/^(.*?)_path$/', $name, $match) ) {

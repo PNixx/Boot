@@ -19,6 +19,12 @@ class Boot_Assets {
 	private $compile;
 
 	/**
+	 * Сжимает файлы
+	 * @var bool
+	 */
+	private $compress = true;
+
+	/**
 	 * @var bool
 	 */
 	private $debug;
@@ -41,6 +47,84 @@ class Boot_Assets {
 		$this->ext = $ext;
 		$this->compile = $compile;
 		$this->debug = $debug;
+	}
+
+	/**
+	 * @param $compress
+	 */
+	public function setCompress($compress) {
+		$this->compress = $compress;
+	}
+
+	/**
+	 * Копирует шрифты
+	 */
+	static public function install_fonts() {
+		$dir = APPLICATION_ROOT . '/bower_components';
+		if( $f = opendir($dir) ) {
+
+			//Проходим по списку файлов
+			while (false !== ($entry = readdir($f))) {
+				if( !in_array($entry, ['.', '..']) ) {
+
+					//Строим полный путь до файла
+					$path = $dir . '/' . $entry . '/bower.json';
+
+					//Если файл существует
+					if( file_exists($path) ) {
+						$json = json_decode(file_get_contents($path));
+						if( !empty($json->main) && is_array($json->main) ) {
+							foreach( $json->main as $file ) {
+								if( in_array(pathinfo($file, PATHINFO_EXTENSION), ['eot', 'svg', 'ttf', 'woff', 'woff2']) ) {
+									//Создаем директорию
+									$copy_dir = APPLICATION_ROOT . '/public/assets/' . pathinfo($file, PATHINFO_DIRNAME);
+									if( !is_dir($copy_dir) ) {
+										mkdir($copy_dir, 0777, true);
+										echo "Create directory: " . $copy_dir . "\r\n";
+									}
+
+									//Копируем файл
+									copy($dir . '/' . $entry . '/' . $file, APPLICATION_ROOT . '/public/assets/' . $file);
+									echo "Copy file: " . $file . "\r\n";
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param $link
+	 * @return null|string
+	 */
+	static public function find_font_path($link) {
+		$dir = APPLICATION_ROOT . '/bower_components';
+		if( $f = opendir($dir) ) {
+
+			//Проходим по списку файлов
+			while (false !== ($entry = readdir($f))) {
+				if( !in_array($entry, ['.', '..']) ) {
+
+					//Строим полный путь до файла
+					$path = $dir . '/' . $entry . '/bower.json';
+
+					//Если файл существует
+					if( file_exists($path) ) {
+						$json = json_decode(file_get_contents($path));
+						if( !empty($json->main) && is_array($json->main) ) {
+							foreach( $json->main as $file ) {
+								if( $file == $link ) {
+									return $dir . '/' . $entry . '/' . $file;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -78,24 +162,24 @@ class Boot_Assets {
 		while( ($row = fgets($f, 4096)) !== false ) {
 
 			//Если попадает под маску
-			if( preg_match("/^" . ($this->ext == "css" ? "\s?\*" : "\/\/") . "=\s(require[^\s]*)\s([^\s\n\r]+)/", $row, $matches) ) {
+			if( preg_match("/^" . ($this->ext == "css" ? "\\s?\\*" : "\\/\\/") . "=\\s(require[^\\s]*)\\s([^\\s\n\r]+)/", $row, $matches) ) {
 
 				//Выполняем функцию
 				switch( $matches[1] ) {
 
 					//Чтение директории
 					case "require_tree":
-						$this->readdir(realpath(APPLICATION_PATH . '/assets/' . $this->ext . '/' . $matches[2]));
+						$this->readdir($matches[2]);
 						break;
 
 					//Чтение директории
 					case "require_directory":
-						$this->readdir(realpath(APPLICATION_PATH . '/assets/' . $this->ext . '/' . $matches[2]), false);
+						$this->readdir($matches[2], false);
 						break;
 
 					//Чтение файла
 					case "require":
-						$this->data .= $this->readfile(realpath(APPLICATION_PATH . '/assets/' . $this->ext . '/' . $matches[2])) . ($this->compile ? PHP_EOL : "");
+						$this->data .= $this->readfile($matches[2]) . ($this->compile ? PHP_EOL : "");
 						break;
 
 					default:
@@ -106,22 +190,65 @@ class Boot_Assets {
 	}
 
 	/**
+	 * Ищет указанный файл
+	 * @param $path
+	 * @return null|string
+	 */
+	public function full_path($path) {
+
+		//Если добавляем из bower
+		if( strpos($path, 'bower_components') === 0 ) {
+			return realpath(APPLICATION_ROOT . '/' . $path);
+		}
+		return realpath(APPLICATION_PATH . '/assets/' . $this->ext . '/' . $path);
+	}
+
+	/**
+	 * Normalize path
+	 *
+	 * @param   string  $path
+	 * @param   string  $separator
+	 * @return  string  normalized path
+	 */
+	public function normalizePath($path, $separator = '\\/') {
+		// Remove any kind of funky unicode whitespace
+		$normalized = preg_replace('#\p{C}+|^\./#u', '', $path);
+
+		// Path remove self referring paths ("/./").
+		$normalized = preg_replace('#/\.(?=/)|^\./|\./$#', '', $normalized);
+
+		// Regex for resolving relative paths
+		$regex = '#\/*[^/\.]+/\.\.#Uu';
+
+		while (preg_match($regex, $normalized)) {
+			$normalized = preg_replace($regex, '', $normalized);
+		}
+
+		if (preg_match('#/\.{2}|\.{2}/#', $normalized)) {
+			throw new LogicException('Path is outside of the defined root, path: [' . $path . '], resolved: [' . $normalized . ']');
+		}
+
+		return trim($normalized, $separator);
+	}
+
+	/**
 	 * Чтение деректории рукурсивно
 	 * @param $dir
 	 * @param bool $recursive
 	 */
 	public function readdir($dir, $recursive = true) {
-		if( $f = opendir($dir) ) {
+		$realpath = $this->full_path($dir);
+		if( $f = opendir($realpath) ) {
 
 			//Проходим по списку файлов
 			while (false !== ($entry = readdir($f))) {
 				if( !in_array($entry, ['.', '..']) ) {
 
 					//Строим полный путь до файла
-					$path = $dir . '/' . $entry;
+					$path = $this->normalizePath($dir . '/' . $entry);
 
 					//Если это директория
-					if( is_dir($path) ) {
+					if( is_dir($realpath . '/' . $entry) ) {
 
 						//Если нужно проходить по дереву
 						if( $recursive ) {
@@ -149,17 +276,23 @@ class Boot_Assets {
 		//Если расширение входим в массив
 		if( in_array($ext, [$this->ext, 'scss']) ) {
 			if( $this->compile ) {
+				$path_new = $this->full_path($path);
+				if( !$path_new ) {
+					echo 'File ' . $path . ' not be found' . PHP_EOL;
+					exit(127);
+				}
+				$path = $path_new;
 
 				//SASS
 				if( $ext == 'scss' ) {
 
 					//Компилируем SASS файл
 					$sass = new Sass();
-					$sass->setStyle(Sass::STYLE_COMPRESSED);
+					$sass->setStyle($this->compress ? Sass::STYLE_COMPRESSED : Sass::STYLE_EXPANDED);
 					$sass->setIncludePath(APPLICATION_ROOT);
-					$sass->setComments(false);
+					$sass->setComments(!$this->compress);
 
-					$filename = pathinfo(APPLICATION_PATH . $path, PATHINFO_FILENAME);
+					$filename = pathinfo($path, PATHINFO_FILENAME);
 					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
 
 					//Добавляем префиксы
@@ -172,44 +305,41 @@ class Boot_Assets {
 						unlink('/tmp/' . $filename . '.css');
 						return $css;
 					}
-
-					//Ruby SASS
-//					//Компилируем sass
-//					$filename = pathinfo(APPLICATION_PATH . $path, PATHINFO_FILENAME);
-//					$return = system('sass -t compressed --sourcemap=none ' . escapeshellarg($path) . ' ' . escapeshellarg('/tmp/' . $filename . '.css') . ' 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('sass error: ' . $return);
-//					}
-//
-//					//Добавляем префиксы
-//					$return = system('postcss --use autoprefixer /tmp/' . $filename . '.css -o /tmp/' . $filename . '_out.css 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('autoprefixer error: ' . $return);
-//					}
-//
-//					//Выводим данные
-//					return file_get_contents('/tmp/' . $filename . '_out.css');
 				}
 
 				//Выполняем для обычных css файлов
-				return $this->compress(file_get_contents($path));
-			} else {
-				switch( $this->ext ) {
-
-					case "css":
-						return "<link href='" . str_replace(APPLICATION_PATH, "", preg_replace('/\.scss$/i', '.css', $path)) . "' rel='stylesheet' type='text/css'>" . PHP_EOL;
-						break;
-
-					case "js":
-						return "<script src='" . str_replace(APPLICATION_PATH, "", $path) . "' type=\"text/javascript\"></script>" . PHP_EOL;
-						break;
-
-					default:
-						throw new Exception("Wrong file extension");
+				if( $this->compress ) {
+					return $this->compress(file_get_contents($path));
+				} else {
+					return file_get_contents($path);
 				}
+			} else {
+				return $this->developerTag($path);
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Сразу вывод
+	 * @param $path
+	 * @return string
+	 * @throws Exception
+	 */
+	public function developerTag($path) {
+		switch( $this->ext ) {
+
+			case "css":
+				return "<link href='/assets/css/" . preg_replace('/\.scss$/i', '.css', $path) . "' rel='stylesheet' type='text/css'>" . PHP_EOL;
+				break;
+
+			case "js":
+				return "<script src='/assets/js/" . $path . "' type=\"text/javascript\"></script>" . PHP_EOL;
+				break;
+
+			default:
+				throw new Exception("Wrong file extension");
+		}
 	}
 
 	/**

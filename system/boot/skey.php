@@ -96,11 +96,12 @@ class Boot_Skey {
     return self::getInstance()->_init_skey;
   }
 
-  /**
-   * Парсинг закрытого ключа
-   * @static
-   * @param $skey
-   */
+	/**
+	 * Парсинг закрытого ключа
+	 * @static
+	 * @param $skey
+	 * @return bool
+	 */
   static public function validKey($skey) {
 
     //Разбиваем

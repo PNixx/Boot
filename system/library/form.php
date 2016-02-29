@@ -5,7 +5,7 @@
  * Time: 15:38
  */
 class Boot_Form_Lib extends Boot_Abstract_Library {
-	use \Boot\TagTrait;
+	use \Boot\TagTrait, \Boot\UrlTrait;
 
 	/**
 	 * Отключаем инициализицию
@@ -35,7 +35,17 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Если не указан экшен
 		if( empty($params['action']) && $row instanceof ActiveRecord ) {
-			$params['action'] = (!empty($params['namespace']) ? '/' . $params['namespace'] : '') . '/' . strtolower(str_ireplace("Model_", "", get_class($row))) . '/' . ($row->isNew() ? 'create' : 'save');
+			$prefix = '';
+			if( !empty($params['namespace']) ) {
+				$prefix = $params['namespace'] . '_';
+				unset($params['namespace']);
+			}
+			$prefix .= strtolower(str_ireplace("Model_", "", get_class($row)));
+			if( $row->isNew() ) {
+				$params['action'] = $this->{$prefix . '_create_path'}();
+			} else {
+				$params['action'] = $this->{$prefix . '_save_path'}($row->id);
+			}
 		}
 
 		//Сразу рисуем форму

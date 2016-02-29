@@ -1,8 +1,15 @@
 <?php
 
 class Boot_View {
-
 	use \Boot\TagTrait, \Boot\UrlTrait, \Boot\LibraryTrait;
+
+	/**
+	 * Список путей подключения вьюх
+	 * @var array
+	 */
+	static public $include_path = [
+		APPLICATION_PATH . '/views'
+	];
 
 	/**
 	 * Инстанс
@@ -102,8 +109,7 @@ class Boot_View {
 		$__path = null;
 
 		//Проверяем наличие шаблона
-		$paths = explode(PATH_SEPARATOR, get_include_path());
-		foreach( $paths as $p ) {
+		foreach( self::$include_path as $p ) {
 			if( file_exists(realpath($p) . '/' . $file . '.phtml') ) {
 				$__path = realpath($p) . '/' . $file . '.phtml';
 				break;
@@ -229,11 +235,16 @@ class Boot_View {
 
 	/**
 	 * Регистрация пути для подключения вьюх
-	 * @param $path
+	 * @param      $path
+	 * @param bool $top  Добавление вверх
 	 */
-	static public function register_include_path($path) {
-		if( !in_array($path, explode(PATH_SEPARATOR, get_include_path())) ) {
-			set_include_path($path . PATH_SEPARATOR . get_include_path());
+	static public function register_include_path($path, $top = true) {
+		if( !in_array($path, self::$include_path) && realpath($path) ) {
+			if( $top ) {
+				array_unshift(self::$include_path, $path);
+			} else {
+				array_push(self::$include_path, $path);
+			}
 		}
 	}
 }

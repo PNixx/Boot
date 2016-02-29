@@ -45,9 +45,9 @@ class postgres {
 	 */
 	private function error($query = null) {
 		//Debug
-		Boot::getInstance()->debug("  SQL Error: " . $query);
+		Boot::getInstance()->debug("  SQL Error: " . $query, true);
 
-		throw new Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
+		throw new DB_Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
 	/**

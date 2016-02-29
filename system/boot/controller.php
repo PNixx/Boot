@@ -1,6 +1,9 @@
 <?php
 class Boot_Controller {
 
+	/**
+	 * @deprecated
+	 */
 	const PREFIX = "Controller";
 
 	/**
@@ -99,56 +102,43 @@ class Boot_Controller {
 				default:
 					throw new Boot_Exception('Unknown file extension');
 			}
+			$path_info = preg_replace('/^\/assets\/(css|js)\/?/', '', $path_info);
+
+			$assets = new Boot_Assets($matches[1], true, false);
+			$assets->setCompress(false);
 
 			//Если расширение css и файл найден
-			if( file_exists(APPLICATION_PATH . $path_info) || $matches[1] == 'js' ) {
-				echo file_get_contents(APPLICATION_PATH . $path_info);
-			} else {
+			if( $assets->full_path($path_info) ) {
+				echo $assets->readfile($path_info);
+			} elseif( $matches[1] == 'css' ) {
 
 				//Если файл не найден, пробуем найти scss
-				$filename = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_FILENAME);
-				$scss = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_DIRNAME) . '/' . $filename . '.scss';
+				$filename = pathinfo($path_info, PATHINFO_FILENAME);
+				$scss = $assets->normalizePath(pathinfo($path_info, PATHINFO_DIRNAME) . '/' . $filename . '.scss');
 
 				//Если файл существует
-				if( file_exists($scss) ) {
-
-					//Компилируем SASS файл
-					$sass = new Sass();
-					$sass->setStyle(Sass::STYLE_EXPANDED);
-					$sass->setIncludePath(APPLICATION_ROOT);
-					$sass->setComments(true);
-					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($scss));
-
-					//Добавляем префиксы
-					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css', $r);
-					if( $result ) {
-						throw new Boot_Exception($result);
-					} else {
-						echo file_get_contents('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.css');
-					}
-//					$autoprefixer = new Autoprefixer(['ff > 2', '> 2%', 'ie 8']);
-//					echo $autoprefixer->compile($css);
-
-					//Ruby Sass
-//					//Компилируем sass
-//					$return = system('sass -l -t expanded --sourcemap=none ' . escapeshellarg($scss) . ' ' . escapeshellarg('/tmp/' . $filename . '.css') . ' 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('sass error: ' . $return);
-//					}
-//
-//					//Добавляем префиксы
-//					$return = system('postcss --use autoprefixer /tmp/' . $filename . '.css -o /tmp/' . $filename . '_out.css 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('autoprefixer error: ' . $return);
-//					}
-//
-//					//Выводим данные
-//					readfile('/tmp/' . $filename . '_out.css');
+				if( $assets->full_path($scss) ) {
+					echo $assets->readfile($scss);
 				} else {
 					throw new Boot_Exception('File ' . $path_info . ' not found', 404);
 				}
+			} else {
+				throw new Boot_Exception('File ' . $path_info . ' not found', 404);
+			}
+			exit;
+		}
+
+		//Для шрифтов
+		if( APPLICATION_ENV == 'development' && preg_match('/^\/assets\/.*?\.(eot|svg|ttf|woff|woff2)$/', $path_info, $matches) ) {
+			$path_info = preg_replace('/^\/assets\//', '', $path_info);
+			header("Content-Type: font/" . pathinfo($path_info, PATHINFO_EXTENSION));
+
+			//Если файл не найден, устанавливаем шрифты
+			$file = Boot_Assets::find_font_path($path_info);
+			if( $file ) {
+				echo readfile($file);
+			} else {
+				throw new Boot_Exception('Font ' . $path_info . ' not found', 404);
 			}
 			exit;
 		}
@@ -185,6 +175,11 @@ class Boot_Controller {
 				return new Boot_Params($_POST[$name]);
 			}
 			return $_POST[$name];
+		}
+
+		//Если пост пустой, но передается файл
+		if( isset($_FILES[$name]) ) {
+			return new Boot_Params([]);
 		}
 
 		return false;

@@ -39,9 +39,10 @@ class Boot_Console_Assets {
 		if( file_exists(APPLICATION_ROOT . "/bower.json") ) {
 
 			//Возвращаем результат
-			if( !$this->exec("bower-installer") ) {
-				$this->error("Bower was not installer");
-			}
+			$this->exec("bower install");
+
+			//Ищем папки со шрифтами и копируем
+			Boot_Assets::install_fonts();
 		}
 
 		//Выполняем поиск

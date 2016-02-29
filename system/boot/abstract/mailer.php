@@ -5,6 +5,7 @@
  * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
  */
 abstract class Boot_Mailer_Abstract {
+	use \Boot\LibraryTrait;
 
 	/**
 	 * Шаблон письма
@@ -128,8 +129,7 @@ abstract class Boot_Mailer_Abstract {
 		$__path = null;
 
 		//Проверяем наличие шаблона
-		$paths = explode(PATH_SEPARATOR, get_include_path());
-		foreach( $paths as $p ) {
+		foreach( Boot_View::$include_path as $p ) {
 			if( file_exists(realpath($p) . '/' . $path . '.phtml') ) {
 				$__path = realpath($p) . '/' . $path . '.phtml';
 				break;

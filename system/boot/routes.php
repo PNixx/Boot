@@ -3,7 +3,6 @@
 * User: Odintsov S.A.
 * Date: 30.08.12
 * Time: 14:52
-* todo Переделать
 */
 class Boot_Routes {
 
@@ -54,7 +53,7 @@ class Boot_Routes {
 
 		//Проходим по списку роутов
 		foreach( $this->_routes as $route ) {
-			if( $route['method'] == strtolower($_SERVER['REQUEST_METHOD']) && preg_match('/^' . preg_replace('/\\\:(\w[\w\d]*)/', '(?<$1>[^\/]+)', preg_quote($route['request'], '/')) . '$/', $query, $match) ) {
+			if( $route['method'] == strtolower($_SERVER['REQUEST_METHOD']) && preg_match('/^' . preg_replace('/\\\:(\w[\w\d]*)/', '(?<$1>[^\/]+)', preg_quote($route['request'], '/')) . '\/?$/', $query, $match) ) {
 				$this->_current = $route;
 
 				//Добавляем параметры
@@ -87,6 +86,17 @@ class Boot_Routes {
 	 */
 	public function getControllerName() {
 		return strtolower(preg_replace('/^(.*?)([^\\\]+)$/', '$2', $this->getController()));
+	}
+
+	/**
+	 * Получаем путь до контроллера
+	 * @return string
+	 */
+	static public function getControllerPath($name) {
+		if( preg_match('/^Boot\\\(.+?)\\\Controller\\\(.+?)$/', $name, $match) ) {
+			return strtolower(str_replace('\\', '/', $match[1])) . '/' . strtolower($match[2]);
+		}
+		return strtolower(str_replace('_', '/', preg_replace('/Controller$/', '', $name)));
 	}
 
 	/**
@@ -178,7 +188,7 @@ class Boot_Routes {
 		}
 
 		//Дефолтные экшены
-		$actions = [['get', 'index'], ['get', 'show', 'member'], ['get', 'edit', 'member'], ['post', 'delete', 'member'], ['post', 'create', 'member'], ['post', 'update', 'member']];
+		$actions = [['get', 'index'], ['get', 'new'], ['post', 'create'], ['get', 'show', 'member'], ['get', 'edit', 'member'], ['get', 'destroy', 'member'], ['post', 'save', 'member']];
 
 		//Если указаны исключающие
 		if( !empty($args['except']) ) {
@@ -279,8 +289,18 @@ class Boot_Routes {
 	 */
 	static public function make_path($name, $args = []) {
 
+		$params = [];
+		$link_params = [];
+		foreach( $args as $v ) {
+			if( is_array($v) ) {
+				$params = array_merge($params, $v);
+			} else {
+				$link_params[] = $v;
+			}
+		}
+
 		//Строим параметры запроса
-		$query = ($args ? '?' . http_build_query($args) : '');
+		$query = ($params ? '?' . http_build_query($params) : '');
 
 		//Если рут
 		if( $name == 'root' ) {
@@ -289,9 +309,11 @@ class Boot_Routes {
 
 		//Проходим по списку маршрутов
 		foreach( self::getInstance()->_routes as $route) {
-			$convert = str_replace('/', '_', $route['request']);
+			$convert = preg_replace('/\/(:\w+\/)?/', '_', $route['request']);
 			if( $name == $convert ) {
-				return '/' . $route['request'] . $query;
+				return preg_replace_callback('/:\w+/', function() use (&$link_params) {
+					return array_shift($link_params);
+				}, '/' . $route['request']) . $query;
 			}
 		}
 

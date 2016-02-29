@@ -83,7 +83,7 @@ trait Boot_ActiveAdmin {
 		if( $row->save() ) {
 
 			//Добавляем ответ
-			$this->setFlash("success", "Запись успешно создана");
+			$this->setFlash("notice", "Запись успешно создана");
 
 			//Редиректим в список
 			$this->success_redirect($row);
@@ -131,13 +131,13 @@ trait Boot_ActiveAdmin {
 		if( $row->update($this->getFromParams()) ) {
 
 			//Добавляем ответ
-			$this->setFlash("success", "Запись успешно обновлена");
+			$this->setFlash("notice", "Запись успешно обновлена");
 
 			//Редиректим в список
 			$this->success_redirect($row);
 		} else {
 			//Добавляем ответ
-			$this->setFlash("error", "Ошибка при сохранении записи");
+			$this->setFlash("alert", "Ошибка при сохранении записи");
 
 			//Изменяем вьюху
 			$this->render('edit');
@@ -167,7 +167,7 @@ trait Boot_ActiveAdmin {
 	 * @param ActiveRecord $row
 	 */
 	protected function success_redirect(ActiveRecord $row) {
-		$this->_redirect("/" . $this->getModule() . '/' . $this->getController());
+		$this->_redirect("/" . Boot_Routes::getInstance()->getController());
 	}
 
 	/**
@@ -178,7 +178,7 @@ trait Boot_ActiveAdmin {
 	private function getModel() {
 
 		//Строим имя модели
-		$model = "Model_" . ucfirst($this->getController());
+		$model = 'Model_' . ucfirst($this->getController());
 
 		//Проверяем существует ли такая модель
 		if( class_exists($model) ) {

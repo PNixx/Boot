@@ -36,9 +36,6 @@ class Translate {
 	 */
   private function __construct() {
 
-		//Строим путь до базы
-		$dir = APPLICATION_PATH . "/lang";
-
 		//Получаем из куков язык
 		if( \Boot_Cookie::get("lang") ) {
 			$this->_lang = \Boot_Cookie::get("lang");
@@ -48,11 +45,23 @@ class Translate {
 			$this->_lang = $this->_default;
 		}
 
-		//Проверяем директорию
-    if( is_dir($dir) ) {
-      $this->loadLang($dir);
-    }
+		//Загружаем дефолтные переводы
+		$this->loadLang(SYSTEM_PATH . '/boot/lang');
   }
+
+	/**
+	 * Загружает переводы проекта
+	 */
+	public function loadProjectLang() {
+
+		//Строим путь до базы
+		$dir = APPLICATION_PATH . "/lang";
+
+		//Проверяем директорию
+		if( is_dir($dir) ) {
+			$this->loadLang($dir);
+		}
+	}
 
 	/**
 	 * @return Translate
@@ -83,7 +92,7 @@ class Translate {
 		if( $plural ) {
 			return $this->plural($text, $args, $lang);
 		}
-    return !empty($this->_parse[$lang][$text]) ? $this->_parse[$lang][$text] : ucfirst(str_replace(['.', '_'], ' ', $text));
+    return !empty($this->_parse[$lang][$text]) ? $this->_parse[$lang][$text] : str_replace(['.', '_'], ' ', $text);
   }
 
   /**

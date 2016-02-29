@@ -6,7 +6,7 @@
  * @version 1.0
  */
 abstract class Boot_Abstract_Controller {
-	use Boot_TraitController, \Boot\LibraryTrait;
+	use Boot_TraitController, \Boot\LibraryTrait, \Boot\UrlTrait;
 
 	/**
 	 * Переменная для передачи по вьюху
@@ -31,11 +31,22 @@ abstract class Boot_Abstract_Controller {
 		$this->view = new stdClass();
 
 		//Добавляем пути для подключения вьюх
-		$object = new ReflectionObject($this);
-		$views = realpath(pathinfo($object->getFileName(), PATHINFO_DIRNAME) . '/../views');
-		Boot_View::register_include_path(APPLICATION_PATH . '/views');
-		Boot_View::register_include_path($views);
-		Boot_View::register_include_path($views . '/' . Boot_Routes::getInstance()->getControllerName());
+		$this->include_path(new ReflectionObject($this));
+	}
+
+	//Добавлят пути
+	private function include_path(ReflectionClass $object, $top = true) {
+		$views = realpath(explode('controller', $object->getFileName())[0]);
+		if( $views ) {
+			Boot_View::register_include_path($views . '/views', $top);
+			Boot_View::register_include_path($views . '/views/' . Boot_Routes::getControllerPath($object->name), $top);
+		}
+
+		//Если есть родительский класс
+		$parent = $object->getParentClass();
+		if( $parent && $parent->name != 'Boot_Abstract_Controller' ) {
+			$this->include_path($parent, false);
+		}
 	}
 
 	//Инициализация

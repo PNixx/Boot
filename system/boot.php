@@ -282,9 +282,6 @@ class Boot {
 		//Загружаем библиотеки
 		$this->load_library();
 
-		//Инициализируем модули
-		$this->initialize();
-
 		//Debug
 		$this->debug(PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
 		if( isset($_SERVER['argv']) ) {
@@ -307,10 +304,16 @@ class Boot {
 		}
 
 		//Загрузка контроллеров модулем
+		//todo поддержка старой версии
 		if( preg_match("/^(.+?)_(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . "/" . strtolower($match[2]) . ".php";
 		} elseif( preg_match("/^(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . ".php";
+		}
+
+		//Загрузка контроллеров для новой версии
+		if( preg_match('/^Boot\\\(.+?)\\\Controller\\\(.+?)$/', $name, $match) ) {
+			$file = 'controllers/' . strtolower(str_replace('\\', '/', $match[1])) . '/' . strtolower($match[2]) . '.php';
 		}
 
 		//Загрузка загрузчиков файлов
@@ -400,6 +403,9 @@ class Boot {
 		if( file_exists(APPLICATION_PATH . '/config/initialize.php') ) {
 			require_once APPLICATION_PATH . '/config/initialize.php';
 		}
+
+		//Загружаем переводы проекта
+		\Boot\Library\Translate::getInstance()->loadProjectLang();
 	}
 
 	/**
@@ -491,7 +497,7 @@ class Boot {
 	public function load_library() {
 
 		//Подключаем библиотеки
-		//todo потом сделать циклом
+		//todo потом сделать циклом принудительное подключение или через автолоад
 		require_once APPLICATION_ROOT . '/system/library/translate.php';
 
 		//Подключаем клас библиотек

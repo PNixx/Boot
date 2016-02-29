@@ -1,0 +1,4 @@
+{
+	"model.errors.taken": "уже существует",
+	"model.errors.blank": "не может быть пустым"
+}

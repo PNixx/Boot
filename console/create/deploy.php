@@ -50,14 +50,11 @@ class Boot_{$application}_Deploy extends Boot_Deploy_Abstract {
 	 * @var array
 	 */
 	protected \$shared_children = [
+		"vendor",
 		"log",
+		"bower_components",
+		"public/uploads"
 	];
-
-	/**
-	 * Путь до фреймворка
-	 * @var string
-	 */
-	protected \$boot_path = "/home/www/Boot";
 
 	/**
 	 * Выполнение команды после успешного деплоя

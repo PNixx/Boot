@@ -309,7 +309,7 @@ abstract class ActiveRecord {
 			}
 
 			//Если есть в переменной
-			if( array_key_exists(strtolower($match[1]), $this->_row) ) {
+			if( array_key_exists(strtolower($match[1]), (array)$this->_row) ) {
 				return $this->{strtolower($match[1])};
 			}
 		}
@@ -1024,6 +1024,9 @@ abstract class ActiveRecord {
 					//Завершаем транзакцию
 					$this->commit();
 
+					//Изменяем данные строки
+					$this->_row_update = [];
+
 					//Возвращаем результат
 					return true;
 				} else {
@@ -1102,7 +1105,6 @@ abstract class ActiveRecord {
 	/**
 	 * ------------------------------------------Validate---------------------------------------
 	 * Проверяет, валидна ли колонка
-	 * todo сделать класс ошибок
 	 */
 	public function valid() {
 
@@ -1137,6 +1139,11 @@ abstract class ActiveRecord {
 		//Строим запрос
 		if( !is_array($column) ) {
 			$column = [$column];
+		}
+
+		//Если есть обновляемые колонки
+		if( !array_intersect(array_keys($this->_new_record ? (array)$this->_row : $this->_row_update), $column) ) {
+			return;
 		}
 
 		//Строим запрос
@@ -1264,7 +1271,7 @@ class ActiveRecordErrors implements Iterator, ArrayAccess, Countable {
 		$messages = [];
 		foreach( $this as $column => $message ) {
 			foreach( $message as $v ) {
-				$messages[] = ($column ? $this->t(ucfirst($column)) . ' ' : '') . $v;
+				$messages[] = ($column ? $this->t(ucfirst($column)) . ' ' : '') . $this->t($v);
 			}
 		}
 		return $messages;
