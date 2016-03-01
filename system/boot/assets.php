@@ -284,6 +284,7 @@ class Boot_Assets {
 				$path = $path_new;
 
 				//SASS
+				//todo сделать кеширование для development
 				if( $ext == 'scss' ) {
 
 					//Компилируем SASS файл
@@ -293,17 +294,23 @@ class Boot_Assets {
 					$sass->setComments(!$this->compress);
 
 					$filename = pathinfo($path, PATHINFO_FILENAME);
-					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
 
-					//Добавляем префиксы
-					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css 2>&1', $r);
-					if( $result ) {
-						throw new Boot_Exception($result);
+					//Если компилируем готовые ассеты или в конфиге включен режим префиксов
+					if( $this->compress || !empty(Boot::getInstance()->config->autoprefixer) && Boot::getInstance()->config->autoprefixer ) {
+						file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
+
+						//Добавляем префиксы
+						$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css 2>&1', $r);
+						if( $result ) {
+							throw new Boot_Exception($result);
+						} else {
+							$css = file_get_contents('/tmp/' . $filename . '.out.css');
+							unlink('/tmp/' . $filename . '.out.css');
+							unlink('/tmp/' . $filename . '.css');
+							return $css;
+						}
 					} else {
-						$css = file_get_contents('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.css');
-						return $css;
+						return $sass->compileFile($path);
 					}
 				}
 

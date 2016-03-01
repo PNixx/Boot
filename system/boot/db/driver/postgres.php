@@ -394,7 +394,6 @@ class postgres {
 
 		$this->query("UPDATE " . pg_escape_identifier($table) . " SET $q" . ($where ? ' WHERE ' . $where : ''));
 		return $this->affected_rows();
-
 	}
 
 	/**

@@ -26,7 +26,7 @@ trait Boot_ActiveAdmin {
 		if( $page < 0 ) {
 			$page = 0;
 		}
-		$limit = 20;
+		$limit = $this->getLimit();
 
 		//Получаем модель
 		$model = $this->getModel();
@@ -41,6 +41,7 @@ trait Boot_ActiveAdmin {
 
 		if( class_exists('\PNixx\Pagination\Pagination') ) {
 			//Инициализируем пагинатор
+			$model = $this->getModel();
 			$this->view->pagination = new \PNixx\Pagination\Pagination([
 				'total'     => $model::count(),
 				'per_page'  => $limit,
@@ -136,10 +137,6 @@ trait Boot_ActiveAdmin {
 			//Редиректим в список
 			$this->success_redirect($row);
 		} else {
-			//Добавляем ответ
-			$this->setFlash("alert", "Ошибка при сохранении записи");
-
-			//Изменяем вьюху
 			$this->render('edit');
 		}
 	}
@@ -171,11 +168,19 @@ trait Boot_ActiveAdmin {
 	}
 
 	/**
+	 * Возвращаем число строк по умолчанию
+	 * @return int
+	 */
+	protected function getLimit() {
+		return 20;
+	}
+
+	/**
 	 * Получение модели
 	 * @return ActiveRecord
 	 * @throws Boot_Exception
 	 */
-	private function getModel() {
+	protected function getModel() {
 
 		//Строим имя модели
 		$model = 'Model_' . ucfirst($this->getController());

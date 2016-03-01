@@ -469,9 +469,10 @@ abstract class ActiveRecord {
 	 * Обновляет данные в таблице
 	 * @param array       $set
 	 * @param null|string $where
+	 * @return bool|int
 	 */
 	public static function update_all(array $set, $where = null) {
-		DB::getDB()->update(self::getTable(), $set, $where);
+		return DB::getDB()->update(self::getTable(), $set, $where);
 	}
 
 	/**
