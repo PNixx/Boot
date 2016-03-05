@@ -207,7 +207,12 @@ class Boot_Controller {
 
 		//Если есть в post запросе
 		if( isset($_POST) ) {
-			return $_POST;
+			return array_filter($_POST, function($k) {
+				if( $k != '_method' ) {
+					return true;
+				}
+				return false;
+			}, ARRAY_FILTER_USE_KEY);
 		}
 
 		return false;
@@ -266,7 +271,7 @@ class Boot_Controller {
 
 		//Проверяем существование класса с его автоподгрузкой
 		if( class_exists($this->getControllerName()) == false ) {
-			throw new Exception($this->getControllerName() . " not exists");
+			throw new Boot_Exception($this->getControllerName() . " not exists", 404);
 		}
 	}
 

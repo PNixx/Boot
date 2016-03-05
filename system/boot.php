@@ -193,7 +193,7 @@ class Boot {
 
 		//Debug
 		if( preg_match("/\\.(css|js)$/", $_SERVER['REQUEST_URI']) == false ) {
-			$this->debug(PHP_EOL . PHP_EOL . $_SERVER['REQUEST_METHOD'] . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
+			$this->debug(PHP_EOL . PHP_EOL . Boot_Params::getMethod() . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
 		}
 
 		try {

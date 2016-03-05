@@ -34,6 +34,21 @@ class Boot_Params implements Iterator, ArrayAccess {
 	}
 
 	/**
+	 * Получение метода запроса
+	 * @return string
+	 */
+	static public function getMethod() {
+
+		//Получаем основной метод
+		$method = $_SERVER['REQUEST_METHOD'];
+
+		if( strtolower($method) == 'post' && !empty($_POST['_method']) ) {
+			$method = strtoupper($_POST['_method']);
+		}
+		return $method;
+	}
+
+	/**
 	 * Установка разрешенный полей для формы
 	 * @param array $permit
 	 * @return $this

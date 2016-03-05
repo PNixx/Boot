@@ -71,4 +71,5 @@ Boot framework v2.3
 
 ##Дополнительные модули
 
+* [jQuery ujs](https://github.com/rails/jquery-ujs) - Ненавязчивый адаптер сценариев для jQuery
 * [Boot Auth](https://github.com/PNixx/Boot_Auth) - модуль авторизации

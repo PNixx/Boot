@@ -53,7 +53,9 @@ class Boot_Routes {
 
 		//Проходим по списку роутов
 		foreach( $this->_routes as $route ) {
-			if( $route['method'] == strtolower($_SERVER['REQUEST_METHOD']) && preg_match('/^' . preg_replace('/\\\:(\w[\w\d]*)/', '(?<$1>[^\/]+)', preg_quote($route['request'], '/')) . '\/?$/', $query, $match) ) {
+
+			//Проверяем совпадение
+			if( $route['method'] == strtolower(Boot_Params::getMethod()) && preg_match('/^' . preg_replace('/\\\:(\w[\w\d]*)/', '(?<$1>[^\/]+)', preg_quote($route['request'], '/')) . '\/?$/', $query, $match) ) {
 				$this->_current = $route;
 
 				//Добавляем параметры
@@ -188,7 +190,7 @@ class Boot_Routes {
 		}
 
 		//Дефолтные экшены
-		$actions = [['get', 'index'], ['get', 'new'], ['post', 'create'], ['get', 'show', 'member'], ['get', 'edit', 'member'], ['get', 'destroy', 'member'], ['post', 'save', 'member']];
+		$actions = [['get', 'index'], ['get', 'new'], ['post', 'create'], ['get', 'show', 'member'], ['get', 'edit', 'member'], ['delete', 'destroy', 'member'], ['post', 'save', 'member']];
 
 		//Если указаны исключающие
 		if( !empty($args['except']) ) {
@@ -247,6 +249,15 @@ class Boot_Routes {
 	 */
 	static public function post($route, ...$args) {
 		self::getInstance()->addRoute('post', $route, $args);
+	}
+
+	/**
+	 * @param       $route
+	 * @param array ...$args
+	 * @throws RouteException
+	 */
+	static public function delete($route, ...$args) {
+		self::getInstance()->addRoute('delete', $route, $args);
 	}
 
 	/**
