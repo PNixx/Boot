@@ -255,7 +255,7 @@ class Boot_Controller {
 
 		//Debug
 		Boot::getInstance()->debug("Processing by " . (isset($this->_param->module) ? ucfirst($this->_param->module) . "::" : "") . ucfirst($this->_param->controller) . "#" . $this->_param->action);
-		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams()));
+		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams(), JSON_UNESCAPED_UNICODE));
 
 		//Если найден такой класс
 		if( class_exists($Cname) == false ) {
