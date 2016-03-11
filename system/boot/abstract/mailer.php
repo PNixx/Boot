@@ -6,6 +6,7 @@
  */
 abstract class Boot_Mailer_Abstract {
 	use \Boot\LibraryTrait;
+	use Boot\ViewTrait;
 
 	/**
 	 * Шаблон письма
@@ -65,6 +66,7 @@ abstract class Boot_Mailer_Abstract {
 		if( empty(self::$headers['From']) ) {
 			self::$headers['From'] = 'no-reply@' . Boot::getInstance()->config->host;
 		}
+		self::$headers['Content-Transfer-Encoding'] = 'base64';
 
 		//Мигрируем остальные заголовки
 		self::$headers = array_merge(self::$headers, $headers);
@@ -88,7 +90,7 @@ abstract class Boot_Mailer_Abstract {
 		if( isset(debug_backtrace()[2]) && debug_backtrace()[2]['class'] == $caller['class'] . 'Preview' ) {
 			echo $view;
 		} else {
-			mail($to, self::encode_header($subject), $view, self::make_headers());
+			mail($to, self::encode_header($subject), rtrim(chunk_split(base64_encode(self::html_min($view)))), self::make_headers());
 		}
 	}
 
