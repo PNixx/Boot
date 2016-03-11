@@ -5,7 +5,7 @@
  * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
  */
 abstract class Boot_Mailer_Abstract {
-	use \Boot\LibraryTrait;
+	use Boot\LibraryTrait;
 	use Boot\ViewTrait;
 
 	/**
