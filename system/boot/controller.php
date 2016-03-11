@@ -318,7 +318,7 @@ class Boot_Controller {
 		Boot::getInstance()->debug("Processing by " . $Cname . "#" . self::getAction());
 		$params = $this->getParams();
 		$this->filterParams($params);
-		Boot::getInstance()->debug("  Parameters: " . json_encode($params));
+		Boot::getInstance()->debug("  Parameters: " . json_encode($params, JSON_UNESCAPED_UNICODE));
 
 		//Если найден такой класс
 		if( class_exists($Cname) == false ) {
