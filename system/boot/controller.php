@@ -199,23 +199,24 @@ class Boot_Controller {
 	 * @return null|array
 	 */
 	public function getParams() {
+		$params = [];
 
 		//Если есть в get запросе
 		if( isset(Boot_Controller::getInstance()->_request) ) {
-			return Boot_Controller::getInstance()->_request;
+			$params = Boot_Controller::getInstance()->_request;
 		}
 
 		//Если есть в post запросе
 		if( isset($_POST) ) {
-			return array_filter($_POST, function($k) {
+			$params = array_merge($params, array_filter($_POST, function($k) {
 				if( $k != '_method' ) {
 					return true;
 				}
 				return false;
-			}, ARRAY_FILTER_USE_KEY);
+			}, ARRAY_FILTER_USE_KEY));
 		}
 
-		return false;
+		return $params;
 	}
 
 	/**

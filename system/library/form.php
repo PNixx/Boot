@@ -126,7 +126,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Дефолтный инпут
 			default:
-				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"{$params['value']}\"" . $this->implode($p) . ">";
+				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"" . htmlspecialchars($params['value']) . "\"" . $this->implode($p) . ">";
 		}
 
 		return $print;
