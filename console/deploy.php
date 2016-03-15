@@ -48,6 +48,7 @@ switch( $argv[2] ) {
 
 	case "deploy":
 		$deploy->deploy(strtolower($application));
+		$deploy->migrate();
 		break;
 
 	case "deploy:migrate":
