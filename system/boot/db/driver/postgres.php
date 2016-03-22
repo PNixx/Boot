@@ -423,9 +423,9 @@ class postgres {
 	 * @param $table
 	 * @param $column
 	 * @param int $id
-	 * @return void
+	 * @return postgres
 	 */
 	public function delete($table, $column, $id) {
-		$this->query("DELETE FROM " . pg_escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = " . pg_escape_literal($id) . ";");
+		return $this->query("DELETE FROM " . pg_escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = " . pg_escape_literal($id) . ";");
 	}
 }

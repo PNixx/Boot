@@ -149,4 +149,8 @@ class Model_Collection implements Iterator, ArrayAccess  {
 	public function prepend(ActiveRecord $record) {
 		array_unshift($this->_rows, $record->toStdClass());
 	}
+
+	public function toArray() {
+		return $this->_rows;
+	}
 }

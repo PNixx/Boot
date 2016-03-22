@@ -285,7 +285,7 @@ class Boot {
 		//Debug
 		$this->debug(PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
 		if( isset($_SERVER['argv']) ) {
-			$this->debug("  File: " . implode(" ", $_SERVER['argv']));
+			$this->debug("  File: " . implode(" ", array_map('escapeshellarg', $_SERVER['argv'])));
 		}
 	}
 

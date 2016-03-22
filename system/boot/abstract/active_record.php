@@ -939,7 +939,6 @@ abstract class ActiveRecord {
 		 * @var Boot_Uploader_Abstract $class
 		 */
 		foreach( static::$mount_uploader as $column => $class ) {
-			Boot::getInstance()->debug("column: " . $column . ', is: ' . var_export($class::fetchUploadFile(static::getTable(), $column), true));
 			if( $class::fetchUploadFile(static::getTable(), $column) ) {
 
 				//Загружаем новые файлы
@@ -1074,6 +1073,11 @@ abstract class ActiveRecord {
 					foreach($rows as $row) {
 						$row->destroy();
 					}
+				}
+
+				//Если нужно удалить строки без проверки свзяей
+				if( $db_links->dependent == "delete" ) {
+					DB::getDB()->delete($table, $db_links->foreign_key, $this->{static::$pkey});
 				}
 
 				//Если нужно обнулить значение

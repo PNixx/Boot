@@ -357,7 +357,7 @@ class Boot_Controller {
 		}
 
 		//Запускаем обработку
-		$this->run_before_actions($controller->before_action, $Aname);
+		$this->run_before_actions($controller, $Aname);
 
 		//Стартуем экшен
 		$controller->$Aname();
@@ -370,11 +370,13 @@ class Boot_Controller {
 
 	/**
 	 * Запускает обработку до выполнения экшена
-	 * @param $before_action
-	 * @param $action
+	 * @param Boot_Abstract_Controller $controller
+	 * @param                          $action
+	 * @internal param $before_action
 	 */
-	private function run_before_actions($before_action, $action) {
-		foreach( $before_action as $func => $filter ) {
+	private function run_before_actions(Boot_Abstract_Controller $controller, $action) {
+		$action = preg_replace('/Action$/', '', $action);
+		foreach( $controller->before_action as $func => $filter ) {
 			if( !empty($filter['except']) ) {
 				$except = is_array($filter['except']) ? $filter['except'] : [$filter['except']];
 			} else {
@@ -387,7 +389,11 @@ class Boot_Controller {
 			}
 			$only = array_diff($only, $except);
 			if( (!$only || in_array($action, $only)) && (!$except || !in_array($action, $except)) ) {
-				$this->$func($action);
+				if( method_exists($controller, $func) ) {
+					$controller->$func();
+				} else {
+					$this->$func($action);
+				}
 			}
 		}
 	}
