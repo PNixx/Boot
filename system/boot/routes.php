@@ -311,7 +311,8 @@ class Boot_Routes {
 		}
 
 		//Строим параметры запроса
-		$query = ($params ? '?' . http_build_query($params) : '');
+		$params = http_build_query($params);
+		$query = ($params ? '?' . $params : '');
 
 		//Если рут
 		if( $name == 'root' ) {
@@ -320,7 +321,7 @@ class Boot_Routes {
 
 		//Проходим по списку маршрутов
 		foreach( self::getInstance()->_routes as $route) {
-			$convert = preg_replace('/\/(:\w+\/)?/', '_', $route['request']);
+			$convert = preg_replace(['/(\/:\w+)/', '/\//'], ['', '_'], $route['request']);
 			if( $name == $convert ) {
 				return preg_replace_callback('/:\w+/', function() use (&$link_params) {
 					return array_shift($link_params);

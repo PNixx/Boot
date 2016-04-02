@@ -2,6 +2,7 @@
 /**
  * Class Boot
  * @method void debug(string $logger, bool $error = false)
+ * @method void warning(string $logger)
  */
 class Boot {
 
@@ -101,6 +102,9 @@ class Boot {
 		//Если выполняем дебаг
 		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || $this->config->debug_production ) ) {
 			Boot_Debug_Lib::log($params[0], isset($params[1]) ? $params[1] : false);
+		}
+		if( $name == "warning" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || $this->config->debug_production ) ) {
+			Boot_Debug_Lib::log('[33mWarning: ' . $params[0] . '[0m');
 		}
 	}
 
@@ -223,10 +227,14 @@ class Boot {
 
 	/**
 	 * Завершение работы скрипта
+	 * @param bool $exit
 	 */
-	public function end() {
+	public function end($exit = false) {
 		//Выводим время работы
 		Boot::getInstance()->debug("  Completed (" . Boot::check_time($this->_time_start) . "ms)");
+		if( $exit ) {
+			exit(127);
+		}
 	}
 
 	/**

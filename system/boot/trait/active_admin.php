@@ -52,6 +52,19 @@ trait Boot_ActiveAdmin {
 	}
 
 	/**
+	 * Просмотр объекта
+	 * @throws DB_Exception
+	 */
+	public function showAction() {
+
+		//Получаем модель
+		$model = $this->getModel();
+
+		//Получаем строку
+		$this->view->row = $model::find($this->getParam('id'));
+	}
+
+	/**
 	 * Форма создания нового объекта
 	 *
 	 * view return:
@@ -192,7 +205,10 @@ trait Boot_ActiveAdmin {
 		throw new Boot_Exception($model . ' can\'t be found');
 	}
 
-	//Получаем параметры формы
+	/**
+	 * Получаем параметры формы
+	 * @return Boot_Params
+	 */
 	private function getFromParams() {
 		return $this->getParam(strtolower($this->getController()))->permit(array_merge($this->permit, ['id']));
 	}

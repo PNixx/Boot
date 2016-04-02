@@ -76,7 +76,7 @@ abstract class ActiveRecord {
 
 	/**
 	 * Хранилище для кеширования объектов belongs_to
-	 * @var array
+	 * @var ActiveRecord[]
 	 */
 	private $_cached = [];
 
@@ -129,8 +129,10 @@ abstract class ActiveRecord {
 		$this->errors = new ActiveRecordErrors($this);
 
 		//Инициализируем загрузчики
-		foreach( static::$mount_uploader as $column => $class ) {
-			$this->_row->$column = new $class($this, $column, $this->$column);
+		if( $row ) {
+			foreach( static::$mount_uploader as $column => $class ) {
+				$this->_row->$column = new $class($this, $column, $this->$column);
+			}
 		}
 	}
 
@@ -212,6 +214,10 @@ abstract class ActiveRecord {
 	 * @return string
 	 */
 	public function __get($name) {
+
+		//Если запрашиваем свойство, то считаем, что нужно получить объект и если уже был создан запрос
+		$this->available_select();
+
 		if( array_key_exists($name, $this->_row_update) ) {
 			return $this->_row_update[$name];
 		} elseif( property_exists($this->_row, $name) ) {
@@ -260,12 +266,10 @@ abstract class ActiveRecord {
 	}
 
 	/**
-	 * Проверяет, будет ли обновлен столбец
-	 * @param $key
-	 * @return bool
+	 * Преобразование в строку для вывода
 	 */
-	public function isUpdate($key) {
-		return $this->isNew() || array_key_exists($key, $this->_row_update);
+	public function __toString() {
+		return print_r($this->toArray(), true);
 	}
 
 	/**
@@ -273,39 +277,24 @@ abstract class ActiveRecord {
 	 * @param $name
 	 * @param $params
 	 * @throws Exception
-	 * @return string|ActiveRecord[]|ActiveRecord|Model_Collection
+	 * @return string|ActiveRecord[]|ActiveRecord|Model_Collection|static|static[]
 	 */
 	public function __call($name, $params) {
 
-		if( preg_match("/^get([A-Z].*?)$/", $name, $match) ) {
+		//Если есть в связях таблицы belongs_to
+		if( static::isBelongs($name) ) {
+			return $this->call_belongs_to($name);
+
+		} elseif( preg_match("/^get([A-Z].*?)$/", $name, $match) ) {
+			//todo deprecated
+			Boot::getInstance()->warning('Magic method $this->' . $name . '() is deprecated, use $this->' . strtolower($match[1]) . '()');
 
 			//Получаем ключ
 			$key = strtolower(preg_replace("/(?!^)([A-Z])/", "_$1", $match[1]));
 
 			//Если есть в связях таблицы belongs_to
 			if( static::isBelongs($key) ) {
-
-				/**
-				 * Строим класс
-				 * @var $class ActiveRecord
-				 */
-				$class = "Model_" . ucfirst($key);
-
-				//Строим конструктор
-				$db_links = static::getBelongsTo($key);
-
-				//Если нет данных в кеше
-				if( isset($this->_cached[$key]) == false ) {
-					//Получаем строку
-					if( $this->{$db_links->foreign_key} > 0 ) {
-						$this->_cached[$key] = $class::find($this->{$db_links->foreign_key});
-						return $this->_cached[$key];
-					}
-				} else {
-					//Отдаем строку
-					return $this->_cached[$key];
-				}
-				return null;
+				return $this->call_belongs_to($key);
 			}
 
 			//Если есть в переменной
@@ -315,28 +304,85 @@ abstract class ActiveRecord {
 		}
 
 		//Связь с has_many
-		if( preg_match("/^list([A-Z].*?)$/", $name, $match) ) {
+		if( preg_match('/^(.*?)s$/', $name, $match) && array_key_exists($match[1], static::$has_many) ) {
+			return $this->call_has_many($match[1]);
+
+		} elseif( preg_match("/^list([A-Z].*?)$/", $name, $match) ) {
 
 			//Получаем ключ
 			$key = strtolower(preg_replace("/(?!^)([A-Z])/", "_$1", $match[1]));
+			Boot::getInstance()->warning('Magic method $this->' . $name . '() is deprecated, use $this->' . $key . 's()');
 
 			//Проверяем условие совпадения
 			if( array_key_exists($key, static::$has_many) ) {
 
-				/**
-				 * Строим класс
-				 * @var $class ActiveRecord
-				 */
-				$class = "Model_" . ucfirst($key);
-
-				//Строим конструктор
-				$db_links = new DBLinks($key, static::getTable(), static::$has_many[$key]);
-
 				//Получаем строки
-				return $class::where([$db_links->foreign_key => $this->id])->all();
+				return $this->call_has_many($key)->all();
 			}
 		}
-		throw new Exception("Функция {$name} не определена");
+
+		//Метод не найден
+		throw new BadMethodCallException();
+	}
+
+	/**
+	 * Делает запрос на получение связи
+	 * @param $key
+	 * @return mixed|null
+	 * @throws DB_Exception
+	 */
+	private function call_belongs_to($key) {
+		/**
+		 * Строим класс
+		 * @var $class ActiveRecord
+		 */
+		$class = "Model_" . ucfirst($key);
+		$class = new $class;
+
+		//Строим конструктор
+		$db_links = $class::getBelongsTo($key);
+
+		//Если нет данных в кеше
+		if( isset($this->_cached[$key]) == false ) {
+			//Получаем строку
+			if( $this->{$db_links->foreign_key} > 0 ) {
+				$this->_cached[$key] = $class::find($this->{$db_links->foreign_key});
+				return $this->_cached[$key];
+			}
+		} else {
+			//Отдаем строку
+			return $this->_cached[$key];
+		}
+		return null;
+	}
+
+	/**
+	 * Строит структуру для вызова детей по связи
+	 * @param $key
+	 * @return ActiveRecord
+	 * @throws Exception
+	 */
+	private function call_has_many($key) {
+		/**
+		 * Строим класс
+		 * @var $class ActiveRecord
+		 */
+		$class = "Model_" . ucfirst($key);
+
+		//Строим конструктор
+		$db_links = new DBLinks($key, static::getTable(), static::$has_many[$key]);
+
+		//Получаем строки
+		return $class::where([$db_links->foreign_key => $this->id]);
+	}
+
+	/**
+	 * Проверяет, будет ли обновлен столбец
+	 * @param $key
+	 * @return bool
+	 */
+	public function isUpdate($key) {
+		return $this->isNew() || array_key_exists($key, $this->_row_update);
 	}
 
 	/**
@@ -357,12 +403,18 @@ abstract class ActiveRecord {
 		return new DBLinks(static::getTable(), $key, array_key_exists($key, static::$belongs_to) ? static::$belongs_to[$key] : []);
 	}
 
+
+	/*************
+	 * Static methods for Select
+	 *************/
+
 	/**
 	 * Создание строки
 	 * @param array|Boot_Params $row
 	 * @return static
 	 */
 	public static function create($row = array()) {
+		unset(self::$select[static::getTable()]);
 
 		//Получаем имя вызываемого класса
 		$class = get_called_class();
@@ -394,7 +446,7 @@ abstract class ActiveRecord {
 	public static function find_or_insert_by($data = array()) {
 
 		//Пробуем найти
-		$row = static::where($data)->row();
+		$row = static::find_by($data);
 
 		//Если нашли строку
 		if( $row ) {
@@ -413,8 +465,8 @@ abstract class ActiveRecord {
 	 * Инициализация запроса для конкретной модели
 	 */
 	private static function init_select() {
-		if( isset(self::$select[self::getTable()]) == false ) {
-			self::$select[self::getTable()] = new Select(static::getTable(), null, null, static::$default_order);
+		if( isset(self::$select[static::getTable()]) == false ) {
+			self::$select[static::getTable()] = new Select(static::getTable(), null, new DB_Expr(DB::getDB()->escape_identifier(static::getTable()) . '.*'), static::$default_order);
 		}
 	}
 
@@ -423,8 +475,17 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	private static function check_select() {
-		if( isset(self::$select[self::getTable()]) == false ) {
+		if( isset(self::$select[static::getTable()]) == false ) {
 			throw new DB_Exception("Non select constructor");
+		}
+	}
+
+	/**
+	 * Если требуется сделать запрос
+	 */
+	private function available_select() {
+		if( isset(self::$select[static::getTable()]) && !(array)$this->_row ) {
+			$this->row(true);
 		}
 	}
 
@@ -435,8 +496,8 @@ abstract class ActiveRecord {
 	private static function query_select() {
 
 		//Выполняем запрос
-		$result = DB::getDB()->query(self::$select[self::getTable()]);
-		unset(self::$select[self::getTable()]);
+		$result = DB::getDB()->query(self::$select[static::getTable()]);
+		unset(self::$select[static::getTable()]);
 
 		//Возвращаем результат
 		return $result;
@@ -472,14 +533,15 @@ abstract class ActiveRecord {
 	 * @return bool|int
 	 */
 	public static function update_all(array $set, $where = null) {
-		return DB::getDB()->update(self::getTable(), $set, $where);
+		return DB::getDB()->update(static::getTable(), $set, $where);
 	}
 
 	/**
+	 * @param bool $current
 	 * @return static
 	 * @throws DB_Exception
 	 */
-	public static function row() {
+	public function row($current = false) {
 		self::check_select();
 
 		//Выполняем запрос
@@ -490,7 +552,20 @@ abstract class ActiveRecord {
 
 		//Создаем экземплятор
 		if( $row ) {
-			return self::createRow($row);
+
+			//Если требуется ли обновить текущий
+			if( $current ) {
+				$this->_row = $row;
+
+				//todo сделать общую функцию загрузки (объединить из конструктора)
+				foreach( static::$mount_uploader as $column => $class ) {
+					$this->_row->$column = new $class($this, $column, $this->$column);
+				}
+
+				return $this;
+			} else {
+				return self::createRow($row);
+			}
 		}
 		return null;
 	}
@@ -499,21 +574,18 @@ abstract class ActiveRecord {
 	 * @return array
 	 * @throws DB_Exception
 	 */
-	public static function read_cols() {
+	public function read_cols() {
 		self::check_select();
 
-		//Выполняем запрос
-		$result = self::query_select();
-
 		//Получаем строку
-		return $result->read_cols();
+		return self::query_select()->read_cols();
 	}
 
 	/**
 	 * @return array
 	 * @throws DB_Exception
 	 */
-	public static function read_all() {
+	public function read_all() {
 		self::check_select();
 
 		//Выполняем запрос
@@ -529,7 +601,7 @@ abstract class ActiveRecord {
 	}
 
 	/**
-	 * @return static[]|Model_Collection
+	 * @return static[]|Model_Collection|ActiveRecord[]
 	 * @throws DB_Exception
 	 */
 	public static function all() {
@@ -556,10 +628,10 @@ abstract class ActiveRecord {
 	public static function query($query) {
 
 		//Выполняем запрос
-		self::$select[self::getTable()] = $query;
+		self::$select[static::getTable()] = $query;
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -584,14 +656,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
-			self::$select[self::getTable()]->where($where);
-		} else {
-			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
-		}
+		self::$select[static::getTable()]->where($where);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -607,14 +675,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
-			self::$select[self::getTable()]->notIn($column, $array);
-		} else {
-			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
-		}
+		self::$select[static::getTable()]->notIn($column, $array);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -625,15 +689,30 @@ abstract class ActiveRecord {
 	public static function joins($table, $on = null) {
 
 		//Инициализируем
-		if( isset(self::$select[self::getTable()]) == false ) {
-			self::$select[self::getTable()] = new Select(static::getTable(), null, new DB_Expr(static::getTable() . ".*"), static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем join
-		self::$select[self::getTable()]->joins($table, $on);
+		self::$select[static::getTable()]->joins($table, $on);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
+	}
+
+	/**
+	 * @param string $table
+	 * @param string|array|null $on
+	 * @return static
+	 */
+	public static function join($table, $on = null) {
+
+		//Инициализируем
+		self::init_select();
+
+		//Добавляем join
+		self::$select[static::getTable()]->joins($table, $on, false);
+
+		//Возвращаем ту же функцию
+		return new static;
 	}
 
 	/**
@@ -648,10 +727,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		self::$select[self::getTable()]->where("LOWER(" . DB::getDB()->escape_identifier($column) . ") ILIKE " . DB::getDB()->getStringQueryByValue(strtolower($value)));
+		self::$select[static::getTable()]->where("LOWER(" . DB::getDB()->escape_identifier($column) . ") ILIKE " . DB::getDB()->getStringQueryByValue(strtolower($value)));
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -665,10 +744,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем колонки выборки
-		self::$select[self::getTable()]->column($column);
+		self::$select[static::getTable()]->column($column);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -679,15 +758,15 @@ abstract class ActiveRecord {
 	public static function order($order_by) {
 
 		//Инициализируем
-		if( isset(self::$select[self::getTable()]) == false ) {
-			self::$select[self::getTable()] = new Select(static::getTable());
+		if( isset(self::$select[static::getTable()]) == false ) {
+			self::$select[static::getTable()] = new Select(static::getTable());
 		}
 
 		//Добавляем колонки выборки
-		self::$select[self::getTable()]->order($order_by);
+		self::$select[static::getTable()]->order($order_by);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -702,10 +781,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем колонки выборки
-		self::$select[self::getTable()]->limit($limit, $offset);
+		self::$select[static::getTable()]->limit($limit, $offset);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -721,11 +800,7 @@ abstract class ActiveRecord {
 		}
 
 		//Добавляем колонки выборки
-		self::column(new DB_Expr("count(1) AS c"));
-		self::order(null);
-
-		//Возвращаем ту же функцию
-		return self::row()->c;
+		return self::column(new DB_Expr("count(1) AS c"))->order(null)->read_cols()[0];
 	}
 
 	/**
@@ -804,12 +879,12 @@ abstract class ActiveRecord {
 	 * Преобразование запроса
 	 * @return Select
 	 */
-	public static function toSql() {
+	public function toSql() {
 
 		//Инициализируем
 		self::init_select();
-		$select = self::$select[self::getTable()];
-		unset(self::$select[self::getTable()]);
+		$select = self::$select[static::getTable()];
+		unset(self::$select[static::getTable()]);
 
 		//Возвращем
 		return $select;
@@ -846,24 +921,42 @@ abstract class ActiveRecord {
 	 */
 	public static function find($id) {
 
-		//Если есть в кеше
-		if( isset(self::$_cached_by_find[static::getTable()][$id]) ) {
-			$row = self::$_cached_by_find[static::getTable()][$id];
-		} else {
+		//Если запрос уже имеется, ищем по нему
+		if( isset(self::$select[static::getTable()]) ) {
+			self::where([self::$pkey => $id]);
+
 			//Получаем строку из БД
-			$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($id))->row();
+			$row = DB::getDB()->query(self::$select[static::getTable()])->row();
+		} else {
 
-			//Если ничего не нашли
-			if( $row == false ) {
-				throw new DB_Exception("Record not found", 404);
+			//Если есть в кеше
+			if( isset(self::$_cached_by_find[static::getTable()][$id]) ) {
+				$row = self::$_cached_by_find[static::getTable()][$id];
+			} else {
+				//Получаем строку из БД
+				$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($id))->row();
+
+				//Сохраняем в кеш
+				self::$_cached_by_find[static::getTable()][$id] = $row;
 			}
+		}
+		unset(self::$select[static::getTable()]);
 
-			//Сохраняем в кеш
-			self::$_cached_by_find[static::getTable()][$id] = $row;
+		//Если ничего не нашли
+		if( $row == false ) {
+			throw new DB_Exception("Record not found", 404);
 		}
 
 		//Создаем экземплятор
 		return self::createRow($row);
+	}
+
+	/**
+	 * @param $where
+	 * @return static
+	 */
+	public static function find_by($where) {
+		return static::where($where)->row();
 	}
 
 	// ---------------- Row methods --------------------->
@@ -883,6 +976,7 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	public function update($data) {
+		$this->available_select();
 
 		//Проверяем не новая ли запись
 		if( $this->_new_record ) {
@@ -950,20 +1044,20 @@ abstract class ActiveRecord {
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
 
-			//Пытаемся обновить
-			if( $this->_row_update ) {
+			//Запускаем транзакцию
+			$this->begin_transaction();
+			try {
 
-				//Запускаем транзакцию
-				$this->begin_transaction();
-				try {
+				//Выполняем функции колбека
+				$this->before_save();
 
-					//Выполняем функции колбека
-					$this->before_save();
+				//Проверяем валидацию
+				if( !$this->valid() ) {
+					throw new ValidateException();
+				}
 
-					//Проверяем валидацию
-					if( !$this->valid() ) {
-						throw new ValidateException();
-					}
+				//Пытаемся обновить
+				if( $this->_row_update ) {
 
 					//Обновляем
 					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($this->{static::$pkey}));
@@ -983,17 +1077,19 @@ abstract class ActiveRecord {
 					} else {
 						$this->rollback();
 						$rollback_upload();
+						return false;
 					}
-				} catch(ValidateException $e) {
-					$this->rollback();
-					$rollback_upload();
-				} catch(Exception $e) {
-					$this->rollback();
-					$rollback_upload();
-					throw $e;
+				} else {
+					$this->commit();
+					return true;
 				}
-			} else {
-				return true;
+			} catch(ValidateException $e) {
+				$this->rollback();
+				$rollback_upload();
+			} catch(Exception $e) {
+				$this->rollback();
+				$rollback_upload();
+				throw $e;
 			}
 		} else {
 
@@ -1068,6 +1164,7 @@ abstract class ActiveRecord {
 				if( $db_links->dependent == "destroy" ) {
 
 					//Получаем строки
+					//todo есть же связи, сделать через них
 					$rows = $class::where(array($db_links->foreign_key => $this->{static::$pkey}))->all();
 					foreach($rows as $row) {
 						$row->destroy();
@@ -1138,7 +1235,6 @@ abstract class ActiveRecord {
 	 * @param array|string $column
 	 */
 	protected function validator_uniqueness_of($column) {
-		static::column(new \DB_Expr('1'));
 
 		//Строим запрос
 		if( !is_array($column) ) {
@@ -1149,19 +1245,20 @@ abstract class ActiveRecord {
 		if( !array_intersect(array_keys($this->_new_record ? (array)$this->_row : $this->_row_update), $column) ) {
 			return;
 		}
+		self::column(new \DB_Expr('1'));
 
 		//Строим запрос
 		foreach( $column as $c ) {
-			static::where([$c => $this->$c]);
+			self::where([$c => $this->$c]);
 		}
 
 		//Если запись не новая, добавляем исключение с текущим id
 		if( !$this->isNew() ) {
-			static::where(static::getPKey() . ' != ' . \DB::getDB()->escape_identifier($this->{static::getPKey()}));
+			self::where(static::getPKey() . ' != ' . \DB::getDB()->escape_identifier($this->{static::getPKey()}));
 		}
 
 		//Пробуем найти
-		if( static::row() ) {
+		if( self::row() ) {
 			$this->errors->add(implode(' ', $column), 'model.errors.taken');
 		}
 	}
@@ -1171,7 +1268,7 @@ abstract class ActiveRecord {
 	 * @return array
 	 */
 	public function toArray() {
-		return (array)$this->_row;
+		return array_merge((array)$this->_row, $this->_row_update);
 	}
 
 	/**
@@ -1180,13 +1277,6 @@ abstract class ActiveRecord {
 	 */
 	public function toStdClass() {
 		return $this->_row;
-	}
-
-	/**
-	 * Преобразование в строку для вывода
-	 */
-	public function __toString() {
-		return print_r($this->toArray(), true);
 	}
 }
 
@@ -1204,6 +1294,9 @@ class DBLinks {
 
 	/**
 	 * Конструктор
+	 * @param $table
+	 * @param $table_parent
+	 * @param $values
 	 */
 	public function __construct($table, $table_parent, $values) {
 
