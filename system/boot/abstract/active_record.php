@@ -129,10 +129,8 @@ abstract class ActiveRecord {
 		$this->errors = new ActiveRecordErrors($this);
 
 		//Инициализируем загрузчики
-		if( $row ) {
-			foreach( static::$mount_uploader as $column => $class ) {
-				$this->_row->$column = new $class($this, $column, $this->$column);
-			}
+		foreach( static::$mount_uploader as $column => $class ) {
+			$this->_row->$column = new $class($this, $column, $row ? $this->$column : null);
 		}
 	}
 
@@ -332,15 +330,10 @@ abstract class ActiveRecord {
 	 * @throws DB_Exception
 	 */
 	private function call_belongs_to($key) {
-		/**
-		 * Строим класс
-		 * @var $class ActiveRecord
-		 */
-		$class = "Model_" . ucfirst($key);
-		$class = new $class;
 
 		//Строим конструктор
-		$db_links = $class::getBelongsTo($key);
+		$db_links = static::getBelongsTo($key);
+		$class = $db_links->getModel();
 
 		//Если нет данных в кеше
 		if( isset($this->_cached[$key]) == false ) {
@@ -400,7 +393,7 @@ abstract class ActiveRecord {
 	 * @return DBLinks
 	 */
 	public static function getBelongsTo($key) {
-		return new DBLinks(static::getTable(), $key, array_key_exists($key, static::$belongs_to) ? static::$belongs_to[$key] : []);
+		return new DBLinks($key, $key, array_key_exists($key, static::$belongs_to) ? static::$belongs_to[$key] : []);
 	}
 
 
@@ -1254,7 +1247,7 @@ abstract class ActiveRecord {
 
 		//Если запись не новая, добавляем исключение с текущим id
 		if( !$this->isNew() ) {
-			self::where(static::getPKey() . ' != ' . \DB::getDB()->escape_identifier($this->{static::getPKey()}));
+			self::where(static::getPKey() . ' != ' . \DB::getDB()->getStringQueryByValue($this->{static::$pkey}));
 		}
 
 		//Пробуем найти
@@ -1311,7 +1304,7 @@ class DBLinks {
 		}
 
 		//Запоминаем данные
-		$this->table = strtolower($table);
+		$this->table = strtolower(preg_replace('/^Model_/', '', $values["class_name"]));
 		$this->class_name = $values["class_name"];
 		$this->foreign_key = $values["foreign_key"];
 		$this->dependent = isset($values["dependent"]) ? $values["dependent"] : null;
