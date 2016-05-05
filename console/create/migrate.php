@@ -74,6 +74,8 @@ if( preg_match("/^(create_table|alter_table|drop_table|create_index|sql)_?(.*)$/
 							case "string":
 								$type = "varchar(255)";
 								break;
+							default:
+								$type = $column_args[1];
 						}
 
 						//Если указано значение для NULL
