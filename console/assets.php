@@ -13,8 +13,8 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 //Подключаем файл асетов
-require_once APPLICATION_ROOT . '/system/boot/assets.php';
 require_once APPLICATION_ROOT . '/system/boot/trait/console.php';
+require_once APPLICATION_ROOT . '/system/boot/assets.php';
 require_once APPLICATION_ROOT . '/vendor/autoload.php';
 
 class Boot_Console_Assets {
@@ -39,15 +39,16 @@ class Boot_Console_Assets {
 		if( file_exists(APPLICATION_ROOT . "/bower.json") ) {
 
 			//Возвращаем результат
-			if( !$this->exec("bower-installer") ) {
-				$this->error("Bower was not installer");
-			}
+			$this->exec("bower install --production --config.interactive=false --save-resolutions");
+
+			//Ищем папки со шрифтами и копируем
+			Boot\Assets::install();
 		}
 
 		//Выполняем поиск
-		$css = new Boot_Assets("css", true, true);
+		$css = new Boot\Assets("css", true, true);
 		$css->read_all_assets();
-		$js = new Boot_Assets("js", true, true);
+		$js = new Boot\Assets("js", true, true);
 		$js->read_all_assets();
 	}
 }

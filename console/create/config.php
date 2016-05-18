@@ -255,3 +255,5 @@ $nginx = "server {
 }
 ";
 Boot_Console_Helper::create_file("/application/config/nginx.conf", $nginx);
+
+Boot_Console_Helper::create_file('/application/config/initialize.php', '<?php\n');

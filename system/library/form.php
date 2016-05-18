@@ -5,6 +5,7 @@
  * Time: 15:38
  */
 class Boot_Form_Lib extends Boot_Abstract_Library {
+	use \Boot\TagTrait, \Boot\UrlTrait;
 
 	/**
 	 * Отключаем инициализицию
@@ -34,7 +35,17 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Если не указан экшен
 		if( empty($params['action']) && $row instanceof ActiveRecord ) {
-			$params['action'] = (!empty($params['namespace']) ? '/' . $params['namespace'] : '') . '/' . strtolower(str_ireplace("Model_", "", get_class($row))) . '/' . ($row->isNew() ? 'create' : 'save');
+			$prefix = '';
+			if( !empty($params['namespace']) ) {
+				$prefix = $params['namespace'] . '_';
+				unset($params['namespace']);
+			}
+			$prefix .= strtolower(str_ireplace("Model_", "", get_class($row)));
+			if( $row->isNew() ) {
+				$params['action'] = $this->{$prefix . '_create_path'}();
+			} else {
+				$params['action'] = $this->{$prefix . '_save_path'}($row->id);
+			}
 		}
 
 		//Сразу рисуем форму
@@ -102,7 +113,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Textarea
 			case "text":
-				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . ($htmlspecialchars ? htmlspecialchars($params['value']) : $params['value']) . "</textarea>";
+				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . htmlspecialchars($params['value']) . "</textarea>";
 				break;
 
 			case "checkbox":
@@ -115,7 +126,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Дефолтный инпут
 			default:
-				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"{$params['value']}\"" . $this->implode($p) . ">";
+				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"" . htmlspecialchars($params['value']) . "\"" . $this->implode($p) . ">";
 		}
 
 		return $print;
@@ -195,11 +206,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 
 		//Строим селектор
-		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($params) . ">";
+		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode(array_diff_key($params, ['include_blank' => ''])) . ">";
 
 		//Добавляем пустое поле
 		if( $params["include_blank"] ) {
-			$print .= "<option></option>";
+			$print .= "<option value=''>" . ($params["include_blank"] !== true ? $params["include_blank"] : '') . "</option>";
 		}
 
 		//Проходим по списку значений
@@ -247,19 +258,6 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Возвращаем имя
 		return ucfirst($name);
-	}
-
-	/**
-	 * Собирает параметры
-	 * @param $params
-	 * @return string
-	 */
-	private function implode($params) {
-		$string = "";
-		foreach( $params as $key => $value ) {
-			$string .= " " . $key . "=\"" . $value . "\"";
-		}
-		return $string;
 	}
 }
 

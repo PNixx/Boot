@@ -3,11 +3,11 @@ class Boot_Exception extends Exception {
 
 	/**
 	 * Конструктор
-	 * @param null $message
-	 * @param int  $code
-	 * @param null $error_code
+	 * @param null      $message
+	 * @param int       $code
+	 * @param Exception $previous
 	 */
-	public function __construct($message = null, $code = 500, $error_code = null) {
+	public function __construct($message = null, $code = 500, Exception $previous = null) {
 		$this->message = $message;
 		$this->code = $code;
 		self::ex($this);
@@ -105,6 +105,8 @@ class Boot_Exception extends Exception {
 
 	/**
 	 * Функция выполняется, фатальной ошибке
+	 * @param $str
+	 * @return string
 	 */
 	public static function shutdown($str) {
 
@@ -160,12 +162,12 @@ class Boot_Exception extends Exception {
  */
 class Controller_Exception extends Exception {
 
-	public function __construct($message = null, $code = 500, $error_code = null) {
+	public function __construct($message = null, $code = 500, $error_code = null, Exception $previous = null) {
 		http_response_code($code);
 		if( Boot_Controller::getInstance()->isAjax() ) {
 
 			//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
-			Boot_Exception::sendLibraryException(new Exception($message, $code));
+			Boot_Exception::sendLibraryException(new Exception($message, $code, $previous));
 
 			echo json_encode(array(
 				'error' => $code,
@@ -174,8 +176,10 @@ class Controller_Exception extends Exception {
 				'trace' => APPLICATION_ENV == "production" ? "" : $this->getTraceAsString()
 			));
 		} else {
-			throw new Boot_Exception($message, $code);
+			throw new Boot_Exception($message, $code, $previous);
 		}
 		exit;
 	}
 }
+
+class RouteException extends Exception {};

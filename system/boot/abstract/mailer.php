@@ -1,11 +1,17 @@
 <?php
-/**
+namespace Boot\Abstracts {
+
+use Boot;
+use Boot\Core\View;
+use Boot_Exception;
+
+	/**
  * Date: 29.11.15
  * Time: 13:14
  * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
  */
-abstract class Boot_Mailer_Abstract {
-	use Boot\ViewTrait;
+abstract class Mailer {
+	use Boot\ViewTrait, Boot\LibraryTrait;
 
 	/**
 	 * Шаблон письма
@@ -72,12 +78,13 @@ abstract class Boot_Mailer_Abstract {
 
 		//Достаем функцию вызова
 		$caller = debug_backtrace()[1];
-		if( !preg_match('/^(.*?)Mailer$/', $caller['class'], $match) ) {
+		$object = new \ReflectionClass($caller['class']);
+		if( !preg_match('/^(.*?)Mailer$/', $object->getShortName(), $match) ) {
 			throw new Boot_Exception('Parent execute not Mailer class');
 		}
 
 		//Рендерим письмо
-		$view = self::_render('views/mailer/' . strtolower($match[1]) . '/' . $caller['function']);
+		$view = self::_render('mailer/' . strtolower($match[1]) . '/' . $caller['function']);
 
 		//Инициализируем шаблон
 		if( static::$layout ) {
@@ -120,52 +127,11 @@ abstract class Boot_Mailer_Abstract {
 	 * Рендирит шаблон
 	 * @param string $path Путь к файлу без расширения
 	 * @param null   $content
-	 * @return
+	 * @return string
 	 * @throws Boot_Exception
 	 */
 	private static function _render($path, $content = null) {
-
-		//Строим полный путь
-		$__path = APPLICATION_PATH . '/' . $path . '.phtml';
-
-		//Проверяем наличие шаблона
-		if( !file_exists($__path) ) {
-			throw new Boot_Exception('Mailer view "' . $path . '.phtml" not exist');
-		}
-
-		//Счетчик времени
-		$time = Boot::mktime();
-
-		//Оборачиваем все в функцию
-		$view = function ($params, $content) use ($__path) {
-
-			//Извлекаем переменные
-			if( !empty($params) ) {
-				extract((array)$params);
-			}
-
-			//Запускаем отладчик
-			ob_start();
-
-			//Подключаем файл
-			require $__path;
-
-			//Выполняем сценарий
-			$html = ob_get_contents();
-			ob_end_clean();
-
-			//Возвращаем данные
-			return $html;
-		};
-
-		//Выполняем функцию
-		$html = $view(static::$params, $content);
-
-		//Debug
-		Boot::getInstance()->debug("  Rendered " . str_replace(APPLICATION_PATH . "/", "", $__path) . " (" . Boot::check_time($time) . "ms)");
-
-		//Возвращаем результат
-		return $html;
+		return (new View(View::include_path($path), array_merge(['content' => $content], static::$params)))->html();
 	}
 
 	/**
@@ -176,4 +142,15 @@ abstract class Boot_Mailer_Abstract {
 	protected static function encode_header($text) {
 		return '=?UTF-8?B?' . base64_encode($text) . '?=';
 	}
+}
+
+}
+
+//todo удалить
+namespace {
+
+	/**
+	 * @deprecated
+	 */
+	abstract class Boot_Mailer_Abstract extends Boot\Abstracts\Mailer {}
 }

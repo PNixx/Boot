@@ -225,10 +225,13 @@ class mysql {
 	 * Выбор всех записей в таблице по запросу
 	 * @param string $table Имя таблицы
 	 * @param string $where
+	 * @param null   $column
+	 * @param null   $order
+	 * @param null   $limit
 	 * @return Model
 	 */
-	public function select($table, $where = null, $colum = null, $order = null, $limit = null) {
-		return $this->query('SELECT ' . ($colum === null ? '*' : $colum) . ' FROM `' . $table . '`' . ($where ? ' WHERE ' . $where : '') . ($order ? " ORDER BY " . $order : "") . ($limit ? " LIMIT " . $limit : ""));
+	public function select($table, $where = null, $column = null, $order = null, $limit = null) {
+		return $this->query('SELECT ' . ($column === null ? '*' : $column) . ' FROM `' . $table . '`' . ($where ? ' WHERE ' . $where : '') . ($order ? " ORDER BY " . $order : "") . ($limit ? " LIMIT " . $limit : ""));
 	}
 
 	/**

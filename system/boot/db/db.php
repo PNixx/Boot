@@ -35,7 +35,10 @@ class DB {
 	 */
 	public function __construct() {
 
-		//Получаем имя драйвера
+		/**
+		 * Получаем имя драйвера
+		 * @var stdClass $db
+		 */
 		$db = Boot::getInstance()->config->db;
 		$driver = $db->adapter;
 		$host = $db->host;

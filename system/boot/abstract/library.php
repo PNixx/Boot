@@ -1,9 +1,11 @@
 <?php
+use Boot\Core\View;
+
 /**
  * @author: nixx
  * Date: 24.04.13
  * Time: 13:56
- * @version 1.0
+ * @deprecated 
  */
 abstract class Boot_Abstract_Library {
 
@@ -21,7 +23,7 @@ abstract class Boot_Abstract_Library {
 
 	/**
 	 * Инициализация библиотеки во вьюхе и контроллере
-	 * @param Boot_View|Boot_Layout|Boot_Abstract_Controller $class
+	 * @param View|Boot_Abstract_Controller $class
 	 * @return void
 	 */
 	public function init(&$class) {

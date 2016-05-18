@@ -15,7 +15,7 @@ trait Boot_Console {
 	 * Вывод ошибки
 	 * @param $message
 	 */
-	public function error($message) {
+	public static function error($message) {
 		echo "\x1b[31m{$message}\x1b[0m\r\n";
 		exit(127);
 	}

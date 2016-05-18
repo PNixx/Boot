@@ -13,14 +13,14 @@ abstract class ActiveRecord {
 	 * Многие к одному
 	 * @var null|array
 	 */
-	protected static $belongs_to = array();
+	protected static $belongs_to = [];
 
 	/**
 	 * Связь с таблицами
 	 * Один ко многим
 	 * @var DBLinks[]
 	 */
-	protected static $has_many = array();
+	protected static $has_many = [];
 
 	/**
 	 * Первичный ключ
@@ -44,6 +44,23 @@ abstract class ActiveRecord {
 	protected static $mount_uploader = [];
 
 	/**
+	 * Список валидации на непустые поля
+	 * @var array
+	 */
+	protected static $validates_presence_of = [];
+
+	/**
+	 * Список валидации на уникальные поля
+	 * example:
+	 *   ['email', ['user_id', 'name']]
+	 * Проверяет уникальность для следующих условий:
+	 * 1. Поле email должно быть уникально
+	 * 2. Поля user_id, name должны быть уникальны в группе
+	 * @var array
+	 */
+	protected static $validates_uniqueness_of = [];
+
+	/**
 	 * Функция выполнения до сохранения записи
 	 * @var null|string
 	 * @deprecated
@@ -59,15 +76,21 @@ abstract class ActiveRecord {
 
 	/**
 	 * Хранилище для кеширования объектов belongs_to
-	 * @var array
+	 * @var ActiveRecord[]
 	 */
-	private $_cached = array();
+	private $_cached = [];
+
+	/**
+	 * Список ошибок
+	 * @var ActiveRecordErrors
+	 */
+	public $errors;
 
 	/**
 	 * Кеширование запросов для поиска через find
 	 * @var array
 	 */
-	static private $_cached_by_find = array();
+	static private $_cached_by_find = [];
 
 	/**
 	 * Хранилище данных
@@ -79,7 +102,7 @@ abstract class ActiveRecord {
 	 * Хранилище обновляемых данных
 	 * @var array
 	 */
-	private $_row_update = array();
+	private $_row_update = [];
 
 	/**
 	 * Новая строка?
@@ -103,10 +126,11 @@ abstract class ActiveRecord {
 		//Сохраняем данные
 		$this->_row = (object)$row;
 		$this->_new_record = $new_record;
+		$this->errors = new ActiveRecordErrors($this);
 
 		//Инициализируем загрузчики
 		foreach( static::$mount_uploader as $column => $class ) {
-			$this->_row->$column = new $class($this, $column, $this->$column);
+			$this->_row->$column = new $class($this, $column, $row ? $this->$column : null);
 		}
 	}
 
@@ -261,7 +285,7 @@ abstract class ActiveRecord {
 			}
 
 			//Если есть в переменной
-			if( array_key_exists(strtolower($match[1]), $this->_row) ) {
+			if( array_key_exists(strtolower($match[1]), (array)$this->_row) ) {
 				return $this->{strtolower($match[1])};
 			}
 		}
@@ -421,9 +445,10 @@ abstract class ActiveRecord {
 	 * Обновляет данные в таблице
 	 * @param array       $set
 	 * @param null|string $where
+	 * @return bool|int
 	 */
 	public static function update_all(array $set, $where = null) {
-		DB::getDB()->update(self::getTable(), $set, $where);
+		return DB::getDB()->update(static::getTable(), $set, $where);
 	}
 
 	/**
@@ -510,7 +535,7 @@ abstract class ActiveRecord {
 		self::$select[self::getTable()] = $query;
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -535,14 +560,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
-			self::$select[self::getTable()]->where($where);
-		} else {
-			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
-		}
+		self::$select[self::getTable()]->where($where);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -558,14 +579,10 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем условие
-		if( self::$select[self::getTable()] && self::$select[self::getTable()] instanceof Select ) {
-			self::$select[self::getTable()]->notIn($column, $array);
-		} else {
-			throw new Exception('Select if null: ' . var_export(self::$select[self::getTable()], true));
-		}
+		self::$select[self::getTable()]->notIn($column, $array);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -576,15 +593,13 @@ abstract class ActiveRecord {
 	public static function joins($table, $on = null) {
 
 		//Инициализируем
-		if( isset(self::$select[self::getTable()]) == false ) {
-			self::$select[self::getTable()] = new Select(static::getTable(), null, new DB_Expr(static::getTable() . ".*"), static::$default_order);
-		}
+		self::init_select();
 
 		//Добавляем join
 		self::$select[self::getTable()]->joins($table, $on);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -602,7 +617,7 @@ abstract class ActiveRecord {
 		self::$select[self::getTable()]->where("LOWER(" . DB::getDB()->escape_identifier($column) . ") ILIKE " . DB::getDB()->getStringQueryByValue(strtolower($value)));
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -619,7 +634,7 @@ abstract class ActiveRecord {
 		self::$select[self::getTable()]->column($column);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -638,7 +653,7 @@ abstract class ActiveRecord {
 		self::$select[self::getTable()]->order($order_by);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -656,7 +671,7 @@ abstract class ActiveRecord {
 		self::$select[self::getTable()]->limit($limit, $offset);
 
 		//Возвращаем ту же функцию
-		return new static();
+		return new static;
 	}
 
 	/**
@@ -672,11 +687,7 @@ abstract class ActiveRecord {
 		}
 
 		//Добавляем колонки выборки
-		self::column(new DB_Expr("count(1) AS c"));
-		self::order(null);
-
-		//Возвращаем ту же функцию
-		return self::row()->c;
+		return self::column(new DB_Expr("count(1) AS c"))->order(null)->read_cols()[0];
 	}
 
 	/**
@@ -817,6 +828,14 @@ abstract class ActiveRecord {
 		return self::createRow($row);
 	}
 
+	/**
+	 * @param $where
+	 * @return static
+	 */
+	public static function find_by($where) {
+		return static::where($where)->row();
+	}
+
 	// ---------------- Row methods --------------------->
 
 	/**
@@ -870,32 +889,10 @@ abstract class ActiveRecord {
 	 */
 	public function save() {
 
-		//Определяем функцию
-		//todo убрать в релизе 2.3.0
-		$after_save = function() {
-
-			//Если указана функция
-			if( static::$after_save ) {
-				Boot::getInstance()->debug("Variable static::\$after_save was deprecated! Use abstract function after_save()", true);
-				$this->{static::$after_save}();
-			}
-		};
-
-		//Перед сохранением
-		//todo убрать в релизе 2.3.0
-		$before_save = function() {
-
-			//Если указана функция
-			if( static::$before_save ) {
-				Boot::getInstance()->debug("Variable static::\$before_save was deprecated! Use abstract function before_save()", true);
-				$this->{static::$before_save}();
-			}
-		};
-
 		$rollback_upload = function() {
 			/**
 			 * Инициализируем загрузчики
-			 * @var Boot_Uploader_Abstract $class
+			 * @var Boot\Abstracts\Uploader $class
 			 */
 			foreach( static::$mount_uploader as $column => $class ) {
 				if( $class::fetchUploadFile(static::getTable(), $column) ) {
@@ -909,32 +906,34 @@ abstract class ActiveRecord {
 
 		/**
 		 * Инициализируем загрузчики
-		 * @var Boot_Uploader_Abstract $class
+		 * @var Boot\Abstracts\Uploader $class
 		 */
 		foreach( static::$mount_uploader as $column => $class ) {
-			Boot::getInstance()->debug("column: " . $column . ', is: ' . var_export($class::fetchUploadFile(static::getTable(), $column), true));
 			if( $class::fetchUploadFile(static::getTable(), $column) ) {
 
 				//Загружаем новые файлы
 				$this->$column->remove();
 				$this->$column->uploadFile();
-				$this->_row_update[$column] = $this->$column->__toString();
 			}
 		}
 
 		//Проверяем не новая ли запись
 		if( $this->_new_record == false ) {
 
-			//Пытаемся обновить
-			if( $this->_row_update ) {
+			//Запускаем транзакцию
+			$this->begin_transaction();
+			try {
 
-				//Запускаем транзакцию
-				$this->begin_transaction();
-				try {
+				//Выполняем функции колбека
+				$this->before_save();
 
-					//Выполняем функции колбека
-					$before_save();
-					$this->before_save();
+				//Проверяем валидацию
+				if( !$this->valid() ) {
+					throw new ValidateException();
+				}
+
+				//Пытаемся обновить
+				if( $this->_row_update ) {
 
 					//Обновляем
 					$result = DB::getDB()->update(static::getTable(), $this->getUpdateColumns(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($this->{static::$pkey}));
@@ -944,7 +943,6 @@ abstract class ActiveRecord {
 						$this->merge_after_update();
 
 						//Выполняем функции колбека
-						$after_save();
 						$this->after_save($old);
 
 						//Завершаем транзакцию
@@ -955,14 +953,19 @@ abstract class ActiveRecord {
 					} else {
 						$this->rollback();
 						$rollback_upload();
+						return false;
 					}
-				} catch(Exception $e) {
-					$this->rollback();
-					$rollback_upload();
-					throw $e;
+				} else {
+					$this->commit();
+					return true;
 				}
-			} else {
-				return true;
+			} catch(ValidateException $e) {
+				$this->rollback();
+				$rollback_upload();
+			} catch(Exception $e) {
+				$this->rollback();
+				$rollback_upload();
+				throw $e;
 			}
 		} else {
 
@@ -971,9 +974,13 @@ abstract class ActiveRecord {
 			try {
 
 				//Выполняем функции колбека
-				$before_save();
 				$this->before_create();
 				$this->before_save();
+
+				//Проверяем валидацию
+				if( !$this->valid() ) {
+					throw new ValidateException();
+				}
 
 				//Добавляем строку
 				$id = DB::getDB()->insert(static::getTable(), $this->getUpdateColumns(), static::$pkey);
@@ -982,12 +989,14 @@ abstract class ActiveRecord {
 					$this->_new_record = false;
 
 					//Выполняем функции колбека
-					$after_save();
 					$this->after_create($old);
 					$this->after_save($old);
 
 					//Завершаем транзакцию
 					$this->commit();
+
+					//Изменяем данные строки
+					$this->_row_update = [];
 
 					//Возвращаем результат
 					return true;
@@ -995,6 +1004,9 @@ abstract class ActiveRecord {
 					$this->rollback();
 					$rollback_upload();
 				}
+			} catch(ValidateException $e) {
+				$this->rollback();
+				$rollback_upload();
 			} catch(Exception $e) {
 				$this->rollback();
 				$rollback_upload();
@@ -1028,10 +1040,16 @@ abstract class ActiveRecord {
 				if( $db_links->dependent == "destroy" ) {
 
 					//Получаем строки
+					//todo есть же связи, сделать через них
 					$rows = $class::where(array($db_links->foreign_key => $this->{static::$pkey}))->all();
 					foreach($rows as $row) {
 						$row->destroy();
 					}
+				}
+
+				//Если нужно удалить строки без проверки свзяей
+				if( $db_links->dependent == "delete" ) {
+					DB::getDB()->delete($table, $db_links->foreign_key, $this->{static::$pkey});
 				}
 
 				//Если нужно обнулить значение
@@ -1047,7 +1065,7 @@ abstract class ActiveRecord {
 			foreach( $this->_row as $key => $column ) {
 
 				//Проверяем загрузчик
-				if( $column instanceof Boot_Uploader_Abstract ) {
+				if( $column instanceof Boot\Abstracts\Uploader ) {
 					$column->remove();
 				}
 			}
@@ -1062,11 +1080,71 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * ------------------------------------------Validate---------------------------------------
+	 * Проверяет, валидна ли колонка
+	 */
+	public function valid() {
+
+		//Проверяем валидацию
+		foreach( static::$validates_presence_of as $column ) {
+			$this->validator_presence_of($column);
+		}
+		foreach( static::$validates_uniqueness_of as $column ) {
+			$this->validator_uniqueness_of($column);
+		}
+
+		return count($this->errors) == 0;
+	}
+
+	/**
+	 * Проверяет, чтобы поле было заполнено
+	 * @param $column
+	 */
+	protected function validator_presence_of($column) {
+		if( !$this->$column ) {
+			$this->errors->add($column, 'model.errors.blank');
+		}
+	}
+
+	/**
+	 * Проверяет уникальность колонок
+	 * @param array|string $column
+	 */
+	protected function validator_uniqueness_of($column) {
+
+		//Строим запрос
+		if( !is_array($column) ) {
+			$column = [$column];
+		}
+
+		//Если есть обновляемые колонки
+		if( !array_intersect(array_keys($this->_new_record ? (array)$this->_row : $this->_row_update), $column) ) {
+			return;
+		}
+		self::column(new \DB_Expr('1'));
+
+		//Строим запрос
+		foreach( $column as $c ) {
+			self::where([$c => $this->$c]);
+		}
+
+		//Если запись не новая, добавляем исключение с текущим id
+		if( !$this->isNew() ) {
+			self::where(static::getPKey() . ' != ' . \DB::getDB()->getStringQueryByValue($this->{static::$pkey}));
+		}
+
+		//Пробуем найти
+		if( self::row() ) {
+			$this->errors->add(implode(' ', $column), 'model.errors.taken');
+		}
+	}
+
+	/**
 	 * Преобразоване в массив
 	 * @return array
 	 */
 	public function toArray() {
-		return (array)$this->_row;
+		return array_merge((array)$this->_row, $this->_row_update);
 	}
 
 	/**
@@ -1099,6 +1177,9 @@ class DBLinks {
 
 	/**
 	 * Конструктор
+	 * @param $table
+	 * @param $table_parent
+	 * @param $values
 	 */
 	public function __construct($table, $table_parent, $values) {
 
@@ -1113,7 +1194,7 @@ class DBLinks {
 		}
 
 		//Запоминаем данные
-		$this->table = strtolower($table);
+		$this->table = strtolower(preg_replace('/^Model_/', '', $values["class_name"]));
 		$this->class_name = $values["class_name"];
 		$this->foreign_key = $values["foreign_key"];
 		$this->dependent = isset($values["dependent"]) ? $values["dependent"] : null;
@@ -1124,5 +1205,146 @@ class DBLinks {
 	 */
 	public function getModel() {
 		return $this->class_name;
+	}
+}
+
+/**
+ * Класс генерации ошибки
+ */
+class ActiveRecordErrors implements Iterator, ArrayAccess, Countable {
+	use \Boot\LibraryTrait;
+
+	/**
+	 * Список ошибок
+	 * @var array
+	 */
+	private $errors = [];
+
+	/**
+	 * @var \ActiveRecord
+	 */
+	private $model;
+
+	//Constructor
+	public function __construct(ActiveRecord $model) {
+		$this->model = $model;
+	}
+
+	/**
+	 * Добавление ошибки
+	 * @param $column
+	 * @param $message
+	 */
+	public function add($column, $message) {
+		if( isset($this->errors[$column]) ) {
+			$this->errors[$column][] = $message;
+		} else {
+			$this->errors[$column] = [$message];
+		}
+	}
+
+	/**
+	 * Извлекает массив ошибок
+	 * @return array
+	 */
+	public function messages() {
+		$messages = [];
+		foreach( $this as $column => $message ) {
+			foreach( $message as $v ) {
+				$messages[] = ($column ? $this->t(ucfirst($column)) . ' ' : '') . $this->t($v);
+			}
+		}
+		return $messages;
+	}
+
+	/**
+	 * Whether a offset exists
+	 * @param mixed $offset
+	 * @return bool|void
+	 */
+	public function offsetExists($offset) {
+		Boot::getInstance()->debug('offset: ' . $offset);
+		return isset($this->errors[$offset]);
+	}
+
+	/**
+	 * Offset to retrieve
+	 * @param mixed $offset
+	 * @return array Can return all value types.
+	 */
+	public function offsetGet($offset) {
+		Boot::getInstance()->debug('get: ' . $offset);
+		$messages = [];
+		if( $this->offsetExists($offset) ) {
+			foreach( $this->errors[$offset] as $message ) {
+				$messages[] = $this->t($message);
+			}
+		}
+		return $messages;
+	}
+
+	/**
+	 * Offset to set
+	 * @param mixed $offset
+	 * @param mixed $value
+	 * @throws Boot_Exception
+	 */
+	public function offsetSet($offset, $value) {
+		throw new Boot_Exception('You can not set this class, please use add($column, $message) method');
+	}
+
+	/**
+	 * Offset to unset
+	 * @param mixed $offset
+	 */
+	public function offsetUnset($offset) {
+		unset($this->errors[$offset]);
+	}
+
+	/**
+	 * Count elements of an object
+	 * @return int
+	 */
+	public function count() {
+		return count($this->errors);
+	}
+
+	/**
+	 * Return the current element
+	 * @return array
+	 */
+	public function current() {
+		return current($this->errors);
+	}
+
+	/**
+	 * Move forward to next element
+	 */
+	public function next() {
+		next($this->errors);
+	}
+
+	/**
+	 * Return the key of the current element
+	 * @return string
+	 */
+	public function key() {
+		return key($this->errors);
+	}
+
+	/**
+	 * Checks if current position is valid
+	 * @return boolean
+	 */
+	public function valid() {
+		$key = key($this->errors);
+		return !is_null($key) && $key !== false;
+	}
+
+	/**
+	 * Rewind the Iterator to the first element
+	 */
+	public function rewind() {
+		reset($this->errors);
 	}
 }

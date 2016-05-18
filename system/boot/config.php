@@ -45,7 +45,7 @@ class Boot_Config {
 				//Проходим по списску ищем строку с APPLICATION_ENV
 				if( is_array($htaccess) ) {
 					foreach( $htaccess as $row ) {
-						if( preg_match("/^SetEnv APPLICATION_ENV\s+(.*?)$/", $row, $match) ) {
+						if( preg_match('/^SetEnv APPLICATION_ENV\\s+(.*?)$/', $row, $match) ) {
 							define('APPLICATION_ENV', trim($match[1]));
 						}
 					}
@@ -53,7 +53,7 @@ class Boot_Config {
 			}
 		}
 		if( getenv('APPLICATION_ENV') === false && defined("APPLICATION_ENV") === false ) {
-			define('APPLICATION_ENV', "development");
+			define('APPLICATION_ENV', 'development');
 		}
 
 		if( is_file(APPLICATION_PATH . '/config/application.ini') ) {

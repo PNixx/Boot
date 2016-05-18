@@ -36,7 +36,7 @@ $class = "Boot_" . ucfirst($application) . "_Deploy";
 
 /**
  * Инициализируем деплой
- * @var Boot_Deploy_Abstract $deploy
+ * @var Boot\Abstracts\Deploy $deploy
  */
 $deploy = new $class();
 if( isset($argv[2]) == false ) {
@@ -48,6 +48,7 @@ switch( $argv[2] ) {
 
 	case "deploy":
 		$deploy->deploy(strtolower($application));
+		$deploy->migrate();
 		break;
 
 	case "deploy:migrate":

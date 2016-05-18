@@ -288,7 +288,6 @@ class Model {
 	 * Обновить данные таблицы из массива
 	 * @param array $data
 	 * @param string $where
-	 * @internal param string $table
 	 * @return bool|int <type>
 	 */
 	public function update($data, $where = null) {

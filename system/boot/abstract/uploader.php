@@ -1,10 +1,16 @@
 <?php
-/**
+namespace Boot\Abstracts {
+
+use ActiveRecord;
+use Boot;
+use Boot_Exception;
+
+	/**
  * Date: 19.03.15
  * Time: 16:33
  * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
  */
-abstract class Boot_Uploader_Abstract {
+abstract class Uploader {
 
 	/**
 	 * @var ActiveRecord
@@ -39,6 +45,10 @@ abstract class Boot_Uploader_Abstract {
 	 * @var array
 	 */
 	protected $version = [];
+
+	//Событие перед загрузкаой
+	protected function before_upload() {
+	}
 
 	/**
 	 * Constructor
@@ -169,6 +179,9 @@ abstract class Boot_Uploader_Abstract {
 		if( $this->original_filename() ) {
 			$this->fetchDirectory();
 
+			//Событие перед загрузкой
+			$this->before_upload();
+
 			//Дебаг
 			Boot::getInstance()->debug("  * Create image version: \x1b[33m" . $this->storeDir() . '/' .$this->filename() . "\x1b[0m");
 
@@ -271,7 +284,7 @@ abstract class Boot_Uploader_Abstract {
 
 		/**
 		 * create an image manager instance with favored driver
-		 * @var Intervention\Image\ImageManager $manager;
+		 * @var \Intervention\Image\ImageManager $manager;
 		 */
 		$class = "Intervention\\Image\\ImageManager";
 		$manager = new $class(array('driver' => 'imagick'));
@@ -313,7 +326,7 @@ abstract class Boot_Uploader_Abstract {
 
 		/**
 		 * create an image manager instance with favored driver
-		 * @var Intervention\Image\ImageManager $manager;
+		 * @var \Intervention\Image\ImageManager $manager;
 		 */
 		$class = "Intervention\\Image\\ImageManager";
 		$manager = new $class(array('driver' => 'imagick'));
@@ -338,7 +351,7 @@ abstract class Boot_Uploader_Abstract {
 
 		/**
 		 * create an image manager instance with favored driver
-		 * @var Intervention\Image\ImageManager $manager;
+		 * @var \Intervention\Image\ImageManager $manager;
 		 */
 		$class = "Intervention\\Image\\ImageManager";
 		$manager = new $class(array('driver' => 'imagick'));
@@ -439,4 +452,15 @@ abstract class Boot_Uploader_Abstract {
 	public function __toString() {
 		return (string)$this->filename();
 	}
+}
+
+}
+
+//todo удалить
+namespace {
+
+	/**
+	 * @deprecated
+	 */
+	abstract class Boot_Uploader_Abstract extends Boot\Abstracts\Uploader {}
 }

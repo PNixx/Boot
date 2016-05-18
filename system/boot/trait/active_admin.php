@@ -5,7 +5,7 @@
  * Time: 16:47
  * @author  Sergey Odintsov <sergey.odintsov@mkechinov.ru>
  *
- * @property Boot_View $view
+ * @property stdClass $view
  * @property array $permit
  */
 trait Boot_ActiveAdmin {
@@ -26,7 +26,7 @@ trait Boot_ActiveAdmin {
 		if( $page < 0 ) {
 			$page = 0;
 		}
-		$limit = 20;
+		$limit = $this->getLimit();
 
 		//Получаем модель
 		$model = $this->getModel();
@@ -48,6 +48,19 @@ trait Boot_ActiveAdmin {
 				'page'      => $page + 1
 			]);
 		}
+	}
+
+	/**
+	 * Просмотр объекта
+	 * @throws DB_Exception
+	 */
+	public function showAction() {
+
+		//Получаем модель
+		$model = $this->getModel();
+
+		//Получаем строку
+		$this->view->row = $model::find($this->getParam('id'));
 	}
 
 	/**
@@ -83,7 +96,7 @@ trait Boot_ActiveAdmin {
 		if( $row->save() ) {
 
 			//Добавляем ответ
-			$this->setFlash("success", "Запись успешно создана");
+			$this->setFlash("notice", "Запись успешно создана");
 
 			//Редиректим в список
 			$this->success_redirect($row);
@@ -131,15 +144,11 @@ trait Boot_ActiveAdmin {
 		if( $row->update($this->getFromParams()) ) {
 
 			//Добавляем ответ
-			$this->setFlash("success", "Запись успешно обновлена");
+			$this->setFlash("notice", "Запись успешно обновлена");
 
 			//Редиректим в список
 			$this->success_redirect($row);
 		} else {
-			//Добавляем ответ
-			$this->setFlash("error", "Ошибка при сохранении записи");
-
-			//Изменяем вьюху
 			$this->render('edit');
 		}
 	}
@@ -160,14 +169,22 @@ trait Boot_ActiveAdmin {
 		$row->destroy();
 
 		//Редиректим в список
-		$this->success_redirect($row);
+		$this->_redirect("/" . \Boot\Routes::getInstance()->getController());
 	}
 
 	/**
 	 * @param ActiveRecord $row
 	 */
 	protected function success_redirect(ActiveRecord $row) {
-		$this->_redirect("/" . $this->getModule() . '/' . $this->getController());
+		$this->_redirect("/" . \Boot\Routes::getInstance()->getController());
+	}
+
+	/**
+	 * Возвращаем число строк по умолчанию
+	 * @return int
+	 */
+	protected function getLimit() {
+		return 20;
 	}
 
 	/**
@@ -175,10 +192,10 @@ trait Boot_ActiveAdmin {
 	 * @return ActiveRecord
 	 * @throws Boot_Exception
 	 */
-	private function getModel() {
+	protected function getModel() {
 
 		//Строим имя модели
-		$model = "Model_" . ucfirst($this->getController());
+		$model = 'Model_' . ucfirst($this->getController());
 
 		//Проверяем существует ли такая модель
 		if( class_exists($model) ) {
@@ -187,7 +204,10 @@ trait Boot_ActiveAdmin {
 		throw new Boot_Exception($model . ' can\'t be found');
 	}
 
-	//Получаем параметры формы
+	/**
+	 * Получаем параметры формы
+	 * @return Boot_Params
+	 */
 	private function getFromParams() {
 		return $this->getParam(strtolower($this->getController()))->permit(array_merge($this->permit, ['id']));
 	}

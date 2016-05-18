@@ -4,6 +4,7 @@
  * Date: 25.04.13
  * Time: 20:30
  * @version 1.0
+ * @deprecated
  */
 interface Boot_Exception_Interface {
 

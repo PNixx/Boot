@@ -49,7 +49,7 @@ switch( $type ) {
 			}
 		}
 		sort($files);
-
+		
 		//Проходим по файла, делаем миграцию
 		foreach($files as $file) {
 			Boot_Migration::model()->migrate($file);

@@ -7,15 +7,16 @@
 	"authors": [
 		{
 			"name": "Sergey Odintsov",
-			"homepage": "http://pnixx.ru",
+			"homepage": "https://pnixx.ru",
 			"email": "nixx.dj@gmail.com",
 			"role": "Developer"
 		}
 	],
 	"require": {
-		"php": ">=5.5.0",
+		"php": ">=5.6.0",
 		"ext-curl": "*",
 		"ext-json": "*",
-		"intervention/image": "~2.1"
+		"intervention/image": "~2.1",
+		"aura/router": "^3.0"
 	}
 }

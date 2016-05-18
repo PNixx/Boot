@@ -1,6 +1,11 @@
+<?php
+/**
+ * @var Exception $e
+ */
+?>
 <h1>Oops</h1>
 <p>Страница не найдена</p>
 <? if( APPLICATION_ENV != "production" ): ?>
 	<b>Error message:</b> <?= $e->getMessage() ?>
-	<pre><?= $e->getTraceAsString() ?></pre>
+	<pre><?= htmlspecialchars($e->getTraceAsString()) ?></pre>
 <? endif ?>

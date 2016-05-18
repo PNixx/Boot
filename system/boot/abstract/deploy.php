@@ -1,11 +1,13 @@
 <?php
+namespace Boot\Abstracts {
+
 /**
  * @author: nixx
  * Date: 04.03.14
  * Time: 17:41
  */
-abstract class Boot_Deploy_Abstract {
-	use Boot_Console;
+abstract class Deploy {
+	use \Boot_Console;
 
 	/**
 	 * Репозиторий
@@ -189,4 +191,15 @@ abstract class Boot_Deploy_Abstract {
 		//Выполняем код
 		$this->ssh_exec("cd {$this->deploy_to}/current && php console/db.php migrate");
 	}
+}
+
+}
+
+//todo удалить
+namespace {
+	
+	/**
+	 * @deprecated
+	 */
+	abstract class Boot_Deploy_Abstract extends Boot\Abstracts\Deploy {}
 }

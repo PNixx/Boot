@@ -55,9 +55,10 @@ trait Boot_TraitController {
 	 * Получение декодированного параметра запроса
 	 * @param $name
 	 * @return string
+	 * @deprecated
 	 */
 	public function getParamDecode($name) {
-		return trim(urldecode($this->getParam($name)));
+		return $this->getParam($name);
 	}
 
 	/**
@@ -72,7 +73,7 @@ trait Boot_TraitController {
 	/**
 	 * Получить имя контроллера
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	public function getController() {
 		return Boot_Controller::getController();
@@ -81,7 +82,7 @@ trait Boot_TraitController {
 	/**
 	 * Получить имя экшена
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	public function getAction() {
 		return Boot_Controller::getAction();
@@ -91,6 +92,7 @@ trait Boot_TraitController {
 	 * Получить имя модуля
 	 * @static
 	 * @return string|bool
+	 * @deprecated 
 	 */
 	public function getModule() {
 		return Boot_Controller::getModule();

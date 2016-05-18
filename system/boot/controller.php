@@ -1,14 +1,13 @@
 <?php
+use Boot\Abstracts\Controller;
+use Boot\Routes;
+
 class Boot_Controller {
 
-	const PREFIX = "Controller";
-
 	/**
-	 * Параметры запроса
-	 * [module | controller | action]
-	 * @var null|stdClass
+	 * Префик namespace
 	 */
-	private $_param = null;
+	const POSTFIX = "Controller";
 
 	/**
 	 * Параметры запроса
@@ -30,13 +29,34 @@ class Boot_Controller {
 
 	/**
 	 * Переменная для передачи по вьюху
-	 * @var Boot_View
+	 * @var array
 	 */
 	public $view = null;
+
+	/**
+	 * Зарегистрированные функции
+	 * @var array
+	 */
+	private static $call_functions = [];
 
 	//Конструктор
 	public function __construct() {
 		$this->view = new stdClass();
+	}
+
+	/**
+	 * Пробует вызвать зарегистрированную функцию
+	 * @param $name
+	 * @param $arguments
+	 * @return mixed
+	 */
+	public function __call($name, $arguments) {
+		if( array_key_exists($name, self::$call_functions) ) {
+			$f = self::$call_functions[$name];
+			return $f::$name($arguments);
+		}
+
+		throw new BadMethodCallException('Call to undefined function ' . $name . '()');
 	}
 
 	/**
@@ -48,7 +68,6 @@ class Boot_Controller {
 
 		if( !(self::$_instance instanceof Boot_Controller) ) {
 			self::$_instance = new Boot_Controller();
-			self::$_instance->initizlize();
 		}
 		return self::$_instance;
 	}
@@ -57,77 +76,11 @@ class Boot_Controller {
 	 * Обработка запроса, разбитие на: module/controller/action
 	 * @throws Boot_Exception
 	 */
-	private function getQuery() {
+	public function getQuery() {
 
 		$path_info = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : $_SERVER['REQUEST_URI'];
-		if( preg_match("/^(\/[^\/\.]+)\.+$/", $path_info, $match) && count($match) > 1 ) {
+		if( preg_match('/^(\/[^\/\.]+)\.+$/', $path_info, $match) && count($match) > 1 ) {
 			$this->_redirect($match[1]);
-		}
-
-		//Если страница пытается загрузкить из асетов файл
-		if( APPLICATION_ENV == 'development' && preg_match("/^\/assets\/(css|js)\/.*?\.(css|js)$/", $path_info, $matches) ) {
-			switch( $matches[1] ) {
-				case "css":
-					header("Content-Type: text/css");
-					break;
-				case "js":
-					header("Content-Type: application/javascript");
-					break;
-				default:
-					throw new Boot_Exception('Unknown file extension');
-			}
-
-			//Если расширение css и файл найден
-			if( file_exists(APPLICATION_PATH . $path_info) || $matches[1] == 'js' ) {
-				echo file_get_contents(APPLICATION_PATH . $path_info);
-			} else {
-
-				//Если файл не найден, пробуем найти scss
-				$filename = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_FILENAME);
-				$scss = pathinfo(APPLICATION_PATH . $path_info, PATHINFO_DIRNAME) . '/' . $filename . '.scss';
-
-				//Если файл существует
-				if( file_exists($scss) ) {
-
-					//Компилируем SASS файл
-					$sass = new Sass();
-					$sass->setStyle(Sass::STYLE_EXPANDED);
-					$sass->setIncludePath(APPLICATION_ROOT);
-					$sass->setComments(true);
-					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($scss));
-
-					//Добавляем префиксы
-					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css', $r);
-					if( $result ) {
-						throw new Boot_Exception($result);
-					} else {
-						echo file_get_contents('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.css');
-					}
-//					$autoprefixer = new Autoprefixer(['ff > 2', '> 2%', 'ie 8']);
-//					echo $autoprefixer->compile($css);
-
-					//Ruby Sass
-//					//Компилируем sass
-//					$return = system('sass -l -t expanded --sourcemap=none ' . escapeshellarg($scss) . ' ' . escapeshellarg('/tmp/' . $filename . '.css') . ' 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('sass error: ' . $return);
-//					}
-//
-//					//Добавляем префиксы
-//					$return = system('postcss --use autoprefixer /tmp/' . $filename . '.css -o /tmp/' . $filename . '_out.css 2>&1');
-//					if( $return ) {
-//						throw new Boot_Exception('autoprefixer error: ' . $return);
-//					}
-//
-//					//Выводим данные
-//					readfile('/tmp/' . $filename . '_out.css');
-				} else {
-					throw new Boot_Exception('File ' . $path_info . ' not found', 404);
-				}
-			}
-			exit;
 		}
 
 		//Получаем строку запроса
@@ -135,13 +88,8 @@ class Boot_Controller {
 			parse_str($_SERVER['QUERY_STRING'], $this->_request);
 		}
 
-		$query = $path_info;
-		if( preg_match("/^(.*?)\\?/", $path_info, $match) ) {
-			$query = $match[1];
-		}
-
 		//Сохраняем параметры запроса
-		$this->_param = Boot_Routes::getInstance()->getParam(substr($query, 1, strlen($query)));
+		Routes::getInstance()->fetchQuery();
 	}
 
 	/**
@@ -152,8 +100,8 @@ class Boot_Controller {
 	public function getParam($name) {
 
 		//Если есть в get запросе
-		if( isset(Boot_Controller::getInstance()->_request[$name]) ) {
-			return Boot_Controller::getInstance()->_request[$name];
+		if( isset($this->_request[$name]) ) {
+			return $this->_request[$name];
 		}
 
 		//Если есть в post запросе
@@ -164,7 +112,21 @@ class Boot_Controller {
 			return $_POST[$name];
 		}
 
+		//Если пост пустой, но передается файл
+		if( isset($_FILES[$name]) ) {
+			return new Boot_Params([]);
+		}
+
 		return false;
+	}
+
+	/**
+	 * Добавляет параметр в общий массив
+	 * @param $key
+	 * @param $value
+	 */
+	public function setParam($key, $value) {
+		$this->_request[$key] = $value;
 	}
 
 	/**
@@ -172,18 +134,38 @@ class Boot_Controller {
 	 * @return null|array
 	 */
 	public function getParams() {
+		$params = [];
 
 		//Если есть в get запросе
 		if( isset(Boot_Controller::getInstance()->_request) ) {
-			return Boot_Controller::getInstance()->_request;
+			$params = Boot_Controller::getInstance()->_request;
 		}
 
 		//Если есть в post запросе
 		if( isset($_POST) ) {
-			return $_POST;
+			$params = array_merge($params, array_filter($_POST, function($k) {
+				if( $k != '_method' ) {
+					return true;
+				}
+				return false;
+			}, ARRAY_FILTER_USE_KEY));
 		}
 
-		return false;
+		return $params;
+	}
+
+	/**
+	 * Фильтрует параметры
+	 * @param array $params
+	 */
+	private function filterParams(array &$params) {
+		foreach( $params as $key => &$param ) {
+			if( is_array($param) ) {
+				$this->filterParams($param);
+			} elseif( stristr($key, 'password') ) {
+				$param = '[FILTERED]';
+			}
+		}
 	}
 
 	/**
@@ -224,7 +206,7 @@ class Boot_Controller {
 	private function includeController() {
 
 		//Проверяем существование класса с его автоподгрузкой
-		if( class_exists($this->getClassName()) == false ) {
+		if( !class_exists($this->getClassName()) ) {
 			throw new Exception($this->getClassName() . " not exists");
 		}
 	}
@@ -234,7 +216,7 @@ class Boot_Controller {
 	 * @return string
 	 */
 	private function getClassName() {
-		return (isset($this->_param->module) ? ucfirst($this->_param->module) . "_" : "") . ucfirst($this->_param->controller) . self::PREFIX;
+		return ucfirst(str_replace('/', '_', Routes::getInstance()->getController())) . self::POSTFIX;
 	}
 
 	/**
@@ -242,48 +224,40 @@ class Boot_Controller {
 	 * @throws Exception
 	 * @return void
 	 */
-	protected function initizlize() {
-
-		//Получаем данные запроса
-		$this->getQuery();
+	public function initialize() {
 
 		//Загружаем контроллер
 		$this->includeController();
 
-		$Cname = $this->getClassName();
-		$Aname = $this->_param->action . "Action";
+		$class_name = $this->getClassName();
+		$action_name = $this->getAction() . "Action";
 
 		//Debug
-		Boot::getInstance()->debug("Processing by " . (isset($this->_param->module) ? ucfirst($this->_param->module) . "::" : "") . ucfirst($this->_param->controller) . "#" . $this->_param->action);
-		Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams(), JSON_UNESCAPED_UNICODE));
-
-		//Если найден такой класс
-		if( class_exists($Cname) == false ) {
-			throw new Exception('Controller "' . $Cname . '" not exist', 404);
+		if( Routes::getInstance()->isLogEnable() ) {
+			Boot::getInstance()->debug("Processing by " . $class_name . "#" . $action_name);
+			Boot::getInstance()->debug("  Parameters: " . json_encode($this->getParams(), JSON_UNESCAPED_UNICODE));
 		}
 
-		//Добавляем пути для подключения файлов вьюх
-		set_include_path(implode(PATH_SEPARATOR, [
-			APPLICATION_PATH . '/views/' . (isset($this->_param->module) ? strtolower($this->_param->module) . "/" : "") . strtolower($this->_param->controller),
-			APPLICATION_PATH . '/views',
-			get_include_path(),
-		]));
+		//Если найден такой класс
+		if( class_exists($class_name) == false ) {
+			throw new Exception('Controller "' . $class_name . '" not exist', 404);
+		}
 
 		/**
 		 * Инициализируем
 		 * @var Boot_Abstract_Controller $controller
 		 */
-		$controller = new $Cname();
+		$controller = new $class_name();
 
 		//Инициализируем бибилиотеки
 		foreach(Boot::getInstance()->library->getLibraries() as $library) {
 			$library->init($controller);
 		}
 
-		if( class_exists("Boot_Translate_Lib", false) && $this->hasParam("lang") ) {
+		if( $this->hasParam("lang") ) {
 			$lang = $this->getParam("lang");
 
-			Boot::getInstance()->library->translate->setLocale($lang);
+			Boot\Library\Translate::getInstance()->setLocale($lang);
 
 			//Сохраняем в куку
 			Boot_Cookie::set("lang", $lang);
@@ -295,48 +269,86 @@ class Boot_Controller {
 		}
 
 		//Проверяем существование экшена
-		if( method_exists($controller, $Aname) == false ) {
-			throw new Exception('Action "' . $Aname . '", controller "' . $Cname . '" not exist', 404);
+		if( method_exists($controller, $action_name) == false ) {
+			throw new Exception('Action "' . $action_name . '", controller "' . $class_name . '" not exist', 404);
 		}
+
+		//Запускаем обработку
+		$this->run_before_actions($controller, $action_name);
 
 		//Стартуем экшен
-		$controller->$Aname();
+		$controller->$action_name();
 
 		//Сохраняем данные для передачи во вьюху
-		if( array_key_exists('view', $controller) ) {
-			$this->view = &$controller->view;
-		}
+		$this->view = &$controller->view;
+	}
 
+	/**
+	 * Запускает обработку до выполнения экшена
+	 * @param Controller $controller
+	 * @param                          $action
+	 * @internal param $before_action
+	 */
+	private function run_before_actions(Controller $controller, $action) {
+		$action = preg_replace('/Action$/', '', $action);
+		foreach( $controller->before_action as $func => $filter ) {
+			if( !empty($filter['except']) ) {
+				$except = is_array($filter['except']) ? $filter['except'] : [$filter['except']];
+			} else {
+				$except = [];
+			}
+			if( !empty($filter['only']) ) {
+				$only = is_array($filter['only']) ? $filter['only'] : [$filter['only']];
+			} else {
+				$only = [];
+			}
+			$only = array_diff($only, $except);
+			if( (!$only || in_array($action, $only)) && (!$except || !in_array($action, $except)) ) {
+				if( method_exists($controller, $func) ) {
+					$controller->$func();
+				} else {
+					$this->$func($action);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param string $name     имя функции для быстрого вызова
+	 * @param string $class    имя исполняемого класса
+	 */
+	static public function register_call($name, $class) {
+		self::$call_functions[$name] = $class;
 	}
 
 	/**
 	 * Получить имя модуля
 	 * @static
-	 * @return string|bool
+	 * @return bool|string
+	 * @throws Boot_Exception
+	 * @deprecated
 	 */
 	static public function getModule() {
-		if( isset(self::getInstance()->_param->module) ) {
-			return self::getInstance()->_param->module;
-		}
-		return false;
+		throw new Boot_Exception('Method getModule() was deprecated');
 	}
 
 	/**
 	 * Получить имя контроллера
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	static public function getController() {
-		return self::getInstance()->_param->controller;
+		$path = explode('/', Routes::getInstance()->getController());
+		return end($path);
 	}
 
 	/**
 	 * Получить имя экшена
 	 * @static
-	 * @return
+	 * @return string
 	 */
 	static public function getAction() {
-		return self::getInstance()->_param->action;
+		return Routes::getInstance()->getAction();
 	}
 
 	/**
@@ -354,17 +366,17 @@ class Boot_Controller {
 	 * @return void
 	 */
 	static private function setAction($name) {
-		self::getInstance()->_param->action = $name;
+		Routes::getInstance()->setAction($name);
 	}
 
 	/**
 	 * Выполнить экшен
 	 * @param $action
-	 * @param Boot_Abstract_Controller $controller
+	 * @param Controller $controller
 	 * @throws Exception
 	 * @return void
 	 */
-	public function _action($action, Boot_Abstract_Controller $controller) {
+	public function _action($action, Controller $controller) {
 		self::setAction($action);
 		$name = $action . "Action";
 		if( method_exists($controller, $name) ) {
@@ -390,10 +402,6 @@ class Boot_Controller {
 		exit;
 	}
 
-	public function _render($name) {
-		return Boot_View::getInstance()->render($name);
-	}
-
 	/**
 	 * Был аяксовый запрос или нет
 	 * @return bool
@@ -410,6 +418,7 @@ class Boot_Controller {
 	/**
 	 * Переключение вьюхи
 	 * @param $name
+	 * @deprecated 
 	 */
 	public function render($name) {
 		self::getInstance()->_render = $name;

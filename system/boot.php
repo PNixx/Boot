@@ -1,7 +1,10 @@
 <?
+use Boot\Core\View;
+use Boot\Routes;
+
 /**
- * Class Boot
  * @method void debug(string $logger, bool $error = false)
+ * @method void warning(string $logger)
  */
 class Boot {
 
@@ -33,7 +36,10 @@ class Boot {
 
 	private $_view = true;
 
-	private $_nameLayout = null;
+	/**
+	 * Имя текущего шаблона
+	 */
+	private $_layout_name = null;
 
 	/**
 	 * Запоминаем время начала
@@ -45,12 +51,6 @@ class Boot {
 	 * @var Boot_Library $library
 	 */
 	public $library;
-
-	/**
-	 * Список маршрутов
-	 * @var null
-	 */
-	public $routes = null;
 
 	/**
 	 * Получаем инстанс
@@ -93,9 +93,19 @@ class Boot {
 	public function __call($name, $params) {
 
 		//Если выполняем дебаг
-		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && (APPLICATION_ENV == 'development' || $this->config->debug_production ) ) {
+		if( $name == "debug" && class_exists("Boot_Debug_Lib", false) && ($this->isDevelopment() || $this->config->debug_production ) ) {
 			Boot_Debug_Lib::log($params[0], isset($params[1]) ? $params[1] : false);
 		}
+		if( $name == "warning" && class_exists("Boot_Debug_Lib", false) && ($this->isDevelopment() || $this->config->debug_production ) ) {
+			Boot_Debug_Lib::log('[33mWarning: ' . $params[0] . '[0m');
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isDevelopment() {
+		return APPLICATION_ENV == 'development';
 	}
 
 	/**
@@ -104,15 +114,6 @@ class Boot {
 	 * @return void
 	 */
 	public function run() {
-
-		//Запускаем сессию
-		if( empty($_COOKIE[session_name()]) || !preg_match('/^[a-zA-Z0-9,\-]{22,40}$/', $_COOKIE[session_name()]) ) {
-			session_id(uniqid());
-			session_start();
-			session_regenerate_id();
-		} else {
-			session_start();
-		}
 
 		$this->root = realpath(dirname(__FILE__));
 		header("Content-type: text/html; charset=UTF-8");
@@ -127,6 +128,9 @@ class Boot {
 		require_once 'boot/mail.php';
 		require_once 'boot/assets.php';
 		require_once 'boot/params.php';
+
+		//Запускаем сессию
+		Boot_Cookie::session_start();
 
 		//Инклудим треды
 		require_once SYSTEM_PATH . '/boot/trait/controller.php';
@@ -154,13 +158,13 @@ class Boot {
 		$this->config();
 
 		//Создаём маршруты
-		Boot_Routes::getInstance();
+		\Boot\Routes::getInstance();
 
 		//Инициализируем защищённый ключ
 		Boot_Skey::getInstance();
 
 		//Получаем имя шаблона
-		$this->_nameLayout = $this->config->default->layout ? $this->config->default->layout : "index";
+		$this->_layout_name = isset($this->config->default->layout) ? $this->config->default->layout : "index";
 
 		//Загружаем драйвер БД
 		$this->load_model();
@@ -182,42 +186,46 @@ class Boot {
 		//Загружаем библиотеки
 		$this->load_library();
 
-		//Debug
-		if( preg_match("/\\.(css|js)$/", $_SERVER['REQUEST_URI']) == false ) {
-			$this->debug(PHP_EOL . PHP_EOL . $_SERVER['REQUEST_METHOD'] . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
-		}
+		//Инициализируем модули
+		$this->initialize();
 
 		try {
 			//Инициализируем контроллер
 			$this->init_controller();
-
+			
 			//Если не отключали вьюху, запускаем
 			if( $this->_view ) {
-				$view = $this->init_view();
+				$view = $this->init_view()->html();
 			} else {
 				$view = null;
 			}
 
 			//Загружаем шаблон
-			$this->load_layout($view);
+			echo $this->load_layout($view);
+
+			//Выводим содержимое буфера
+			ob_end_flush();
 		} catch( Exception $e ) {
 			ob_end_clean();
-//			ob_end_flush();
-			@ob_clean();
-//			@ob_flush();
 			throw $e;
 		}
 
 		//Завершение работы скрипта
-		$this->end();
+		if( Routes::getInstance()->isLogEnable() ) {
+			$this->end();
+		}
 	}
 
 	/**
 	 * Завершение работы скрипта
+	 * @param bool $exit
 	 */
-	public function end() {
+	public function end($exit = false) {
 		//Выводим время работы
 		Boot::getInstance()->debug("  Completed (" . Boot::check_time($this->_time_start) . "ms)");
+		if( $exit ) {
+			exit(127);
+		}
 	}
 
 	/**
@@ -276,7 +284,7 @@ class Boot {
 		//Debug
 		$this->debug(PHP_EOL . "Console at " . date("Y-m-d H:i:s O"));
 		if( isset($_SERVER['argv']) ) {
-			$this->debug("  File: " . implode(" ", $_SERVER['argv']));
+			$this->debug("  File: " . implode(" ", array_map('escapeshellarg', $_SERVER['argv'])));
 		}
 	}
 
@@ -295,10 +303,16 @@ class Boot {
 		}
 
 		//Загрузка контроллеров модулем
+		//todo поддержка старой версии
 		if( preg_match("/^(.+?)_(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . "/" . strtolower($match[2]) . ".php";
 		} elseif( preg_match("/^(.+)Controller$/", $name, $match) ) {
 			$file = 'controllers/' . strtolower($match[1]) . ".php";
+		}
+
+		//todo что-то придумать другое для встроенных контроллеров
+		if( preg_match('/^Boot\\\Controllers\\\(.+?)Controller$/', $name, $match) ) {
+			$file = '../system/boot/controllers/' . strtolower($match[1]) . '.php';
 		}
 
 		//Загрузка загрузчиков файлов
@@ -334,7 +348,6 @@ class Boot {
 
 		//Инициализируем класс настроек
 		$this->config = new Boot_Config();
-
 	}
 
 	/**
@@ -368,7 +381,7 @@ class Boot {
 	private function load_view() {
 
 		//Загружаем модель
-		require_once 'boot/view.php';
+		require_once 'boot/core/view.php';
 	}
 
 	/**
@@ -382,53 +395,73 @@ class Boot {
 	}
 
 	/**
+	 * Инициализация модулей
+	 */
+	private function initialize() {
+		if( file_exists(APPLICATION_PATH . '/config/initialize.php') ) {
+			require_once APPLICATION_PATH . '/config/initialize.php';
+		}
+
+		//Загружаем переводы проекта
+		\Boot\Library\Translate::getInstance()->loadProjectLang();
+	}
+
+	/**
 	 * Инициализируем контроллер
 	 * @return void
 	 */
 	private function init_controller() {
 
 		//Запускаем инстанс
-		Boot_Controller::getInstance();
+		Boot_Controller::getInstance()->getQuery();
+
+		//Debug
+		if( Routes::getInstance()->isLogEnable() ) {
+			$this->debug(PHP_EOL . PHP_EOL . Boot_Params::getMethod() . " \"" . $_SERVER['REQUEST_URI'] . "\" for " . self::getRealIp() . " at " . date("Y-m-d H:i:s O"));
+		}
+
+		//Инициализируем контроллер
+		Boot_Controller::getInstance()->initialize();
 	}
 
 	/**
 	 * Инициализируем вьюху
-	 * @return string
+	 * @return View
 	 */
 	private function init_view() {
 
 		//Запускаем инстанс
-		return Boot_View::getInstance()->run();
+		return new View(View::include_path(Boot_Controller::getViewName()), (array) Boot_Controller::getInstance()->view);
 	}
 
 	/**
 	 * Загрузка шаблона
 	 * @param $view
-	 * @return void
+	 * @return string
 	 */
 	private function load_layout(&$view) {
 
 		//Если шаблон не был отключен
 		if( $this->_layout ) {
 
-			require_once("boot/layout.php");
-
-			Boot_Layout::getInstance()->run($view);
+			$layout = new View(APPLICATION_PATH .'/layouts/' . $this->layout() . '.phtml', array_merge_recursive(['content' => $view], (array) Boot_Controller::getInstance()->view));
+			return $layout->html();
 		} elseif( $this->_view ) {
-			echo $view;
+			return $view;
 		}
+		return null;
 	}
 
 	/**
 	 * Получение или установка текущего шаблона
-	 * @param string $set
+	 * @param string $layout
 	 * @return string
 	 */
-	public function  layout($set = null) {
-		if( $set ) {
-			$this->_nameLayout = $set;
+	public function layout($layout = null) {
+		if( $layout ) {
+			$this->_layout_name = $layout;
 		}
-		return $this->_nameLayout;
+		return $this->_layout_name;
 	}
 
 	/**
@@ -468,6 +501,10 @@ class Boot {
 	 * @throws Boot_Exception
 	 */
 	public function load_library() {
+
+		//Подключаем библиотеки
+		//todo потом сделать циклом принудительное подключение или через автолоад
+		require_once APPLICATION_ROOT . '/system/library/translate.php';
 
 		//Подключаем клас библиотек
 		require_once "boot/library.php";
@@ -525,8 +562,6 @@ class Boot {
 	 * @return float
 	 */
 	static public function mktime() {
-//		list($usec, $sec) = explode(" ", microtime());
-//		return ((float)$usec + (float)$sec) * 1000000;
 		return microtime(true);
 	}
 

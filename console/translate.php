@@ -6,6 +6,8 @@
  */
 
 //Путь до структуры
+use Boot\Library\Translate;
+
 define('APPLICATION_PATH', realpath('.') . '/application');
 define('APPLICATION_ROOT', realpath('.'));
 define('LIBRARY_PATH', realpath('.') . '/library');
@@ -28,12 +30,9 @@ if( file_exists(Boot::getInstance()->config->translate->dir . "en.json") == fals
 }
 
 //Запускаем
-$translate = new Boot_Translate_Lib(Boot::getInstance()->config->translate->dir, Boot::getInstance()->config->translate->lang);
-if( file_exists(Boot::getInstance()->config->translate->dir . Boot::getInstance()->config->translate->lang . ".po") ) {
-	$parse = $translate->parse(Boot::getInstance()->config->translate->lang);
-} else {
-	$parse = $translate->parseJSON(Boot::getInstance()->config->translate->lang);
-}
+$translate = Translate::getInstance();
+$translate->loadProjectLang();
+$parse = $translate->getParse();
 
 function glob_recursive($pattern, $flags = 0) {
   $files = glob($pattern, $flags);
@@ -52,7 +51,7 @@ $files = array_merge($files, glob_recursive(APPLICATION_PATH . "/*.phtml", GLOB_
 $keys = array();
 foreach( $files as $file ) {
   //"/_\(\"(.+)\"(?:,\s?(?:$\w+|\"\w+\"))?\)/"
-  if( preg_match_all("/->_\(\"([^\r\n]+?)\",?/", file_get_contents($file), $po) && isset($po[1]) ) {
+  if( preg_match_all("/->_\\(\"([^\r\n]+?)\",?/", file_get_contents($file), $po) && isset($po[1]) ) {
 //		print_r($po);
     foreach( $po[1] as $i => $key ) {
       $key = str_replace("\\\$", "$", $key);
@@ -71,11 +70,6 @@ $diff = array_diff(array_keys($parse), $keys);
 //Проходим по ним и удаляем
 foreach($diff as $d) {
   unset($parse[$d]);
-}
-
-//Если файл старой версии существует, удаляем
-if( file_exists(Boot::getInstance()->config->translate->dir . Boot::getInstance()->config->translate->lang . ".po") ) {
-	unlink(Boot::getInstance()->config->translate->dir . Boot::getInstance()->config->translate->lang . ".po");
 }
 
 //Записываем все значения в массив

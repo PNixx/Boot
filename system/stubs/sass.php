@@ -86,7 +86,7 @@ class Sass {
 	 * Get map path
 	 * @return string
 	 */
-	public function getMapPath($map) {}
+	public function getMapPath() {}
 
 	/**
 	 * Set include path

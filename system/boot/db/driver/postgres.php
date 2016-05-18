@@ -45,9 +45,9 @@ class postgres {
 	 */
 	private function error($query = null) {
 		//Debug
-		Boot::getInstance()->debug("  SQL Error: " . $query);
+		Boot::getInstance()->debug("  SQL Error: " . $query, true);
 
-		throw new Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
+		throw new DB_Exception(pg_last_error() . ($query ? " query: " . $query : "") . "\n", 500);
 	}
 
 	/**
@@ -424,9 +424,9 @@ class postgres {
 	 * @param $table
 	 * @param $column
 	 * @param int $id
-	 * @return void
+	 * @return postgres
 	 */
 	public function delete($table, $column, $id) {
-		$this->query("DELETE FROM " . pg_escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = " . pg_escape_literal($id) . ";");
+		return $this->query("DELETE FROM " . pg_escape_identifier($table) . " WHERE " . $this->escape_identifier($column) . " = " . pg_escape_literal($id) . ";");
 	}
 }

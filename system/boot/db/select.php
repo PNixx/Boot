@@ -231,7 +231,7 @@ class Select {
 		if( is_array($where) ) {
 			$sql = "";
 			foreach($where as $k => $v) {
-				$sql .= ($sql == "" ? "" : " AND ") . $this->driver->separator . $k . $this->driver->separator . " = " . $this->getStringQueryByValue($v);
+				$sql .= ($sql == "" ? "" : " AND ") . $this->driver->separator . $k . $this->driver->separator . " = " . $this->driver->getStringQueryByValue($v);
 			}
 
 			$where = $sql;
