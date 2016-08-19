@@ -58,6 +58,7 @@ class Boot_Migration extends ActiveRecord {
 		require APPLICATION_ROOT . "/db/{$file}";
 		try {
 			if( isset($migration) ) {
+				self::begin_transaction();
 				foreach($migration as $key => $migrate) {
 
 					//Выбираем тип миграции
@@ -78,13 +79,14 @@ class Boot_Migration extends ActiveRecord {
 				}
 				if( preg_match("/^(\\d+)/", $file, $match) ) {
 					self::insert(["id" => $match[1]]);
+					self::commit();
 					echo "Migration `{$match[1]}` success.\r\n";
 				}
 			}
 		} catch( Exception $e ) {
 			echo "!!! Migration error, start rollback\r\n" . $e->getMessage() . PHP_EOL;
 			try {
-				self::rollback_migration($file);
+				self::rollback();
 			} catch( Exception $ee ) {
 			}
 			echo "!!! Rollback end\r\n\r\n";
@@ -323,6 +325,7 @@ class Boot_Migration extends ActiveRecord {
 		require APPLICATION_ROOT . "/db/{$file}";
 
 		if( isset($migration) ) {
+			self::begin_transaction();
 			foreach($migration as $key => $migrate) {
 
 				//Выбираем тип миграции
@@ -343,8 +346,9 @@ class Boot_Migration extends ActiveRecord {
 						exit("Unknown rollback type\r\n");
 				}
 			}
-			if( preg_match("/^(\d+)/", $file, $match) ) {
+			if( preg_match("/^(\\d+)/", $file, $match) ) {
 				self::find((string)$match[1])->destroy();
+				self::commit();
 				echo "Rollback `{$match[1]}` success.\r\n";
 			}
 		}

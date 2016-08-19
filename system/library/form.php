@@ -77,9 +77,6 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 			unset($params['required']);
 		}
 
-		//Если нужно экранировать спец символы
-		$htmlspecialchars = isset($params['htmlspecialchars']) && $params['htmlspecialchars'];
-
 		//Собираем параметры для полей ввода
 		$p = array();
 		foreach( $params as $key => $value ) {
@@ -102,7 +99,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Textarea
 			case "text":
-				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . ($htmlspecialchars ? htmlspecialchars($params['value']) : $params['value']) . "</textarea>";
+				$print .= "<textarea name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($p) . ">" . htmlspecialchars($params['value']) . "</textarea>";
 				break;
 
 			case "checkbox":
@@ -115,7 +112,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 			//Дефолтный инпут
 			default:
-				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"{$params['value']}\"" . $this->implode($p) . ">";
+				$print .= "<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"" . ($params["as"] == "string" ? "text" : $params["as"]) . "\" value=\"" . htmlspecialchars($params['value']) . "\"" . $this->implode($p) . ">";
 		}
 
 		return $print;
@@ -195,11 +192,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 
 		//Строим селектор
-		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode($params) . ">";
+		$print .= "<select name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\"" . $this->implode(array_diff_key($params, ['include_blank' => ''])) . ">";
 
 		//Добавляем пустое поле
 		if( $params["include_blank"] ) {
-			$print .= "<option></option>";
+			$print .= "<option value=''>" . ($params["include_blank"] !== true ? $params["include_blank"] : '') . "</option>";
 		}
 
 		//Проходим по списку значений

@@ -40,6 +40,10 @@ abstract class Boot_Uploader_Abstract {
 	 */
 	protected $version = [];
 
+	//Событие перед загрузкаой
+	protected function before_upload() {
+	}
+
 	/**
 	 * Constructor
 	 * @param ActiveRecord $model
@@ -168,6 +172,9 @@ abstract class Boot_Uploader_Abstract {
 		//Проверяем, был ли загружен файл
 		if( $this->original_filename() ) {
 			$this->fetchDirectory();
+
+			//Событие перед загрузкой
+			$this->before_upload();
 
 			//Дебаг
 			Boot::getInstance()->debug("  * Create image version: \x1b[33m" . $this->storeDir() . '/' .$this->filename() . "\x1b[0m");
