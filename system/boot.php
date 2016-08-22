@@ -105,15 +105,6 @@ class Boot {
 	 */
 	public function run() {
 
-		//Запускаем сессию
-		if( empty($_COOKIE[session_name()]) || !preg_match('/^[a-zA-Z0-9,\-]{22,40}$/', $_COOKIE[session_name()]) ) {
-			session_id(uniqid());
-			session_start();
-			session_regenerate_id();
-		} else {
-			session_start();
-		}
-
 		$this->root = realpath(dirname(__FILE__));
 		header("Content-type: text/html; charset=UTF-8");
 
@@ -200,11 +191,11 @@ class Boot {
 
 			//Загружаем шаблон
 			$this->load_layout($view);
+
+			//Выводим содержимое буфера
+			ob_end_flush();
 		} catch( Exception $e ) {
 			ob_end_clean();
-//			ob_end_flush();
-			@ob_clean();
-//			@ob_flush();
 			throw $e;
 		}
 
@@ -334,7 +325,6 @@ class Boot {
 
 		//Инициализируем класс настроек
 		$this->config = new Boot_Config();
-
 	}
 
 	/**
@@ -525,8 +515,6 @@ class Boot {
 	 * @return float
 	 */
 	static public function mktime() {
-//		list($usec, $sec) = explode(" ", microtime());
-//		return ((float)$usec + (float)$sec) * 1000000;
 		return microtime(true);
 	}
 

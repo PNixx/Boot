@@ -34,4 +34,17 @@ class Boot_Cookie {
 	static public function clear($name) {
 		setcookie($name, "", time() - 1, "/");
 	}
+
+	/**
+	 * Запускаем сессию
+	 */
+	static public function session_start() {
+		if( empty($_COOKIE[session_name()]) || !preg_match('/^[a-zA-Z0-9,\-]{22,40}$/', $_COOKIE[session_name()]) ) {
+			session_id(uniqid());
+			session_start();
+			session_regenerate_id();
+		} else {
+			session_start();
+		}
+	}
 }
