@@ -283,7 +283,7 @@ class Assets {
 					$filename = pathinfo($path, PATHINFO_FILENAME);
 
 					//Если компилируем готовые ассеты или в конфиге включен режим префиксов
-					if( $this->compress || !empty(Boot::getInstance()->config->autoprefixer) && Boot::getInstance()->config->autoprefixer ) {
+					if( $this->compress || Boot::getInstance()->config->autoprefixer ) {
 						file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
 
 						//Добавляем префиксы
