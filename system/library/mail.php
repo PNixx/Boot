@@ -16,10 +16,10 @@ class Boot_Mail_Lib extends Boot_Abstract_Library implements Boot_Exception_Inte
 
 	/**
 	 * Обработка ошибки
-	 * @param Exception $e
+	 * @param Throwable $e
 	 * @return mixed
 	 */
-	public static function onException(Exception $e) {
+	public static function onException($e) {
 		if( APPLICATION_ENV == 'production' && ($e->getCode() >= 500 || $e->getCode() == 0) && isset(Boot::getInstance()->config->mail->error) ) {
 			self::send(Boot::getInstance()->config->mail->error, "Error", "<pre>Error " . $e->getCode() . ": " . $e->getMessage() . "\r\n" . $e->getTraceAsString() . "SERVER:\r\n" . var_export($_SERVER, true) . "POST:\r\n" . var_export($_POST, true) . "</pre>");
 		}

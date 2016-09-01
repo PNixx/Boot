@@ -28,10 +28,10 @@ class Boot_Debug_Lib extends Boot_Abstract_Library implements Boot_Exception_Int
 
 	/**
 	 * Обработка ошибки
-	 * @param Exception $e
+	 * @param Throwable $e
 	 * @return mixed
 	 */
-	public static function onException(Exception $e) {
+	public static function onException($e) {
 		Boot::getInstance()->debug("  \x1b[31mMessage: " . $e->getMessage() . "\x1b[0m" . PHP_EOL . $e->getTraceAsString());
 	}
 }
