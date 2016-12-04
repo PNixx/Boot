@@ -100,7 +100,7 @@ abstract class Mailer {
 
 			//Если есть текстовый файл
 			if( View::fetch_path($path . '.txt') ) {
-				$txt = rtrim(chunk_split(base64_encode(strip_tags(self::_render($path . '.txt')))));
+				$txt = rtrim(chunk_split(base64_encode(self::html_min(strip_tags(self::_render($path . '.txt'))))));
 				$html = $message;
 
 				// Unique boundary
