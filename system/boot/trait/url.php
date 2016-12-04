@@ -17,17 +17,18 @@ trait UrlTrait {
 	 * @param $name
 	 * @param $arguments
 	 * @return mixed
+	 * @throws \RouteException
 	 */
-	public function __call($name, ...$arguments) {
+	public function __call($name, $arguments) {
 
 		//Если запрашиваем путь
 		if( preg_match('/^(.*?)_path$/', $name, $match) ) {
-			return Routes::make_path($match[1], ...$arguments);
+			return Routes::make_path($match[1], $arguments);
 		}
 
 		//Если запрашиваем ссылку
 		if( preg_match('/^(.*?)_url$/', $name, $match) ) {
-			return $_SERVER['REQUEST_SCHEME'] . '://' . \Boot::getInstance()->config->host . Routes::make_path($match[1], ...$arguments);
+			return $_SERVER['REQUEST_SCHEME'] . '://' . \Boot::getInstance()->config->host . Routes::make_path($match[1], $arguments);
 		}
 
 		//Метод не найден

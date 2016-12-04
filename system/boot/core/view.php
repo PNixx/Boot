@@ -59,12 +59,11 @@ class View {
 	}
 
 	/**
+	 * Поиск пути
 	 * @param $name
-	 * @return string
-	 * @throws \Boot_Exception
+	 * @return null|string
 	 */
-	static public function include_path($name) {
-
+	static public function fetch_path($name) {
 		//Строим полный путь
 		$path = null;
 
@@ -73,6 +72,22 @@ class View {
 			if( realpath($p . '/' . $name . '.phtml') ) {
 				return realpath($p) . '/' . $name . '.phtml';
 			}
+		}
+
+		return $path;
+	}
+
+	/**
+	 * @param $name
+	 * @return string
+	 * @throws \Boot_Exception
+	 */
+	static public function include_path($name) {
+
+		//Строим полный путь
+		$path = self::fetch_path($name);
+		if( $path ) {
+			return $path;
 		}
 
 		//Если не нашли шаблон

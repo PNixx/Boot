@@ -63,19 +63,6 @@ abstract class Mailer {
 	 */
 	protected final static function mail($to, $subject, $headers = []) {
 
-		//Собираем все заголовки
-		self::$headers = [];
-		self::$headers['MIME-Version'] = self::header($headers, 'mime_version');
-		self::$headers['Content-type'] = self::header($headers, 'content_type') . '; charset=' . self::header($headers, 'charset');
-		self::$headers['From'] = self::header($headers, 'from');
-		if( empty(self::$headers['From']) ) {
-			self::$headers['From'] = 'no-reply@' . Boot::getInstance()->config->host;
-		}
-		self::$headers['Content-Transfer-Encoding'] = 'base64';
-
-		//Мигрируем остальные заголовки
-		self::$headers = array_merge(self::$headers, $headers);
-
 		//Достаем функцию вызова
 		$caller = debug_backtrace()[1];
 		$object = new \ReflectionClass($caller['class']);
@@ -84,7 +71,8 @@ abstract class Mailer {
 		}
 
 		//Рендерим письмо
-		$view = self::_render('mailer/' . strtolower($match[1]) . '/' . $caller['function']);
+		$path = 'mailer/' . strtolower($match[1]) . '/' . $caller['function'];
+		$view = self::_render($path);
 
 		//Инициализируем шаблон
 		if( static::$layout ) {
@@ -95,7 +83,50 @@ abstract class Mailer {
 		if( isset(debug_backtrace()[2]) && debug_backtrace()[2]['class'] == $caller['class'] . 'Preview' ) {
 			echo $view;
 		} else {
-			mail($to, self::encode_header($subject), rtrim(chunk_split(base64_encode(self::html_min($view)))), self::make_headers());
+
+			//Собираем все заголовки
+			self::$headers = [];
+			self::$headers['MIME-Version'] = self::header($headers, 'mime_version');
+			self::$headers['From'] = self::header($headers, 'from');
+			if( empty(self::$headers['From']) ) {
+				self::$headers['From'] = 'no-reply@' . Boot::getInstance()->config->host;
+			}
+
+			//Мигрируем остальные заголовки
+			self::$headers = array_merge(self::$headers, $headers);
+
+			//Строим html код
+			$message = rtrim(chunk_split(base64_encode(self::html_min($view))));
+
+			//Если есть текстовый файл
+			if( View::fetch_path($path . '.txt') ) {
+				$txt = rtrim(chunk_split(base64_encode(strip_tags(self::_render($path . '.txt')))));
+				$html = $message;
+
+				// Unique boundary
+				$boundary = md5(uniqid() . microtime());
+
+				//Изменяем заголовок
+				self::$headers['Content-Type'] = 'multipart/alternative; boundary="'. $boundary . "\"\r\n\r\n";
+
+				// Plain text version of message
+				$message = "--$boundary\r\n" .
+					'Content-Type: text/plain; charset=' . self::header($headers, 'charset') . "\r\n" .
+					"Content-Transfer-Encoding: base64\r\n\r\n" . $txt . "\r\n";
+
+				// HTML version of message
+				$message .= "--$boundary\r\n" .
+					'Content-Type: ' . self::header($headers, 'content_type') . '; charset=' . self::header($headers, 'charset') . "\r\n" .
+					"Content-Transfer-Encoding: base64\r\n\r\n" . $html . "\r\n";
+
+				$message .= "--$boundary--";
+			} else {
+				self::$headers['Content-Type'] = self::header($headers, 'content_type') . '; charset=' . self::header($headers, 'charset');
+				self::$headers['Content-Transfer-Encoding'] = 'base64';
+			}
+
+			//Отправляем сообщение
+			mail($to, self::encode_header($subject), $message, self::make_headers());
 		}
 	}
 
