@@ -270,6 +270,9 @@ class Boot {
 		//Загружаем драйвер БД
 		$this->load_model();
 
+		//Загружаем модель предствлений
+		$this->load_view();
+
 		//Устанавливаем путь подключения моделей
 		set_include_path(APPLICATION_PATH);
 
