@@ -914,6 +914,7 @@ abstract class ActiveRecord {
 				//Загружаем новые файлы
 				$this->$column->remove();
 				$this->$column->uploadFile();
+				$this->_row_update[$column] = (string)$this->$column;
 			}
 		}
 
