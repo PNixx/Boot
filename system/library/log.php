@@ -40,10 +40,10 @@ class Boot_Log_Lib extends Boot_Abstract_Library implements Boot_Exception_Inter
 
 	/**
 	 * Обработка ошибки
-	 * @param Exception $e
+	 * @param Throwable $e
 	 * @return mixed
 	 */
-	public static function onException(Exception $e) {
+	public static function onException($e) {
 		if( APPLICATION_ENV == 'production' && $e->getCode() != 404 ) {
 			self::log("error.log", "Error " . $e->getCode() . ": " . $e->getMessage() . "\r\n" . $e->getTraceAsString());
 		}

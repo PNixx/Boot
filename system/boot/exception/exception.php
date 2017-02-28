@@ -14,9 +14,9 @@ class Boot_Exception extends Exception {
 	}
 
 	/**
-	 * @param Exception $e
+	 * @param Throwable $e
 	 */
-	public static function ex(Exception $e) {
+	public static function ex($e) {
 		//Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
 		self::sendLibraryException($e);
 
@@ -28,7 +28,7 @@ class Boot_Exception extends Exception {
 
 			//Устанавливаем код ошибки
 			if( $e->getCode() == 0 ) {
-				$e->code = 500;
+				$e = new Exception($e->getMessage(), 500, $e);
 			}
 
 			//Устанавливаем заголовок
@@ -40,9 +40,9 @@ class Boot_Exception extends Exception {
 
 	/**
 	 * Обрабатываем библиотеки, в которых добавлена прослушка на ошибки
-	 * @param Exception $e
+	 * @param Throwable $e
 	 */
-	public static function sendLibraryException(Exception $e) {
+	public static function sendLibraryException($e) {
 		if( Boot::getInstance()->library ) {
 			foreach( Boot::getInstance()->library->getLibraries() as $library ) {
 				if( in_array("Boot_Exception_Interface", class_implements($library, false)) ) {

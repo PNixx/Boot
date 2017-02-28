@@ -88,9 +88,6 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 			unset($params['required']);
 		}
 
-		//Если нужно экранировать спец символы
-		$htmlspecialchars = isset($params['htmlspecialchars']) && $params['htmlspecialchars'];
-
 		//Собираем параметры для полей ввода
 		$p = array();
 		foreach( $params as $key => $value ) {

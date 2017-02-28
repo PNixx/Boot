@@ -10,8 +10,8 @@ interface Boot_Exception_Interface {
 
 	/**
 	 * Обработка ошибки
-	 * @param Exception $e
+	 * @param Throwable $e
 	 * @return mixed
 	 */
-	public static function onException(Exception $e);
+	public static function onException($e);
 }

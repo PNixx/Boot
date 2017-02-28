@@ -109,7 +109,7 @@ abstract class Deploy {
 
 		//Если установлен Composer
 		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
-			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader");
+			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader --prefer-source");
 		}
 
 		//Симлинки фреймворка

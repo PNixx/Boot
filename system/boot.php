@@ -192,7 +192,7 @@ class Boot {
 		try {
 			//Инициализируем контроллер
 			$this->init_controller();
-			
+
 			//Если не отключали вьюху, запускаем
 			if( $this->_view ) {
 				$view = $this->init_view()->html();
@@ -263,6 +263,14 @@ class Boot {
 		//Устанавливаем отлавливатели ошибок
 		set_error_handler( 'Boot_Exception::err_handler' );
 		set_exception_handler("Boot_Exception::ex");
+		register_shutdown_function(function() {
+			$error = error_get_last();
+			if( $error ) {
+				Boot_Exception::err_handler($error['type'], $error['message'], $error['file'], $error['line'], null);
+			} else {
+				Boot::getInstance()->end();
+			}
+		});
 
 		//Загружаем конфиг
 		$this->config();
