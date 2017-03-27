@@ -225,7 +225,6 @@ abstract class ActiveRecord {
 	 * Получаем данные
 	 * @param $name
 	 * @param $value
-	 * @return string
 	 */
 	public function __set($name, $value) {
 		if( $this->isNew() ) {
@@ -336,7 +335,7 @@ abstract class ActiveRecord {
 	/**
 	 * Создание строки
 	 * @param array|Boot_Params $row
-	 * @return static
+	 * @return static|self
 	 */
 	public static function create($row = array()) {
 
@@ -452,7 +451,7 @@ abstract class ActiveRecord {
 	}
 
 	/**
-	 * @return static
+	 * @return self
 	 * @throws DB_Exception
 	 */
 	public static function row() {
@@ -505,7 +504,7 @@ abstract class ActiveRecord {
 	}
 
 	/**
-	 * @return static[]|Model_Collection
+	 * @return self[]|Model_Collection
 	 * @throws DB_Exception
 	 */
 	public static function all() {
@@ -527,7 +526,7 @@ abstract class ActiveRecord {
 	/**
 	 * Обычный, чистый запрос к БД
 	 * @param $query
-	 * @return static
+	 * @return static|self
 	 */
 	public static function query($query) {
 
@@ -542,7 +541,7 @@ abstract class ActiveRecord {
 	 * Постраничное получение данных
 	 * @param $page
 	 * @param $limit
-	 * @return static
+	 * @return static|self
 	 */
 	public static function page($page, $limit) {
 		return self::limit($limit, $page * $limit);
@@ -552,7 +551,7 @@ abstract class ActiveRecord {
 	 * Условие выборки
 	 * @param string|array $where
 	 * @throws Exception
-	 * @return static
+	 * @return static|self
 	 */
 	public static function where($where) {
 
@@ -570,7 +569,7 @@ abstract class ActiveRecord {
 	 * AND NOT IN
 	 * @param string $column
 	 * @param array  $array
-	 * @return static
+	 * @return static|self
 	 * @throws Exception
 	 */
 	public static function notIn($column, array $array) {
@@ -588,7 +587,7 @@ abstract class ActiveRecord {
 	/**
 	 * @param string $table
 	 * @param string|array|null $on
-	 * @return static
+	 * @return static|self
 	 */
 	public static function joins($table, $on = null) {
 
@@ -606,7 +605,7 @@ abstract class ActiveRecord {
 	 * Выборка с поиском ILIKE
 	 * @param $column
 	 * @param $value
-	 * @return static
+	 * @return static|self
 	 */
 	public static function iLike($column, $value) {
 
@@ -623,7 +622,7 @@ abstract class ActiveRecord {
 	/**
 	 * Выборка колонок
 	 * @param array|string $column
-	 * @return static
+	 * @return static|self
 	 */
 	public static function column($column) {
 
@@ -640,7 +639,7 @@ abstract class ActiveRecord {
 	/**
 	 * Сортировка
 	 * @param string $order_by
-	 * @return static
+	 * @return static|self
 	 */
 	public static function order($order_by) {
 
@@ -657,10 +656,29 @@ abstract class ActiveRecord {
 	}
 
 	/**
+	 * Группировка
+	 * @param string $group_by
+	 * @return static|self
+	 */
+	public static function group($group_by) {
+
+		//Инициализируем
+		if( isset(self::$select[self::getTable()]) == false ) {
+			self::$select[self::getTable()] = new Select(static::getTable());
+		}
+
+		//Добавляем колонки выборки
+		self::$select[self::getTable()]->group_by($group_by);
+
+		//Возвращаем ту же функцию
+		return new static;
+	}
+
+	/**
 	 * Сортировка
 	 * @param $limit
 	 * @param int $offset
-	 * @return static
+	 * @return static|self
 	 */
 	public static function limit($limit, $offset = 0) {
 
@@ -704,7 +722,6 @@ abstract class ActiveRecord {
 	 * @param $column
 	 * @param null $pkey
 	 * @param null $ukey
-	 * @return static
 	 */
 	static public function create_table($table, $column, $pkey = null, $ukey = null) {
 		DB::getDB()->create_table($table, $column, $pkey, $ukey);
@@ -1259,7 +1276,7 @@ class ActiveRecordErrors implements Iterator, ArrayAccess, Countable {
 	/**
 	 * Whether a offset exists
 	 * @param mixed $offset
-	 * @return bool|void
+	 * @return bool
 	 */
 	public function offsetExists($offset) {
 		Boot::getInstance()->debug('offset: ' . $offset);

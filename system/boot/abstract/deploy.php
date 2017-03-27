@@ -107,7 +107,7 @@ abstract class Boot_Deploy_Abstract {
 
 		//Если установлен Composer
 		if( file_exists(APPLICATION_ROOT . '/composer.json') ) {
-			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader --prefer-source");
+			$this->ssh_exec("cd {$this->deploy_to}/releases/{$this->timestamp} && composer install --no-dev --optimize-autoloader --prefer-source -n");
 		}
 
 		//Симлинки фреймворка
