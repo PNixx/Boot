@@ -451,7 +451,7 @@ abstract class ActiveRecord {
 	}
 
 	/**
-	 * @return self
+	 * @return static
 	 * @throws DB_Exception
 	 */
 	public static function row() {
