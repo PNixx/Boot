@@ -926,12 +926,12 @@ abstract class ActiveRecord {
 		 * @var Boot_Uploader_Abstract $class
 		 */
 		foreach( static::$mount_uploader as $column => $class ) {
-			Boot::getInstance()->debug("column: " . $column . ', is: ' . var_export($class::fetchUploadFile(static::getTable(), $column), true));
 			if( $class::fetchUploadFile(static::getTable(), $column) ) {
 
 				//Загружаем новые файлы
 				$this->$column->remove();
 				$this->$column->uploadFile();
+				$this->_row_update[$column] = (string)$this->$column;
 			}
 		}
 
@@ -1118,7 +1118,7 @@ abstract class ActiveRecord {
 	 * @param $column
 	 */
 	protected function validator_presence_of($column) {
-		if( !$this->$column ) {
+		if( $this->$column !== 0 && $this->$column !== false && !$this->$column ) {
 			$this->errors->add($column, 'model.errors.blank');
 		}
 	}
