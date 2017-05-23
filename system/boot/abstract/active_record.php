@@ -1102,7 +1102,7 @@ abstract class ActiveRecord {
 	 * @param $column
 	 */
 	protected function validator_presence_of($column) {
-		if( !$this->$column ) {
+		if( $this->$column !== 0 && $this->$column !== false && !$this->$column ) {
 			$this->errors->add($column, 'model.errors.blank');
 		}
 	}
@@ -1261,7 +1261,7 @@ class ActiveRecordErrors implements Iterator, ArrayAccess, Countable {
 	/**
 	 * Whether a offset exists
 	 * @param mixed $offset
-	 * @return bool|void
+	 * @return bool
 	 */
 	public function offsetExists($offset) {
 		Boot::getInstance()->debug('offset: ' . $offset);

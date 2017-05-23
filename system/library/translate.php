@@ -37,7 +37,7 @@ class Translate {
   private function __construct() {
 
 		//Получаем из куков язык
-		if( \Boot_Cookie::get("lang") ) {
+		if( class_exists(\Boot_Cookie::class, false) && \Boot_Cookie::get("lang") ) {
 			$this->_lang = \Boot_Cookie::get("lang");
 		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
 			$this->_lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
