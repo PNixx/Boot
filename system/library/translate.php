@@ -112,10 +112,11 @@ class Translate {
 
   /**
    * Получить список доступных языков
+	 * @use Translate::getLanguages()
 	 * @deprecated
    */
   public function getLangs() {
-    return array_keys($this->_parse);
+    return $this->getLanguages();
   }
 
 	/**

@@ -19,4 +19,20 @@ trait LibraryTrait {
 	static public function t($text, $args = null, $plural = false) {
 		return Translate::getInstance()->_($text, $args, $plural);
 	}
+
+	/**
+	 * Достает текущую локаль
+	 * @return string
+	 */
+	static public function getLocale() {
+		return Translate::getInstance()->getLocale();
+	}
+
+	/**
+	 * Получение всех языков
+	 * @return array
+	 */
+	static public function getLanguages() {
+		return Translate::getInstance()->getLanguages();
+	}
 }
