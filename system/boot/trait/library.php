@@ -35,4 +35,21 @@ trait LibraryTrait {
 	static public function getLanguages() {
 		return Translate::getInstance()->getLanguages();
 	}
+
+	/**
+	 * Сохраняет авторизацию
+	 * @param int $id
+	 * @param string $user_key
+	 */
+	static public function setAuth($id, $user_key = '') {
+		\Boot_Auth_Lib::getInstance()->setAuth($id, $user_key);
+	}
+
+	/**
+	 * Возвращаем авторизацию
+	 * @return \Model_User
+	 */
+	static public function me() {
+		return \Boot_Auth_Lib::getInstance()->getAuth();
+	}
 }

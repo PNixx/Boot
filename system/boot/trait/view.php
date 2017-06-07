@@ -8,6 +8,11 @@ namespace Boot;
 
 use Boot\Core\View;
 
+/**
+ * Trait ViewTrait
+ * @package Boot
+ * @property AuthTrait $current_user
+ */
 trait ViewTrait {
 
 	/**
@@ -16,7 +21,9 @@ trait ViewTrait {
 	 * @return string|bool
 	 */
 	public function __get($name) {
-		if( isset(\Boot_Controller::getInstance()->view->$name) ) {
+		if( $name == 'current_user' ) {
+			return \Boot_Auth_Lib::getInstance()->getAuth();
+		} elseif( isset(\Boot_Controller::getInstance()->view->$name) ) {
 			return \Boot_Controller::getInstance()->view->$name;
 		} else {
 			return false;

@@ -52,7 +52,7 @@ class Boot_Auth_Lib extends Boot_Abstract_Library {
 
 	/**
 	 * Возвращаем авторизацию
-	 * @return Model_User
+	 * @return Boot\AuthTrait
 	 */
 	public function getAuth() {
 		if( $this->_me === null ) {
@@ -66,7 +66,7 @@ class Boot_Auth_Lib extends Boot_Abstract_Library {
 			if( !$id || !$skey || !$sig ) {
 				$this->_me = false;
 				Boot_Cookie::clear("auth_token");
-				return false;
+				return null;
 			}
 
 			//Получаем юзера
@@ -80,7 +80,7 @@ class Boot_Auth_Lib extends Boot_Abstract_Library {
 			if( $this->_me == false || $skey != Boot_Skey::get() || $sig != md5($id . $skey . $this->_me->skey) ) {
 				$this->_me = false;
 				Boot_Cookie::clear("auth_token");
-				return false;
+				return null;
 			}
 		}
 
