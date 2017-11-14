@@ -55,13 +55,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
     }
     $this->_dir = $dir;
 
-		//Если файл перевода не найден
-		if( file_exists($dir . $lang . ".json") == false ) {
-			$lang = "ru";
-			if( class_exists("Boot_Cookie") ) {
-				Boot_Cookie::set('lang', $lang);
-			}
-		}
+		$lang = $this->checkLocale($lang);
 
 		//Парсим файл
 		$this->parseJSON($lang);
@@ -168,7 +162,7 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
 	 * @param $lang
 	 */
   public function setLocale($lang) {
-    $this->_default = $lang;
+    $this->_default = $this->checkLocale($lang);
   }
 
   /**
@@ -185,6 +179,22 @@ class Boot_Translate_Lib extends Boot_Abstract_Library {
     }
     return $this->_lang;
   }
+
+	/**
+	 * Проверяет доступность языка
+	 * @param $lang
+	 * @return string
+	 */
+  private function checkLocale($lang) {
+		//Если файл перевода не найден
+		if( file_exists($this->_dir . $lang . ".json") == false ) {
+			$lang = "ru";
+			if( class_exists("Boot_Cookie") ) {
+				Boot_Cookie::set('lang', $lang);
+			}
+		}
+		return $lang;
+	}
 
 	/**
 	 * @param string $text
