@@ -107,7 +107,7 @@ class Translate {
 	 * @param $lang
 	 */
   public function setLocale($lang) {
-    $this->_lang = $lang;
+    $this->_lang = $this->checkLocale($lang);
   }
 
   /**
@@ -124,6 +124,22 @@ class Translate {
 	 */
 	public function getLanguages() {
 		return array_keys($this->_parse);
+	}
+
+	/**
+	 * Проверяет доступность языка
+	 * @param $lang
+	 * @return string
+	 */
+  private function checkLocale($lang) {
+		//Если файл перевода не найден
+		if( file_exists(APPLICATION_PATH . "/lang/" . $lang . ".json") == false ) {
+			$lang = "ru";
+			if( class_exists("Boot_Cookie") ) {
+				\Boot_Cookie::set('lang', $lang);
+			}
+		}
+		return $lang;
 	}
 
 	/**
