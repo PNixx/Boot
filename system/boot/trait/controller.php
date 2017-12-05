@@ -43,6 +43,14 @@ trait Boot_TraitController {
 	}
 
 	/**
+	 * @param array $json
+	 */
+	public function render_json(array $json) {
+		header('Content-Type: application/json');
+		echo json_encode($json);
+	}
+
+	/**
 	 * Получить параметр запроса
 	 * @param $name
 	 * @return null|string|Boot_Params
