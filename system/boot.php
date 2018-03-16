@@ -438,6 +438,7 @@ class Boot {
 	/**
 	 * Инициализируем вьюху
 	 * @return View
+	 * @throws Boot_Exception
 	 */
 	private function init_view() {
 
@@ -449,6 +450,7 @@ class Boot {
 	 * Загрузка шаблона
 	 * @param $view
 	 * @return string
+	 * @throws Boot_Exception
 	 */
 	private function load_layout(&$view) {
 

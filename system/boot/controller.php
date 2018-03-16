@@ -216,6 +216,13 @@ class Boot_Controller {
 	 * @return string
 	 */
 	private function getClassName() {
+
+		//todo для поддержки новых версий
+		if( preg_match('/^Boot\\\([^\\\]+)\\\Controller\\\/', Routes::getInstance()->getController()) && class_exists(Routes::getInstance()->getController()) ) {
+			return Routes::getInstance()->getController();
+		}
+
+		//todo для поддержки старых версий
 		return ucfirst(str_replace('/', '_', Routes::getInstance()->getController())) . self::POSTFIX;
 	}
 
