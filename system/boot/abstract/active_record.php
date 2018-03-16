@@ -102,7 +102,7 @@ abstract class ActiveRecord {
 	 * Хранилище обновляемых данных
 	 * @var array
 	 */
-	private $_row_update = [];
+	protected $_row_update = [];
 
 	/**
 	 * Новая строка?
