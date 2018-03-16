@@ -103,15 +103,17 @@ class Assets {
 	/**
 	 * @param $link
 	 * @return null|string
+	 * @throws Boot_Exception
 	 * @throws Controller_Exception
 	 */
 	static public function find_path($link) {
-		$dir = APPLICATION_ROOT . '/bower_components';
-
-		if( !file_exists($dir . '/' . $link) ) {
-			throw new Controller_Exception('File not found', 404);
+		$directories = ['/bower_components', '/node_modules'];
+		foreach( $directories as $directory ) {
+			if( file_exists(APPLICATION_ROOT . $directory . '/' . $link) ) {
+				return APPLICATION_ROOT . $directory . '/' . $link;
+			}
 		}
-		return $dir . '/' . $link;
+		throw new Controller_Exception('File not found', 404);
 	}
 
 	/**
