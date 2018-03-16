@@ -116,6 +116,9 @@ class Routes {
 	 * @return string
 	 */
 	static public function getControllerViewsPath($name) {
+		if( preg_match('/^Boot\\\(.+?)\\\Controller\\\(.+?)$/', $name, $match) ) {
+			return strtolower(str_replace('\\', '/', $match[1])) . '/' . strtolower($match[2]);
+		}
 		return strtolower(str_replace('_', '/', preg_replace('/Controller$/', '', $name)));
 	}
 
@@ -192,6 +195,7 @@ class Routes {
 	 * @return Route
 	 */
 	private function addRoute($method, $path, ...$args) {
+
 		/** @var Route $route */
 		$route = $this->map->$method($this->getPathName($path) ?: 'root', $this->getPath($path));
 		$route->extras($args);

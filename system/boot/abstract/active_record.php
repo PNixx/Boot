@@ -96,7 +96,7 @@ abstract class ActiveRecord {
 	 * Хранилище данных
 	 * @var stdClass
 	 */
-	private $_row;
+	protected $_row;
 
 	/**
 	 * Хранилище обновляемых данных

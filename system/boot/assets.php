@@ -113,7 +113,7 @@ class Assets {
 				return APPLICATION_ROOT . $directory . '/' . $link;
 			}
 		}
-		throw new Controller_Exception('File not found', 404);
+		throw new Controller_Exception('File not found: ' . $link, 404);
 	}
 
 	/**

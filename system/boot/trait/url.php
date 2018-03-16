@@ -57,6 +57,6 @@ trait UrlTrait {
 	 * @return string
 	 */
 	public function controller_name() {
-		return Routes::getInstance()->getControllerName();
+		return strtolower(Routes::getInstance()->getControllerName());
 	}
 }
