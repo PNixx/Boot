@@ -13,7 +13,7 @@ trait Boot_ActiveAdmin {
 
 	/**
 	 * Список
-	 * @throws Boot_Exception
+	 * @throws DB_Exception
 	 *
 	 * view return:
 	 *   $rows       - список строк
@@ -52,7 +52,7 @@ trait Boot_ActiveAdmin {
 
 	/**
 	 * Просмотр объекта
-	 * @throws DB_Exception
+	 * @throws Exception
 	 */
 	public function showAction() {
 
@@ -80,7 +80,6 @@ trait Boot_ActiveAdmin {
 
 	/**
 	 * Создание записи
-	 * @throws Boot_Exception
 	 * @throws Exception
 	 */
 	public function createAction() {

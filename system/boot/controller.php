@@ -3,6 +3,7 @@ use Boot\Abstracts\Controller;
 use Boot\Routes;
 
 class Boot_Controller {
+	use \Boot\UrlTrait;
 
 	/**
 	 * Префик namespace

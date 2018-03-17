@@ -1,5 +1,6 @@
 <?php
 namespace Boot;
+use Aura\Router\Exception\RouteNotFound;
 use Aura\Router\Map;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
@@ -74,7 +75,7 @@ class Routes {
 
 		//Если ничего не найдено, кидаем ошибку
 		if( $this->current == null ) {
-			throw new \Boot_Exception("Страница не найдена", 404);
+			throw new \Boot_Exception('Страница не найдена<br><pre>' . implode('<br>', self::all_routes()) . '</pre>', 404);
 		}
 
 		foreach( $this->current->attributes as $key => $value ) {
@@ -357,21 +358,34 @@ class Routes {
 			return '/' . $query;
 		}
 
-		$route = self::$_instance->map->getRoute($name);
-		if( $route ) {
+		try {
+			$route = self::$_instance->map->getRoute($name);
+			if( $route ) {
 
-			if( preg_match_all('/{([^}]+)}/', $route->path, $matches) ) {
-				//Если не указаны обязательные параметры
-				if( count($link_params) != count($matches[1]) ) {
-					throw new \RouteException('Please set required params: ' . implode(', ', $matches[1]));
+				if( preg_match_all('/{([^}]+)}/', $route->path, $matches) ) {
+					//Если не указаны обязательные параметры
+					if( count($link_params) != count($matches[1]) ) {
+						throw new \RouteException('Please set required params: ' . implode(', ', $matches[1]));
+					}
+					$link_params = array_combine($matches[1], $link_params);
 				}
-				$link_params = array_combine($matches[1], $link_params);
+
+				return self::$_instance->routes->getGenerator()->generate($name, $link_params) . $query;
 			}
 
-			return self::$_instance->routes->getGenerator()->generate($name, $link_params) . $query;
+			//Если ничего не нашли, кидаем ошибку
+			throw new \RouteException($name . '_path not found.' . PHP_EOL . print_r(self::all_routes(), true));
+		} catch (RouteNotFound $e) {
+			throw new \RouteException($name . '_path not found.<br><pre>' . implode('<br>', self::all_routes()) . '</pre>');
 		}
+	}
 
-		//Если ничего не нашли, кидаем ошибку
-		throw new \RouteException($name . '_path not found');
+	static private function all_routes() {
+		if( \Boot::getInstance()->isDevelopment() ) {
+			return array_map(function(Route $r) {
+				return '[' . implode(', ', $r->allows) . '] ' . $r->name . ' -> ' . implode('#', $r->handler);
+			}, self::$_instance->map->getRoutes());
+		}
+		return [];
 	}
 }

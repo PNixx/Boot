@@ -26,7 +26,9 @@ trait TagTrait {
 	protected function implode($params) {
 		$string = [];
 		foreach( $params as $key => $value ) {
-			$string[] = $key . '="' . htmlspecialchars($value, ENT_QUOTES | ENT_HTML5) . '"';
+			if( !is_array($value) ) {
+				$string[] = $key . '="' . htmlspecialchars($value, ENT_QUOTES | ENT_HTML5) . '"';
+			}
 		}
 		return ($string ? ' ' : '' ) . implode(' ', $string);
 	}

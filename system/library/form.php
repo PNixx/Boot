@@ -71,6 +71,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	 * @return string
 	 */
 	public function input($name, $params = array()) {
+		$this->attachErrors($name, $params);
 		$print = "";
 
 		//Если не указан тип
@@ -79,7 +80,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		}
 
 		//Печатаем лейбл
-		if( !in_array($params["as"], ["hidden", "checkbox"]) && (isset($params["label"]) && $params["label"] !== false || isset($params["label"]) == false ) ) {
+		if( !in_array($params['as'], ['hidden', 'checkbox']) && (isset($params['label']) && $params['label'] !== false || !isset($params['label']) ) ) {
 			$print .= $this->label($name, $params);
 		}
 
@@ -179,7 +180,12 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	 * @return string
 	 */
 	protected function label($name, $params) {
-		return "<label for=\"{$this->_name}_$name\">" . $this->getLabelTitle($name, $params) . "</label>";
+		if( !empty($params["wrapper_label"]) ) {
+			$wrapper = $this->implode($params["wrapper_label"]);
+		} else {
+			$wrapper = '';
+		}
+		return "<label for=\"{$this->_name}_$name\" {$wrapper}>" . $this->getLabelTitle($name, $params) . "</label>";
 	}
 
 	/**
@@ -190,6 +196,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	 * @return string
 	 */
 	public function select($name, array $options, $params = []) {
+		$this->attachErrors($name, $params);
 
 		//Если не указано добавление пустого поля
 		if( isset($params["include_blank"]) == false ) {
@@ -255,6 +262,37 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 
 		//Возвращаем имя
 		return ucfirst($name);
+	}
+
+	/**
+	 * @param $name
+	 * @return bool
+	 */
+	public function isError($name) {
+		foreach($this->_row->errors as $key => $error) {
+			if( in_array($name, explode(' ', $key)) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Добавляет ошибки
+	 * @param string $name
+	 * @param array $params
+	 */
+	private function attachErrors($name, &$params) {
+
+		//Добавляем класс ошибок
+		$class = explode(' ', $params['class'] ?? '');
+		if( $this->isError($name) ) {
+			$class[] = 'is-invalid';
+		}
+
+		if( $class ) {
+			$params['class'] = implode(' ', array_unique($class));
+		}
 	}
 }
 
