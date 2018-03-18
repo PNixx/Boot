@@ -269,9 +269,11 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 	 * @return bool
 	 */
 	public function isError($name) {
-		foreach($this->_row->errors as $key => $error) {
-			if( in_array($name, explode(' ', $key)) ) {
-				return true;
+		if( $this->_row && is_array($this->_row->errors) ) {
+			foreach( $this->_row->errors as $key => $error ) {
+				if( in_array($name, explode(' ', $key)) ) {
+					return true;
+				}
 			}
 		}
 		return false;
