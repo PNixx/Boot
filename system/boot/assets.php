@@ -189,6 +189,12 @@ class Assets {
 		if( strpos($path, 'bower_components') === 0 ) {
 			return realpath(APPLICATION_ROOT . '/' . $path);
 		}
+		$directories = ['/bower_components', '/node_modules'];
+		foreach( $directories as $directory ) {
+			if( file_exists(APPLICATION_ROOT . $directory . '/' . $path) ) {
+				return realpath(APPLICATION_ROOT . $directory . '/' . $path);
+			}
+		}
 		return realpath(APPLICATION_PATH . '/assets/' . $this->ext . '/' . $path);
 	}
 
