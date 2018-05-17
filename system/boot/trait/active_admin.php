@@ -60,7 +60,7 @@ trait Boot_ActiveAdmin {
 		$model = $this->getModel();
 
 		//Получаем строку
-		$this->view->row = $model::find($this->getParam('id'));
+		$this->view->row = $model::find((int) $this->getParam('id'));
 	}
 
 	/**
@@ -122,7 +122,7 @@ trait Boot_ActiveAdmin {
 		$model = $this->getModel();
 
 		//Получаем строку
-		$this->view->row = $model::find($this->getParam('id'));
+		$this->view->row = $model::find((int) $this->getParam('id'));
 	}
 
 	/**
@@ -137,7 +137,7 @@ trait Boot_ActiveAdmin {
 		$model = $this->getModel();
 
 		//Получаем строку
-		$row = $model::find($params['id']);
+		$row = $model::find((int) $params['id']);
 		$this->view->row = $row;
 
 		if( $row->update($this->getFromParams()) ) {
@@ -164,7 +164,7 @@ trait Boot_ActiveAdmin {
 		$model = $this->getModel();
 
 		//Получаем строку
-		$row = $model::find($this->getParam('id'));
+		$row = $model::find((int) $this->getParam('id'));
 		$row->destroy();
 
 		//Редиректим в список
