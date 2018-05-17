@@ -828,9 +828,13 @@ abstract class ActiveRecord {
 		//Если есть в кеше
 		if( isset(self::$_cached_by_find[static::getTable()][$id]) ) {
 			$row = self::$_cached_by_find[static::getTable()][$id];
+
+			//Создаем экземплятор
+			return self::createRow($row);
 		} else {
+
 			//Получаем строку из БД
-			$row = DB::getDB()->select(static::getTable(), self::getPKey() . " = " . DB::getDB()->getStringQueryByValue($id))->row();
+			$row = static::where([static::$pkey => $id])->row();
 
 			//Если ничего не нашли
 			if( $row == false ) {
@@ -838,16 +842,18 @@ abstract class ActiveRecord {
 			}
 
 			//Сохраняем в кеш
-			self::$_cached_by_find[static::getTable()][$id] = $row;
-		}
+			self::$_cached_by_find[static::getTable()][$id] = $row->toArray();
 
-		//Создаем экземплятор
-		return self::createRow($row);
+			//Возвращаем
+			return $row;
+		}
 	}
 
 	/**
 	 * @param $where
 	 * @return static
+	 * @throws DB_Exception
+	 * @throws Exception
 	 */
 	public static function find_by($where) {
 		return static::where($where)->row();
