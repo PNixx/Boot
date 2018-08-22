@@ -32,7 +32,8 @@ if( file_exists(Boot::getInstance()->config->translate->dir . "en.json") == fals
 //Запускаем
 $translate = Translate::getInstance();
 $translate->loadProjectLang();
-$parse = $translate->getParse();
+$language = Boot::getInstance()->config->translate->lang;
+$parse = $translate->getParse()[$language] ?? [];
 
 function glob_recursive($pattern, $flags = 0) {
   $files = glob($pattern, $flags);
@@ -51,8 +52,7 @@ $files = array_merge($files, glob_recursive(APPLICATION_PATH . "/*.phtml", GLOB_
 $keys = array();
 foreach( $files as $file ) {
   //"/_\(\"(.+)\"(?:,\s?(?:$\w+|\"\w+\"))?\)/"
-  if( preg_match_all("/->_\\(\"([^\r\n]+?)\",?/", file_get_contents($file), $po) && isset($po[1]) ) {
-//		print_r($po);
+  if( preg_match_all("/(?:->_|\\\$this->t)\\((?:\"|')([^\r\n]+?)(?:\"|'),?/", file_get_contents($file), $po) && isset($po[1]) ) {
     foreach( $po[1] as $i => $key ) {
       $key = str_replace("\\\$", "$", $key);
       if( isset($parse[$key]) == false ) {
@@ -64,13 +64,19 @@ foreach( $files as $file ) {
   }
 }
 
+
 //Получаем ключи, которых не нашли на сайте
 $diff = array_diff(array_keys($parse), $keys);
 
 //Проходим по ним и удаляем
 foreach($diff as $d) {
-  unset($parse[$d]);
+	if( isset($argv[1]) ) {
+		unset($parse[$d]);
+	} else {
+		echo 'key "' . $language . ':' . $d . '" not be used' . PHP_EOL;
+	}
 }
+ksort($parse);
 
 //Записываем все значения в массив
-file_put_contents(Boot::getInstance()->config->translate->dir . Boot::getInstance()->config->translate->lang . ".json", json_encode($parse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+file_put_contents(Boot::getInstance()->config->translate->dir . $language . '.json', json_encode((object) $parse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));

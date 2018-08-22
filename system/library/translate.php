@@ -37,8 +37,8 @@ class Translate {
   private function __construct() {
 
 		//Получаем из куков язык
-		if( class_exists(\Boot_Cookie::class, true) && \Boot_Cookie::get("lang") ) {
-			$this->_lang = \Boot_Cookie::get("lang");
+		if( class_exists(\Boot_Cookie::class, true) && \Boot_Cookie::get('lang') ) {
+			$this->_lang = \Boot_Cookie::get('lang');
 		} elseif( isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ) {
 			$this->_lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
 		} else {
@@ -55,7 +55,7 @@ class Translate {
 	public function loadProjectLang() {
 
 		//Строим путь до базы
-		$dir = APPLICATION_PATH . "/lang";
+		$dir = APPLICATION_PATH . '/lang';
 
 		//Проверяем директорию
 		if( is_dir($dir) ) {
@@ -133,9 +133,9 @@ class Translate {
 	 */
   private function checkLocale($lang) {
 		//Если файл перевода не найден
-		if( file_exists(APPLICATION_PATH . "/lang/" . $lang . ".json") == false ) {
-			$lang = "ru";
-			if( class_exists("Boot_Cookie") ) {
+		if( file_exists(APPLICATION_PATH . '/lang/' . $lang . '.json') == false ) {
+			$lang = 'ru';
+			if( class_exists('Boot_Cookie') ) {
 				\Boot_Cookie::set('lang', $lang);
 			}
 		}
