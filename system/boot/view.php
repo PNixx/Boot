@@ -210,9 +210,13 @@ class Boot_View {
 
 		//Если в режиме разработчика
 		if( APPLICATION_ENV == 'development' ) {
-			$js->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
+			if( file_exists(APPLICATION_ROOT . '/public/assets/' . $name) ) {
+				return '<script src=\'/assets/' . $name . '\' type="text/javascript"' . ($async ? 'async="async"' : "") . '></script>';
+			} else {
+				$js->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
 
-			return $js->__toString();
+				return $js->__toString();
+			}
 		}
 
 		return $js->readfile_production($name, $async);
@@ -228,9 +232,13 @@ class Boot_View {
 
 		//Если в режиме разработчика
 		if( APPLICATION_ENV == 'development' ) {
-			$css->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
+			if( file_exists(APPLICATION_ROOT . '/public/assets/' . $name) ) {
+				return '<link href=\'/assets/' . $name . '\' rel=\'stylesheet\' type=\'text/css\'>';
+			} else {
+				$css->read_asset_file(APPLICATION_PATH . "/assets/" . $name);
 
-			return $css->__toString();
+				return $css->__toString();
+			}
 		}
 
 		return $css->readfile_production($name);
