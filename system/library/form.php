@@ -117,7 +117,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 			case "checkbox":
 				$print .= "<div class='checkbox'>" .
 					"<input name=\"{$this->_name}[$name]\" type=\"hidden\" value=\"0\">" .
-					"<input name=\"{$this->_name}[$name]\" id=\"{$this->_name}_$name\" type=\"checkbox\" value=\"1\"" . ($params['value'] ? " checked=\"checked\"" : "") . $this->implode($p) . ">" .
+					"<input name=\"{$this->_name}[$name]\" id=\"" . ($params['id'] ?? "{$this->_name}_$name") . "\" type=\"checkbox\" value=\"1\"" . ($params['value'] ? " checked=\"checked\"" : "") . $this->implode($p) . ">" .
 					$this->label($name, $params) .
 					"</div>";
 				break;
@@ -185,7 +185,7 @@ class Boot_Form_Lib extends Boot_Abstract_Library {
 		} else {
 			$wrapper = '';
 		}
-		return "<label for=\"{$this->_name}_$name\" {$wrapper}>" . $this->getLabelTitle($name, $params) . "</label>";
+		return "<label for=\"" . ($params['id'] ?? "{$this->_name}_$name") . "\" {$wrapper}>" . $this->getLabelTitle($name, $params) . "</label>";
 	}
 
 	/**
