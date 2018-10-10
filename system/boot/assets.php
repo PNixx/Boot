@@ -163,15 +163,37 @@ class Boot_Assets {
 					file_put_contents('/tmp/' . $filename . '.css', $sass->compileFile($path));
 
 					//Добавляем префиксы
-					$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css 2>&1', $r);
-					if( $result ) {
-						throw new Boot_Exception($result);
-					} else {
-						$css = file_get_contents('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.out.css');
-						unlink('/tmp/' . $filename . '.css');
-						return $css;
+					//$result = system('postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css 2>&1', $r);
+					$command = 'postcss --use autoprefixer -o /tmp/' . $filename . '.out.css /tmp/' . $filename . '.css';
+					$pipes = [];
+					$process = proc_open($command, [
+						0 => ['pipe', 'r'],
+						1 => ['pipe', 'w'],
+						2 => ['pipe', 'w'],
+					], $pipes);
+
+					stream_set_blocking($pipes[1], true);
+					stream_set_blocking($pipes[2], true);
+
+					if( is_resource($process) ) {
+
+						$output = stream_get_contents($pipes[1]);
+						$error = stream_get_contents($pipes[2]);
+
+						fclose($pipes[1]);
+						fclose($pipes[2]);
+
+						proc_close($process);
+
+						if( $error ) {
+							throw new Boot_Exception($error);
+						}
 					}
+
+					$css = file_get_contents('/tmp/' . $filename . '.out.css');
+					unlink('/tmp/' . $filename . '.out.css');
+					unlink('/tmp/' . $filename . '.css');
+					return $css;
 
 					//Ruby SASS
 //					//Компилируем sass
