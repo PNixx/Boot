@@ -5,7 +5,7 @@
  * Time: 13:45
  */
 
-class Boot_Params implements Iterator, ArrayAccess {
+class Boot_Params implements Iterator, ArrayAccess, Countable {
 
 	/**
 	 * Позиция
