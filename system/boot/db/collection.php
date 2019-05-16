@@ -4,7 +4,7 @@
  * Date: 21.07.13
  * Time: 10:49
  */
-class Model_Collection implements Iterator, ArrayAccess  {
+class Model_Collection implements Iterator, ArrayAccess, Countable  {
 
 	//Строка модели
 	private $_model_row = null;
