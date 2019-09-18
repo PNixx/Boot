@@ -186,7 +186,7 @@ class Boot_Assets {
 						proc_close($process);
 
 						if( $error ) {
-							throw new Boot_Exception($error);
+							throw new Exception($error);
 						}
 					}
 
