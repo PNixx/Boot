@@ -595,7 +595,11 @@ abstract class ActiveRecord {
 		self::init_select();
 
 		//Добавляем join
-		self::$select[self::getTable()]->joins($table, $on);
+		if( array_search($table, static::$belongs_to) !== false ) {
+			self::$select[self::getTable()]->join($table, $on);
+		} else {
+			self::$select[self::getTable()]->joins($table, $on);
+		}
 
 		//Возвращаем ту же функцию
 		return new static;

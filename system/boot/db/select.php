@@ -198,7 +198,7 @@ class Select {
 	}
 
 	/**
-	 * Добавление join к запросу
+	 * Добавление join к запросу для has_many
 	 * @param string $table
 	 * @param string|array|null $on
 	 * @throws DB_Exception
@@ -219,6 +219,30 @@ class Select {
 
 		//Добавляем
 		$this->_joins .= " INNER JOIN " . $this->driver->escape_identifier($table) . " ON " . $this->driver->escape_identifier($table) . "." . $this->driver->escape_identifier($this->_table[0] . "_id") . " = " . $this->driver->escape_identifier($this->_table[0]) . "." . $this->driver->escape_identifier("id") . $where;
+	}
+
+	/**
+	 * Добавление join к запросу для belong_to
+	 * @param string $table
+	 * @param string|array|null $on
+	 * @throws DB_Exception
+	 */
+	public function join($table, $on = null) {
+
+		//Если указано кол-во таблиц больше 1, то хз че делать
+		if( count($this->_table) > 1 ) {
+			throw new DB_Exception("Must be table count 1");
+		}
+
+		//Добавочное условие
+		if( $on === null ) {
+			$where = null;
+		} else {
+			$where = " AND " . $this->make_where($table, $on);
+		}
+
+		//Добавляем
+		$this->_joins .= " INNER JOIN " . $this->driver->escape_identifier($table) . " ON " . $this->driver->escape_identifier($this->_table[0]) . "." . $this->driver->escape_identifier($table . "_id") . " = " . $this->driver->escape_identifier($table) . "." . $this->driver->escape_identifier("id") . $where;
 	}
 
 	/**
