@@ -351,6 +351,7 @@ class Boot {
 	/**
 	 * Загрузка конфига
 	 * @return void
+	 * @throws Exception
 	 */
 	private function config() {
 
@@ -369,7 +370,7 @@ class Boot {
 	private function load_model() {
 
 		//Если в конфиге был указан драйвер БД, подключаем и инициализируем
-		if( $this->config->db->adapter && is_file($this->root . '/boot/db/driver/' . $this->config->db->adapter . '.php') ) {
+		if( isset($this->config->db->adapter) && is_file($this->root . '/boot/db/driver/' . $this->config->db->adapter . '.php') ) {
 
 			//Грузим драйвер
 			require_once 'boot/db/driver/' . $this->config->db->adapter . '.php';
@@ -379,9 +380,6 @@ class Boot {
 			require_once 'boot/db/collection.php';
 			require_once 'boot/db/db.php';
 
-		} else {
-
-			throw new Exception('Не найден драйвер базы данных: ' . $this->config->db->adapter);
 		}
 	}
 
@@ -420,6 +418,7 @@ class Boot {
 	/**
 	 * Инициализируем контроллер
 	 * @return void
+	 * @throws Boot_Exception
 	 */
 	private function init_controller() {
 
