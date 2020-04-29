@@ -919,7 +919,7 @@ abstract class ActiveRecord {
 			 */
 			foreach( static::$mount_uploader as $column => $class ) {
 				if( $class::fetchUploadFile(static::getTable(), $column) ) {
-					$this->$column->remove();
+					$this->_row->$column->remove();
 				}
 			}
 		};
