@@ -198,8 +198,13 @@ class Routes {
 	private function addRoute($method, $path, ...$args) {
 
 		/** @var Route $route */
-		$route = $this->map->$method($this->getPathName($path) ?: 'root', $this->getPath($path));
+		$route = $this->map->$method($this->getPathName($path) ?: 'root', preg_replace('/\/?{([^}]+)\*}/', '', $this->getPath($path)));
 		$route->extras($args);
+
+		//Parse route wildcard, example /photos/{path*}
+		if( preg_match('/{([^}]+)\*}/', $this->getPath($path), $match) ) {
+			$route->wildcard($match[1]);
+		}
 
 		$namespace = $this->getNamespace($path);
 
