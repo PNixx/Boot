@@ -327,7 +327,7 @@ class Boot_Controller {
 		$controller->$Aname();
 
 		//Сохраняем данные для передачи во вьюху
-		if( array_key_exists('view', $controller) ) {
+		if( property_exists($controller, 'view') ) {
 			$this->view = &$controller->view;
 		}
 
